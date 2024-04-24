@@ -1,0 +1,15 @@
+# OS
+.DS_Store
+
+# configure
+CMakeUserPresets.json
+
+# build
+[Bb]uild/
+[Oo]ut/
+*.pdb
+
+# IDE
+.vs/
+CMakeSettings.json
+.vscode/

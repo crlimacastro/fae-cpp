@@ -1,0 +1,16 @@
+module;
+#include <string_view>
+
+export module fae:config;
+
+export namespace fae::config
+{
+	constexpr std::string_view project_name = "@PROJECT_NAME@";
+	constexpr std::string_view project_version = "@PROJECT_VERSION@";
+	constexpr unsigned int project_version_major = @PROJECT_VERSION_MAJOR@;
+	constexpr unsigned int project_version_minor = @PROJECT_VERSION_MINOR@;
+	constexpr unsigned int project_version_patch = @PROJECT_VERSION_PATCH@;
+	constexpr std::string_view build_type = "@CMAKE_BUILD_TYPE@";
+	constexpr bool is_debug_build = build_type == "Debug";
+	constexpr bool is_release_build = build_type == "Release";
+}

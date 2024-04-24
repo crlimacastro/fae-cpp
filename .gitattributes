@@ -1,0 +1,7 @@
+# automatically normalize line endings
+* text=auto
+
+# treat image files as binary by default
+*.jpg   binary
+*.png   binary
+*.gif   binary
