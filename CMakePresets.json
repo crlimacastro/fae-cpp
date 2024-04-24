@@ -9,7 +9,6 @@
             "installDir": "${sourceDir}/out/install/${presetName}",
             "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
             "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "clang++",
                 "BUILD_SHARED_LIBS": "OFF",
                 "FAE_WARNINGS_ENABLE": "ON",
                 "FAE_WARNINGS_AS_ERRORS": "OFF",
