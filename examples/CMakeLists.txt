@@ -27,7 +27,7 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 		add_executable(${SUBDIRECTORY_NAME})
 		if(EMSCRIPTEN)
 			set_target_properties(${SUBDIRECTORY_NAME} PROPERTIES SUFFIX ".html")
-			target_link_options(${SUBDIRECTORY_NAME} PRIVATE "-sUSE_WEBGPU=1")
+			target_link_options(${SUBDIRECTORY_NAME} PRIVATE "-sUSE_WEBGPU=1" "-sUSE_SDL=3")
 	  	endif()
 
 		target_sources(${SUBDIRECTORY_NAME}

@@ -10,9 +10,10 @@ export module fae:application;
 
 import :core;
 import :event;
-import :resource_manager;
-import :scheduler;
-import :ecs_world;
+
+export import :resource_manager;
+export import :scheduler;
+export import :ecs_world;
 
 export namespace fae
 {
@@ -35,40 +36,47 @@ export namespace fae
     {
     };
 
-    struct application_commands
+    struct init_step
     {
         resource_manager &resources;
         scheduler &scheduler;
         ecs_world &ecs_world;
     };
-
-    struct init_step
-    {
-        application_commands commands;
-    };
     struct start_step
     {
-        application_commands commands;
+        resource_manager &resources;
+        scheduler &scheduler;
+        ecs_world &ecs_world;
     };
     struct pre_update_step
     {
-        application_commands commands;
+        resource_manager &resources;
+        scheduler &scheduler;
+        ecs_world &ecs_world;
     };
     struct update_step
     {
-        application_commands commands;
+        resource_manager &resources;
+        scheduler &scheduler;
+        ecs_world &ecs_world;
     };
     struct post_update_step
     {
-        application_commands commands;
+        resource_manager &resources;
+        scheduler &scheduler;
+        ecs_world &ecs_world;
     };
     struct stop_step
     {
-        application_commands commands;
+        resource_manager &resources;
+        scheduler &scheduler;
+        ecs_world &ecs_world;
     };
     struct deinit_step
     {
-        application_commands commands;
+        resource_manager &resources;
+        scheduler &scheduler;
+        ecs_world &ecs_world;
     };
 
     struct application
@@ -81,19 +89,20 @@ export namespace fae
 
         auto step() -> void
         {
-            const auto commands = application_commands{
+            scheduler.invoke(pre_update_step{
                 .resources = resources,
                 .scheduler = scheduler,
                 .ecs_world = ecs_world,
-            };
-            scheduler.invoke(pre_update_step{
-                .commands = commands,
             });
             scheduler.invoke(update_step{
-                .commands = commands,
+                .resources = resources,
+                .scheduler = scheduler,
+                .ecs_world = ecs_world,
             });
             scheduler.invoke(post_update_step{
-                .commands = commands,
+                .resources = resources,
+                .scheduler = scheduler,
+                .ecs_world = ecs_world,
             });
         }
 
@@ -102,16 +111,15 @@ export namespace fae
             is_running = true;
             scheduler.add_system<application_quit>([&]([[maybe_unused]] const application_quit &event)
                                                    { is_running = false; });
-            const auto commands = application_commands{
+            scheduler.invoke(init_step{
                 .resources = resources,
                 .scheduler = scheduler,
                 .ecs_world = ecs_world,
-            };
-            scheduler.invoke(init_step{
-                .commands = commands,
             });
             scheduler.invoke(start_step{
-                .commands = commands,
+                .resources = resources,
+                .scheduler = scheduler,
+                .ecs_world = ecs_world,
             });
 #if defined(__EMSCRIPTEN__)
             emscripten_set_main_loop(step, 0, false);
@@ -122,10 +130,14 @@ export namespace fae
                 step();
             }
             scheduler.invoke(stop_step{
-                .commands = commands,
+                .resources = resources,
+                .scheduler = scheduler,
+                .ecs_world = ecs_world,
             });
             scheduler.invoke(deinit_step{
-                .commands = commands,
+                .resources = resources,
+                .scheduler = scheduler,
+                .ecs_world = ecs_world,
             });
 #endif
         }

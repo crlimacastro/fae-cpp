@@ -293,21 +293,21 @@ export namespace fae
 
 	auto quit_on_esc(const update_step &step) noexcept -> void
 	{
-		step.commands.resources.use_resource<input>([&](input &input)
+		step.resources.use_resource<input>([&](input &input)
 													{
 			if (input.is_key_just_pressed(key::escape))
 			{
-				step.commands.scheduler.invoke(application_quit{});
+				step.scheduler.invoke(application_quit{});
 			} });
 	}
 
 	auto toggle_fullscreen_on_alt_enter(const update_step &step) noexcept -> void
 	{
-		step.commands.resources.use_resource<input>([&](input &input)
+		step.resources.use_resource<input>([&](input &input)
 													{
 			if (input.is_key_pressed(key::lalt) && input.is_key_just_pressed(key::enter))
 			{
-				step.commands.resources.use_resource<fae::primary_window>([&](fae::primary_window& primary)
+				step.resources.use_resource<fae::primary_window>([&](fae::primary_window& primary)
 					{
 						primary.window().toggle_fullscreen();
 					});

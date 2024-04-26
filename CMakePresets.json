@@ -7,13 +7,7 @@
             "hidden": true,
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/install/${presetName}",
-            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-            "cacheVariables": {
-                "BUILD_SHARED_LIBS": "OFF",
-                "FAE_WARNINGS_ENABLE": "ON",
-                "FAE_WARNINGS_AS_ERRORS": "OFF",
-                "FAE_BUILD_EXAMPLES": "ON"
-            }
+            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
         },
         {
             "name": "debug",

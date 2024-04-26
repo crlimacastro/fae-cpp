@@ -8,10 +8,17 @@ module;
 #include <format>
 
 #include <SDL3/SDL.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#else
+#include <webgpu/webgpu_cpp.h>
+#endif
 
 export module fae:rendering;
 
 import :core;
+import :color;
+import :resource_manager;
 import :logging;
 import :application;
 import :sdl;
@@ -20,24 +27,6 @@ import :windowing;
 
 export namespace fae
 {
-	struct color
-	{
-		std::uint8_t r = 0;
-		std::uint8_t g = 0;
-		std::uint8_t b = 0;
-		std::uint8_t a = 255;
-	};
-
-	namespace colors
-	{
-		constexpr auto black = color{0, 0, 0, 255};
-		constexpr auto white = color{255, 255, 255, 255};
-		constexpr auto red = color{255, 0, 0, 255};
-		constexpr auto green = color{0, 255, 0, 255};
-		constexpr auto blue = color{0, 0, 255, 255};
-		constexpr auto cornflower_blue = color{100, 149, 237, 255};
-	}
-
 	struct renderer
 	{
 		std::function<color()> get_clear_color;
@@ -49,22 +38,31 @@ export namespace fae
 
 	struct render_step
 	{
-		application_commands commands;
+		resource_manager &resources;
+		scheduler &scheduler;
+		ecs_world &ecs_world;
 	};
 
 	auto update_rendering(const update_step &step) noexcept -> void
 	{
 		static bool first_render_happened = false;
-		step.commands.resources.use_resource<fae::renderer>([&](fae::renderer &renderer)
-															{
+		step.resources.use_resource<fae::renderer>([&](fae::renderer &renderer)
+												   {
 			renderer.begin();
 			renderer.clear();
-			step.commands.scheduler.invoke<render_step>(render_step{ .commands = step.commands });
+			step.scheduler.invoke<render_step>(render_step
+			{
+				.resources = step.resources,
+                .scheduler = step.scheduler,
+                .ecs_world = step.ecs_world,
+			});
 			renderer.end();
 			if (!first_render_happened)
 			{
-				step.commands.scheduler.invoke(fae::first_render_end{
-					.commands = step.commands,
+				step.scheduler.invoke(fae::first_render_end{
+					.resources = step.resources,
+                	.scheduler = step.scheduler,
+                	.ecs_world = step.ecs_world,
 					});
 				first_render_happened = true;
 			} });
@@ -72,29 +70,101 @@ export namespace fae
 
 	auto deinit_rendering(const deinit_step &step) noexcept -> void
 	{
-		step.commands.resources.erase<fae::sdl_renderer>();
-		step.commands.resources.erase<fae::renderer>();
+		step.resources.erase<fae::sdl_renderer>();
+		step.resources.erase<fae::renderer>();
 	}
 
-	auto renderer_from(fae::sdl_renderer &renderer) noexcept -> fae::renderer
+	[[nodiscard]] auto make_sdl_renderer(resource_manager &resources) noexcept -> renderer
 	{
-		return fae::renderer{
-			.get_clear_color = [&]() -> fae::color
+		return renderer{
+			.get_clear_color = [&]() -> color
 			{
-				Uint8 r{}, g{}, b{}, a{};
-				SDL_GetRenderDrawColor(renderer.raw, &r, &g, &b, &a);
-				return fae::color(r, g, b, a);
+				auto clear_color = colors::black;
+				resources.use_resource<sdl_renderer>([&](sdl_renderer &renderer)
+													 {
+					std::uint8_t r{}, g{}, b{}, a{};
+					SDL_GetRenderDrawColor(renderer.raw, &r, &g, &b, &a);
+					clear_color = color{r, g, b, a}; });
+				return clear_color;
 			},
-			.set_clear_color = [&](fae::color value)
-			{ SDL_SetRenderDrawColor(renderer.raw, value.r, value.g, value.b, value.a); },
+			.set_clear_color = [&](color value)
+			{ resources.use_resource<sdl_renderer>([&](sdl_renderer &renderer)
+												   { SDL_SetRenderDrawColor(renderer.raw, value.r, value.g, value.b, value.a); }); },
 			.clear = [&]()
-			{ SDL_RenderClear(renderer.raw); },
+			{ resources.use_resource<sdl_renderer>([&](sdl_renderer &renderer)
+												   { SDL_RenderClear(renderer.raw); }); },
 			.begin = [&]()
 			{
 				// do nothing
 			},
 			.end = [&]()
-			{ SDL_RenderPresent(renderer.raw); },
+			{ resources.use_resource<sdl_renderer>([&](sdl_renderer &renderer)
+												   { SDL_RenderPresent(renderer.raw); }); },
+		};
+	}
+
+	[[nodiscard]] auto make_webgpu_renderer(resource_manager &resources) noexcept -> renderer
+	{
+		return renderer{
+			.get_clear_color = [&]()
+			{
+				auto clear_color = colors::black;
+				resources.use_resource<fae::webgpu>([&](webgpu &webgpu)
+													{
+														clear_color = color{
+															.r = static_cast<std::uint8_t>(webgpu.clear_color.r * 255.0f),
+															.g = static_cast<std::uint8_t>(webgpu.clear_color.g * 255.0f),
+															.b = static_cast<std::uint8_t>(webgpu.clear_color.b * 255.0f),
+															.a = static_cast<std::uint8_t>(webgpu.clear_color.a * 255.0f),
+														}; });
+				return clear_color; },
+			.set_clear_color = [&](color value)
+			{ resources.use_resource<fae::webgpu>([&](webgpu &webgpu)
+												  { webgpu.clear_color = WGPUColor{
+														.r = value.r / 255.0f,
+														.g = value.g / 255.0f,
+														.b = value.b / 255.0f,
+														.a = value.a / 255.0f,
+													}; }); },
+			.clear = [&]()
+			{
+				// TODO
+			},
+			.begin = [&]()
+			{ resources.use_resource<fae::webgpu>([&](webgpu &webgpu)
+												  {
+				auto command_encoder_desc = WGPUCommandEncoderDescriptor{};
+				auto command_encoder = wgpuDeviceCreateCommandEncoder(webgpu.device, &command_encoder_desc);
+				auto color_attachment = WGPURenderPassColorAttachment
+				{
+					.view =  wgpuSwapChainGetCurrentTextureView(webgpu.swapchain),
+                    .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+                    .resolveTarget = nullptr,
+                    .loadOp = WGPULoadOp_Clear,
+                    .storeOp = WGPUStoreOp_Store,
+                    .clearValue = webgpu.clear_color,
+                };
+                auto render_pass_desc = WGPURenderPassDescriptor
+                {
+                    .colorAttachmentCount = 1,
+                    .colorAttachments = &color_attachment,
+                    .depthStencilAttachment = nullptr,
+                };
+                auto render_pass = wgpuCommandEncoderBeginRenderPass(command_encoder, &render_pass_desc);
+                wgpuRenderPassEncoderSetPipeline(render_pass, webgpu.render_pipeline);
+                wgpuRenderPassEncoderDraw(render_pass, 3, 1, 0, 0);
+				webgpu.current_render.render_pass = render_pass;
+				webgpu.current_render.command_encoder = command_encoder; }); },
+			.end = [&]()
+			{ resources.use_resource<fae::webgpu>([&](webgpu &webgpu)
+												  {
+				wgpuRenderPassEncoderEnd(webgpu.current_render.render_pass);
+                auto command_buffer_desc = WGPUCommandBufferDescriptor{};
+                auto command_buffer = wgpuCommandEncoderFinish(webgpu.current_render.command_encoder, &command_buffer_desc);
+                auto queue = wgpuDeviceGetQueue(webgpu.device);
+                wgpuQueueSubmit(queue, 1, &command_buffer);
+                wgpuSwapChainPresent(webgpu.swapchain);
+                wgpuInstanceProcessEvents(webgpu.instance); }); },
 		};
 	}
 
@@ -114,7 +184,6 @@ export namespace fae
 
 		struct webgpu_renderer_config
 		{
-			// TODO
 		};
 
 		std::variant<
@@ -176,29 +245,22 @@ export namespace fae
 						fae::log_error(std::format("could not create renderer: {}", SDL_GetError()));
 						return;
 					}
-					auto &sdl_renderer = app.resources.emplace_and_get<fae::sdl_renderer>(fae::sdl_renderer{
+					app.resources.emplace<sdl_renderer>(sdl_renderer{
 						.raw = maybe_renderer,
 					});
-					app.emplace_resource<fae::renderer>(renderer_from(sdl_renderer));
+					app.emplace_resource<renderer>(make_sdl_renderer(app.resources));
 				},
 				[&](webgpu_renderer_config config)
 				{
 					app.add_plugin(webgpu_plugin{});
-
-					auto maybe_primary = app.resources.get<primary_window>();
-					if (!maybe_primary)
+					const auto maybe_webgpu_renderer = app.resources.get<webgpu>();
+					if (!maybe_webgpu_renderer)
 					{
-						fae::log_error("no primary window found");
+						fae::log_error("webgpu renderer not found");
 						return;
 					}
-					auto &primary = *maybe_primary;
-					auto maybe_sdl_window = primary.window_entity.get_component<fae::sdl_window>();
-					if (!maybe_sdl_window)
-					{
-						fae::log_error("primary window is not an sdl_window");
-						return;
-					}
-					auto &sdl_window = *maybe_sdl_window;
+					auto webgpu_renderer = *maybe_webgpu_renderer;
+					app.emplace_resource<renderer>(make_webgpu_renderer(app.resources));
 				},
 				[&]([[maybe_unused]] auto other)
 				{

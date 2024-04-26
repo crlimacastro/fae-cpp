@@ -38,14 +38,16 @@ CPMAddPackage(
 			"SDL_STATIC ON"
 		endif()
 )
-CPMAddPackage(
-  NAME dawn
-  GIT_REPOSITORY https://dawn.googlesource.com/dawn
-  GIT_TAG chromium/6433
-  OPTIONS
-	"DAWN_FETCH_DEPENDENCIES ON"
-	"EXCLUDE_FROM_ALL ON"
+if(NOT EMSCRIPTEN)
+	CPMAddPackage(
+		NAME dawn
+  		GIT_REPOSITORY https://dawn.googlesource.com/dawn
+  		GIT_TAG chromium/6433
+  		OPTIONS
+			"DAWN_FETCH_DEPENDENCIES ON"
+			"EXCLUDE_FROM_ALL ON"
 )
+endif()
 
 # configure
 configure_file(config.cpp.in src/config.cpp)
@@ -102,12 +104,19 @@ target_sources(${PROJECT_NAME}
 	PRIVATE
 )	
 
-target_link_libraries(${PROJECT_NAME}
-	PUBLIC
-		EnTT::EnTT
-		SDL3::SDL3
+set(FAE_PUBLIC_LIBRARIES
+	EnTT::EnTT
+	SDL3::SDL3
+)
+if (NOT EMSCRIPTEN)
+	list(APPEND FAE_PUBLIC_LIBRARIES
 		webgpu_cpp
 		webgpu_dawn
+	)
+endif()
+target_link_libraries(${PROJECT_NAME}
+	PUBLIC
+		${FAE_PUBLIC_LIBRARIES}
 	PRIVATE
 )
 

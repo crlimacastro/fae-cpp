@@ -1,5 +1,4 @@
 module;
-#include <memory>
 #include <unordered_map>
 #include <format>
 #include <SDL3/SDL.h>
@@ -13,63 +12,63 @@ export namespace fae
 {
 	struct sdl_input
 	{
-		void press_key(const SDL_Keycode key) noexcept
+		auto press_key(const SDL_Keycode key) noexcept -> void
 		{
 			m_is_key_pressed[key] = true;
 		}
 
-		void press_key(const SDL_Scancode key) noexcept
+		auto press_key(const SDL_Scancode key) noexcept -> void
 		{
 			press_key(SDL_SCANCODE_TO_KEYCODE(key));
 		}
 
-		void release_key(const SDL_Keycode key) noexcept
+		auto release_key(const SDL_Keycode key) noexcept -> void
 		{
 			m_is_key_pressed[key] = false;
 		}
 
-		void release_key(const SDL_Scancode key) noexcept
+		auto release_key(const SDL_Scancode key) noexcept -> void
 		{
 			release_key(SDL_SCANCODE_TO_KEYCODE(key));
 		}
 
-		auto is_key_pressed(const SDL_Keycode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_pressed(const SDL_Keycode key) const noexcept -> bool
 		{
 			const auto it = m_is_key_pressed.find(key);
 			return (it != m_is_key_pressed.end()) ? it->second : false;
 		}
 
-		auto is_key_pressed(const SDL_Scancode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_pressed(const SDL_Scancode key) const noexcept -> bool
 		{
 			return is_key_pressed(SDL_SCANCODE_TO_KEYCODE(key));
 		}
 
-		auto is_key_released(const SDL_Keycode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_released(const SDL_Keycode key) const noexcept -> bool
 		{
 			return !is_key_pressed(key);
 		}
 
-		auto is_key_released(const SDL_Scancode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_released(const SDL_Scancode key) const noexcept -> bool
 		{
 			return !is_key_pressed(key);
 		}
 
-		auto is_key_just_pressed(const SDL_Keycode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_just_pressed(const SDL_Keycode key) const noexcept -> bool
 		{
 			return is_key_pressed(key) && !was_key_pressed(key);
 		}
 
-		auto is_key_just_pressed(const SDL_Scancode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_just_pressed(const SDL_Scancode key) const noexcept -> bool
 		{
 			return is_key_pressed(key) && !was_key_pressed(key);
 		}
 
-		auto is_key_just_released(const SDL_Keycode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_just_released(const SDL_Keycode key) const noexcept -> bool
 		{
 			return !is_key_pressed(key) && was_key_pressed(key);
 		}
 
-		auto is_key_just_released(const SDL_Scancode key) const noexcept -> bool
+		[[nodiscard]] auto is_key_just_released(const SDL_Scancode key) const noexcept -> bool
 		{
 			return !is_key_pressed(key) && was_key_pressed(key);
 		}
@@ -80,18 +79,19 @@ export namespace fae
 		}
 
 	private:
-		auto was_key_pressed(const SDL_Keycode key) const -> bool
+		[[nodiscard]] auto was_key_pressed(const SDL_Keycode key) const noexcept -> bool
 		{
 			const auto it = m_was_key_pressed.find(key);
 			return (it != m_was_key_pressed.end()) ? it->second : false;
 		}
 
-		auto was_key_pressed(const SDL_Scancode key) const -> bool
+		[[nodiscard]] auto was_key_pressed(const SDL_Scancode key) const noexcept -> bool
 		{
 			const auto it = m_was_key_pressed.find(SDL_SCANCODE_TO_KEYCODE(key));
 			return (it != m_was_key_pressed.end()) ? it->second : false;
 		}
 
+		// TODO change to bitset, it is faster
 		std::unordered_map<SDL_Keycode, bool> m_is_key_pressed{};
 		std::unordered_map<SDL_Keycode, bool> m_was_key_pressed{};
 	};
@@ -107,16 +107,11 @@ export namespace fae
 		SDL_Renderer *raw;
 	};
 
-	struct sdl_settings
-	{
-		bool should_quit_app_on_sdl_quit = true;
-	};
-
 	auto update_sdl(const update_step &step) noexcept -> void
 	{
-		step.commands.resources.use_resource<sdl_input>([&](sdl_input &input)
+		step.resources.use_resource<sdl_input>([&](sdl_input &input)
 														{ input.udpate(); });
-
+		
 		SDL_Event event;
 		while (SDL_PollEvent(&event) != 0)
 		{
@@ -124,68 +119,98 @@ export namespace fae
 			{
 			case SDL_EVENT_QUIT:
 			{
-				step.commands.resources.use_resource<sdl_settings>([&](sdl_settings &settings)
-																   {
-					if (settings.should_quit_app_on_sdl_quit)
-					{
-						step.commands.scheduler.invoke(application_quit{});
-					} });
+				step.scheduler.invoke(application_quit{});
 				break;
 			}
 			case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
 			{
-				auto window = SDL_GetWindowFromID(event.window.windowID);
-				SDL_DestroyWindow(window);
+				auto *window = SDL_GetWindowFromID(event.window.windowID);
+				for (auto [entity, sdl_window] : step.ecs_world.query<sdl_window>())
+				{
+					if (sdl_window.raw == window)
+					{
+						sdl_window.should_close = true;
+						break;
+					}
+				}
 				break;
 			}
 			case SDL_EVENT_KEY_DOWN:
 			{
-				step.commands.resources.use_resource<sdl_input>([&](sdl_input &input)
+				step.resources.use_resource<sdl_input>([&](sdl_input &input)
 																{ input.press_key(event.key.keysym.sym); });
 				break;
 			}
 			case SDL_EVENT_KEY_UP:
 			{
-				step.commands.resources.use_resource<sdl_input>([&](sdl_input &input)
+				step.resources.use_resource<sdl_input>([&](sdl_input &input)
 																{ input.release_key(event.key.keysym.sym); });
 				break;
 			}
 			}
 		}
+
+		for (auto [entity, sdl_window] : step.ecs_world.query<sdl_window>())
+		{
+			if (sdl_window.should_close)
+			{
+				SDL_DestroyWindow(sdl_window.raw);
+				entity.destroy();
+			}
+		}
 	}
 	auto deinit_sdl(const deinit_step &step) noexcept -> void
 	{
-		step.commands.resources.use_resource<sdl_renderer>([&](const sdl_renderer &renderer)
-														   { SDL_DestroyRenderer(renderer.raw); });
-		step.commands.resources.use_resource<sdl_window>([&](const sdl_window &window)
-														 { SDL_DestroyWindow(window.raw); });
 		SDL_Quit();
 	}
 
 	struct sdl_plugin
 	{
-		bool init_video = true;
+		bool init_timer = true;
 		bool init_audio = true;
-		sdl_settings sdl_settings{};
+		bool init_video = true;
+		bool init_haptic = false;
+		bool init_gamepad = false;
+		bool init_sensor = false;
+		bool init_camera = false;
 
 		auto init(application &app) const noexcept -> void
 		{
-			Uint32 flags = 0;
-			if (init_video)
+			Uint32 flags = SDL_INIT_EVENTS;
+			if (init_timer)
 			{
-				flags |= SDL_INIT_VIDEO;
+				flags |= SDL_INIT_TIMER;
 			}
 			if (init_audio)
 			{
 				flags |= SDL_INIT_AUDIO;
 			}
+			if (init_video)
+			{
+				flags |= SDL_INIT_VIDEO;
+			}
+			if (init_haptic)
+			{
+				flags |= SDL_INIT_HAPTIC;
+			}
+			if (init_gamepad)
+			{
+				flags |= SDL_INIT_GAMEPAD;
+			}
+			if (init_sensor)
+			{
+				flags |= SDL_INIT_SENSOR;
+			}
+			if (init_camera)
+			{
+				flags |= SDL_INIT_CAMERA;
+			}
 			if (const auto error_code = SDL_Init(flags))
 			{
-				fae::log_error(std::format("could not initialize SDL: {}-{}", error_code, SDL_GetError()));
+				fae::log_error(std::format("could not initialize SDL: error code {}: error message: {}", error_code, SDL_GetError()));
 				return;
 			}
 			app
-				.emplace_resource<fae::sdl_settings>(sdl_settings)
 				.add_system<update_step>(update_sdl)
 				.add_system<deinit_step>(deinit_sdl);
 		}

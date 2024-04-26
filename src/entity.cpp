@@ -51,5 +51,32 @@ export namespace fae
             [[maybe_unused]] auto maybe_component = set_and_get_component<t_component>(std::forward<t_component &&>(value));
             return *this;
         }
+
+        template <typename t_component>
+        [[maybe_unused]] inline constexpr auto use_component(std::function<void(t_component &)> callback) noexcept -> entity &
+        {
+            auto maybe_component = get_component<t_component>();
+            if (maybe_component)
+            {
+                callback(*maybe_component);
+            }
+            return *this;
+        }
+
+        template <typename t_component>
+        [[maybe_unused]] inline constexpr auto use_component(std::function<void(const t_component &)> callback) const noexcept -> const entity &
+        {
+            const auto maybe_component = get_component<const t_component>();
+            if (maybe_component)
+            {
+                callback(*maybe_component);
+            }
+            return *this;
+        }
+
+        inline constexpr auto destroy() noexcept -> void
+        {
+            registry.destroy(id);
+        }
     };
 }
