@@ -1,10 +1,10 @@
 module;
-#include <string>
+#include <chrono>
 #include <format>
 #include <print>
-#include <chrono>
 #include <source_location>
 #include <stacktrace>
+#include <string>
 
 export module fae:logging;
 
@@ -116,7 +116,7 @@ export namespace fae
 		log(msg, debug_options);
 	}
 
-		template <typename t_log_arg>
+	template <typename t_log_arg>
 	auto log_info(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
 		auto info_options = options;
@@ -147,4 +147,4 @@ export namespace fae
 		error_options.level = log_level::fatal;
 		log(msg, error_options);
 	}
-}
+} // namespace fae

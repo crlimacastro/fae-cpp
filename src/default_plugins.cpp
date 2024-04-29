@@ -23,4 +23,4 @@ export namespace fae
 				.add_plugin(rendering_plugin);
 		}
 	};
-}
+} // namespace fae

@@ -1,6 +1,6 @@
 module;
-#include <functional>
 #include <SDL3/SDL.h>
+#include <functional>
 
 export module fae:input;
 
@@ -294,7 +294,7 @@ export namespace fae
 	auto quit_on_esc(const update_step &step) noexcept -> void
 	{
 		step.resources.use_resource<input>([&](input &input)
-													{
+			{
 			if (input.is_key_just_pressed(key::escape))
 			{
 				step.scheduler.invoke(application_quit{});
@@ -304,7 +304,7 @@ export namespace fae
 	auto toggle_fullscreen_on_alt_enter(const update_step &step) noexcept -> void
 	{
 		step.resources.use_resource<input>([&](input &input)
-													{
+			{
 			if (input.is_key_pressed(key::lalt) && input.is_key_just_pressed(key::enter))
 			{
 				step.resources.use_resource<fae::primary_window>([&](fae::primary_window& primary)
@@ -843,4 +843,4 @@ export namespace fae
 				.add_system<update_step>(toggle_fullscreen_on_alt_enter);
 		}
 	};
-}
+} // namespace fae

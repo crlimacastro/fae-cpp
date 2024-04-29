@@ -1,6 +1,6 @@
 module;
-#include <optional>
 #include <functional>
+#include <optional>
 #include <variant>
 
 export module fae:core;
@@ -89,4 +89,4 @@ export namespace fae
 	{
 		return std::visit(match_arms{std::forward<tarms>(arms)...}, variant);
 	}
-}
+} // namespace fae

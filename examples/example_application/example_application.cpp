@@ -1,7 +1,8 @@
 module;
 #include <SDL3/SDL.h>
-#include <type_traits>
+
 #include <format>
+#include <type_traits>
 
 export module example_application;
 
@@ -10,23 +11,25 @@ import fae;
 auto start(const fae::start_step &step) noexcept -> void
 {
 	auto renderer = step.resources.use_resource<fae::renderer>([](fae::renderer &renderer)
-															   { renderer.set_clear_color(fae::colors::cornflower_blue); });
+		{ renderer.set_clear_color(fae::colors::cornflower_blue); });
 }
 
 auto hue_shift_clear_color(const fae::update_step &step) noexcept -> void
 {
-	auto renderer = step.resources.use_resource<fae::renderer>([](fae::renderer &renderer)
-															   {
-																			const auto speed = 0.0000001f;
-																			auto clear_color_hsva = fae::color_hsva::from_rgba(renderer.get_clear_color());
-																			clear_color_hsva.h = static_cast<int>((clear_color_hsva.h + speed)) % 360;
-																			auto new_clear_color = clear_color_hsva.to_rgba();
-																			renderer.set_clear_color(new_clear_color); });
+	auto renderer = step.resources.use_resource<fae::renderer>(
+		[](fae::renderer &renderer)
+		{
+			const auto speed = 0.0000001f;
+			auto clear_color_hsva =
+				fae::color_hsva::from_rgba(renderer.get_clear_color());
+			clear_color_hsva.h =
+				static_cast<int>((clear_color_hsva.h + speed)) % 360;
+			auto new_clear_color = clear_color_hsva.to_rgba();
+			renderer.set_clear_color(new_clear_color);
+		});
 }
 
-auto update(const fae::update_step &step) noexcept -> void
-{
-}
+auto update(const fae::update_step &step) noexcept -> void {}
 
 auto fae_main(int argc, char *argv[]) -> int
 {

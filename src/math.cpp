@@ -26,4 +26,4 @@ export namespace fae
 	{
 		using namespace glm;
 	}
-}
+} // namespace fae

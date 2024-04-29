@@ -1,7 +1,7 @@
 module;
-#include <unordered_map>
-#include <format>
 #include <SDL3/SDL.h>
+#include <format>
+#include <unordered_map>
 
 export module fae:sdl;
 
@@ -110,8 +110,8 @@ export namespace fae
 	auto update_sdl(const update_step &step) noexcept -> void
 	{
 		step.resources.use_resource<sdl_input>([&](sdl_input &input)
-														{ input.udpate(); });
-		
+			{ input.udpate(); });
+
 		SDL_Event event;
 		while (SDL_PollEvent(&event) != 0)
 		{
@@ -138,13 +138,13 @@ export namespace fae
 			case SDL_EVENT_KEY_DOWN:
 			{
 				step.resources.use_resource<sdl_input>([&](sdl_input &input)
-																{ input.press_key(event.key.keysym.sym); });
+					{ input.press_key(event.key.keysym.sym); });
 				break;
 			}
 			case SDL_EVENT_KEY_UP:
 			{
 				step.resources.use_resource<sdl_input>([&](sdl_input &input)
-																{ input.release_key(event.key.keysym.sym); });
+					{ input.release_key(event.key.keysym.sym); });
 				break;
 			}
 			}
@@ -215,4 +215,4 @@ export namespace fae
 				.add_system<deinit_step>(deinit_sdl);
 		}
 	};
-}
+} // namespace fae
