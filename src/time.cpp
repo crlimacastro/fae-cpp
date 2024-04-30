@@ -53,6 +53,16 @@ export namespace fae
 			return duration{nanosecs + rhs.nanosecs};
 		}
 
+		inline constexpr auto operator*(float scalar) const noexcept -> duration
+		{
+			return duration{std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() * scalar)}};
+		}
+
+		inline constexpr auto operator/(float scalar) const noexcept -> duration
+		{
+			return duration{std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() / scalar)}};
+		}
+
 		inline constexpr auto operator-(const duration &rhs) const noexcept -> duration
 		{
 			return duration{nanosecs - rhs.nanosecs};
@@ -67,6 +77,18 @@ export namespace fae
 		inline constexpr auto operator-=(const duration &rhs) noexcept -> duration &
 		{
 			nanosecs -= rhs.nanosecs;
+			return *this;
+		}
+
+		inline constexpr auto operator*=(float scalar) noexcept -> duration &
+		{
+			nanosecs = std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() * scalar)};
+			return *this;
+		}
+
+		inline constexpr auto operator/=(float scalar) noexcept -> duration &
+		{
+			nanosecs = std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() / scalar)};
 			return *this;
 		}
 
@@ -106,12 +128,23 @@ export namespace fae
 
 	struct time
 	{
-		duration delta{};
-		duration elapsed{};
+		duration unscaled_delta{};
+		duration unscaled_elapsed{};
+		float scale = 1.f;
+
+		inline constexpr auto delta() const noexcept -> duration
+		{
+			return unscaled_delta * scale;
+		}
+
+		inline constexpr auto elapsed() const noexcept -> duration
+		{
+			return unscaled_elapsed * scale;
+		}
 
 		inline constexpr auto fps() const noexcept -> float
 		{
-			auto dt = delta.seconds_f32();
+			auto dt = unscaled_delta.seconds_f32();
 			if (dt == 0.f)
 			{
 				return std::numeric_limits<float>::infinity();
@@ -127,8 +160,8 @@ export namespace fae
 			{
 				static auto last_time = std::chrono::high_resolution_clock::now();
 				auto current_time = std::chrono::high_resolution_clock::now();
-				time.delta = current_time - last_time;
-				time.elapsed += time.delta;
+				time.unscaled_delta = current_time - last_time;
+				time.unscaled_elapsed += time.unscaled_delta;
 				last_time = current_time;
 			});
 	}

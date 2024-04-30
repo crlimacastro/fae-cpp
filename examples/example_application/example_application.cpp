@@ -10,20 +10,22 @@ import fae;
 
 auto start(const fae::start_step &step) noexcept -> void
 {
-	step.resources.use_resource<fae::renderer>([](fae::renderer &renderer)
+	step.resources.use_resource<fae::renderer>([&](fae::renderer &renderer)
 		{ renderer.set_clear_color(fae::colors::cornflower_blue); });
 }
 
 auto hue_shift_clear_color(const fae::update_step &step) noexcept -> void
 {
+	auto &time = step.resources.get_or_emplace<fae::time>(fae::time{});
 	step.resources.use_resource<fae::renderer>(
-		[](fae::renderer &renderer)
+		[&](fae::renderer &renderer)
 		{
-			const auto speed = 1.5f;
+			const auto speed = 200.f;
+			const auto delta_h = speed * time.delta().seconds_f32();
 			auto clear_color_hsva =
 				fae::color_hsva::from_rgba(renderer.get_clear_color());
 			clear_color_hsva.h =
-				static_cast<int>((clear_color_hsva.h + speed)) % 360;
+				static_cast<int>((clear_color_hsva.h + delta_h)) % 360;
 			auto new_clear_color = clear_color_hsva.to_rgba();
 			renderer.set_clear_color(new_clear_color);
 		});

@@ -87,32 +87,6 @@ export namespace fae
 
 		template <typename t_resource>
 		[[nodiscard]] inline constexpr auto
-		get_or_default(t_resource &default_resource = {}) noexcept
-			-> t_resource &
-		{
-			auto maybe_resource = get<t_resource>();
-			if (!maybe_resource)
-			{
-				return default_resource;
-			}
-			return *maybe_resource;
-		}
-
-		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto
-		get_or_default(const t_resource &default_resource = {}) const noexcept
-			-> const t_resource &
-		{
-			const auto maybe_resource = get<const t_resource>();
-			if (!maybe_resource)
-			{
-				return default_resource;
-			}
-			return *maybe_resource;
-		}
-
-		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto
 		get_or_insert(t_resource &&default_resource = {}) noexcept
 			-> t_resource &
 		{
