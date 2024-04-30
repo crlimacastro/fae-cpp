@@ -17,6 +17,7 @@ export import :application;
 export import :sdl;
 export import :webgpu;
 
+export import :time;
 export import :windowing;
 export import :input;
 export import :rendering;

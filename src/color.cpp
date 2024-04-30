@@ -23,46 +23,49 @@ export namespace fae
 		float v = 0.f;
 		std::uint8_t a = 255;
 
-		// TODO fix
 		static inline constexpr auto from_rgba(const color_rgba &color) noexcept
 			-> color_hsva
 		{
-			float fc_max = std::max(std::max(color.r, color.g), color.b);
-			float fc_min = std::min(std::min(color.r, color.g), color.b);
-			float f_delta = fc_max - fc_min;
+			float r_norm = color.r / 255.f;
+			float g_norm = color.g / 255.f;
+			float b_norm = color.b / 255.f;
+
+			float max = std::max(std::max(r_norm, g_norm), b_norm);
+			float min = std::min(std::min(r_norm, g_norm), b_norm);
+			float delta = max - min;
 
 			float h = 0.f, s = 0.f, v = 0.f;
-			if (f_delta > 0)
+			if (delta > 0)
 			{
-				if (fc_max == color.r)
+				if (max == r_norm)
 				{
-					h = 60 * (std::fmod(((color.g - color.b) / f_delta), 6));
+					h = 60 * (std::fmod(((g_norm - b_norm) / delta), 6));
 				}
-				else if (fc_max == color.g)
+				else if (max == g_norm)
 				{
-					h = 60 * (((color.b - color.r) / f_delta) + 2);
+					h = 60 * (((b_norm - r_norm) / delta) + 2);
 				}
-				else if (fc_max == color.b)
+				else if (max == b_norm)
 				{
-					h = 60 * (((color.r - color.g) / f_delta) + 4);
+					h = 60 * (((r_norm - g_norm) / delta) + 4);
 				}
 
-				if (fc_max > 0)
+				if (max > 0)
 				{
-					s = f_delta / fc_max;
+					s = delta / max;
 				}
 				else
 				{
 					s = 0;
 				}
 
-				v = fc_max;
+				v = max;
 			}
 			else
 			{
 				h = 0;
 				s = 0;
-				v = fc_max;
+				v = max;
 			}
 
 			if (h < 0)
@@ -73,7 +76,6 @@ export namespace fae
 			return color_hsva{.h = h, .s = s, .v = v, .a = color.a};
 		}
 
-		// TODO fix
 		inline constexpr auto to_rgba() const noexcept -> color_rgba
 		{
 			float fc = v * s;
@@ -139,11 +141,11 @@ export namespace fae
 
 	namespace colors
 	{
-		constexpr auto black = color{0, 0, 0, 255};
-		constexpr auto white = color{255, 255, 255, 255};
-		constexpr auto red = color{255, 0, 0, 255};
-		constexpr auto green = color{0, 255, 0, 255};
-		constexpr auto blue = color{0, 0, 255, 255};
-		constexpr auto cornflower_blue = color{100, 149, 237, 255};
+		constexpr auto black = color{0, 0, 0};
+		constexpr auto white = color{255, 255, 255};
+		constexpr auto red = color{255, 0, 0};
+		constexpr auto green = color{0, 255, 0};
+		constexpr auto blue = color{0, 0, 255};
+		constexpr auto cornflower_blue = color{100, 149, 237};
 	} // namespace colors
 } // namespace fae
