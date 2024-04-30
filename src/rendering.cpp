@@ -75,6 +75,7 @@ export namespace fae
 		step.resources.erase<fae::renderer>();
 	}
 
+	/* incomplete/deprecated for now */
 	[[nodiscard]] auto make_sdl_renderer(resource_manager &resources) noexcept
 		-> renderer
 	{
@@ -172,13 +173,13 @@ export namespace fae
 				resources.use_resource<fae::webgpu>(
 					[&](webgpu &webgpu)
 					{
+						webgpu.current_render.vertex_data.clear();
+						webgpu.current_render.index_data.clear();
+
 						wgpu::SurfaceTexture surface_texture;
 						webgpu.surface.GetCurrentTexture(&surface_texture);
 						auto surface_texture_view = surface_texture.texture.CreateView();
-
-						auto command_encoder_desc =
-							wgpu::CommandEncoderDescriptor{};
-						auto command_encoder = webgpu.device.CreateCommandEncoder(&command_encoder_desc);
+						auto command_encoder = webgpu.device.CreateCommandEncoder();
 						auto color_attachment = wgpu::RenderPassColorAttachment{
 							.view = surface_texture_view,
 							.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
@@ -194,7 +195,6 @@ export namespace fae
 						};
 						auto render_pass = command_encoder.BeginRenderPass(&render_pass_desc);
 						render_pass.SetPipeline(webgpu.render_pipeline);
-						render_pass.Draw(3, 1, 0, 0);
 						webgpu.current_render.render_pass = render_pass;
 						webgpu.current_render.command_encoder = command_encoder;
 					});
@@ -205,6 +205,15 @@ export namespace fae
 				resources.use_resource<fae::webgpu>(
 					[&](webgpu &webgpu)
 					{
+						const auto vertex_buffer = create_buffer_with_data(
+							webgpu.device, "vertex_buffer", webgpu.current_render.vertex_data.data(), sizeof_vector_data(webgpu.current_render.vertex_data),
+							wgpu::BufferUsage::Vertex);
+						webgpu.current_render.render_pass.SetVertexBuffer(0, vertex_buffer);
+						const auto index_buffer = create_buffer_with_data(
+							webgpu.device, "index_buffer", webgpu.current_render.index_data.data(), sizeof_vector_data(webgpu.current_render.index_data),
+							wgpu::BufferUsage::Index);
+						webgpu.current_render.render_pass.SetIndexBuffer(index_buffer, wgpu::IndexFormat::Uint32);
+						webgpu.current_render.render_pass.DrawIndexed(webgpu.current_render.index_data.size());
 						webgpu.current_render.render_pass.End();
 						auto command_buffer = webgpu.current_render.command_encoder.Finish();
 						auto queue = webgpu.device.GetQueue();

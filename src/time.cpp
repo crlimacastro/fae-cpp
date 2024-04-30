@@ -23,101 +23,101 @@ export namespace fae
 		constexpr duration(const std::chrono::nanoseconds &nanosecs) : nanosecs(nanosecs) {}
 
 		/* in seconds */
-		inline constexpr operator float() const noexcept
+		[[nodiscard]] inline constexpr operator float() const noexcept
 		{
 			return nanosecs.count() * nanoseconds_to_seconds;
 		}
 
-		inline constexpr auto nanoseconds() const noexcept -> std::chrono::nanoseconds
+		[[nodiscard]] inline constexpr auto nanoseconds() const noexcept -> std::chrono::nanoseconds
 		{
 			return nanosecs;
 		}
 
-		inline constexpr auto milliseconds() const noexcept -> std::chrono::milliseconds
+		[[nodiscard]] inline constexpr auto milliseconds() const noexcept -> std::chrono::milliseconds
 		{
 			return std::chrono::duration_cast<std::chrono::milliseconds>(nanosecs);
 		}
 
-		inline constexpr auto seconds() const noexcept -> std::chrono::seconds
+		[[nodiscard]] inline constexpr auto seconds() const noexcept -> std::chrono::seconds
 		{
 			return std::chrono::duration_cast<std::chrono::seconds>(nanosecs);
 		}
 
-		inline constexpr auto seconds_f32() const noexcept -> float
+		[[nodiscard]] inline constexpr auto seconds_f32() const noexcept -> float
 		{
 			return nanosecs.count() * nanoseconds_to_seconds;
 		}
 
-		inline constexpr auto operator+(const duration &rhs) const noexcept -> duration
+		[[nodiscard]] inline constexpr auto operator+(const duration &rhs) const noexcept -> duration
 		{
 			return duration{nanosecs + rhs.nanosecs};
 		}
 
-		inline constexpr auto operator*(float scalar) const noexcept -> duration
+		[[nodiscard]] inline constexpr auto operator*(float scalar) const noexcept -> duration
 		{
 			return duration{std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() * scalar)}};
 		}
 
-		inline constexpr auto operator/(float scalar) const noexcept -> duration
+		[[nodiscard]] inline constexpr auto operator/(float scalar) const noexcept -> duration
 		{
 			return duration{std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() / scalar)}};
 		}
 
-		inline constexpr auto operator-(const duration &rhs) const noexcept -> duration
+		[[nodiscard]] inline constexpr auto operator-(const duration &rhs) const noexcept -> duration
 		{
 			return duration{nanosecs - rhs.nanosecs};
 		}
 
-		inline constexpr auto operator+=(const duration &rhs) noexcept -> duration &
+		[[maybe_unused]] inline constexpr auto operator+=(const duration &rhs) noexcept -> duration &
 		{
 			nanosecs += rhs.nanosecs;
 			return *this;
 		}
 
-		inline constexpr auto operator-=(const duration &rhs) noexcept -> duration &
+		[[maybe_unused]] inline constexpr auto operator-=(const duration &rhs) noexcept -> duration &
 		{
 			nanosecs -= rhs.nanosecs;
 			return *this;
 		}
 
-		inline constexpr auto operator*=(float scalar) noexcept -> duration &
+		[[maybe_unused]] inline constexpr auto operator*=(float scalar) noexcept -> duration &
 		{
 			nanosecs = std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() * scalar)};
 			return *this;
 		}
 
-		inline constexpr auto operator/=(float scalar) noexcept -> duration &
+		[[maybe_unused]] inline constexpr auto operator/=(float scalar) noexcept -> duration &
 		{
 			nanosecs = std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() / scalar)};
 			return *this;
 		}
 
-		inline constexpr auto operator==(const duration &rhs) const noexcept -> bool
+		[[nodiscard]] inline constexpr auto operator==(const duration &rhs) const noexcept -> bool
 		{
 			return nanosecs == rhs.nanosecs;
 		}
 
-		inline constexpr auto operator!=(const duration &rhs) const noexcept -> bool
+		[[nodiscard]] inline constexpr auto operator!=(const duration &rhs) const noexcept -> bool
 		{
 			return nanosecs != rhs.nanosecs;
 		}
 
-		inline constexpr auto operator<(const duration &rhs) const noexcept -> bool
+		[[nodiscard]] inline constexpr auto operator<(const duration &rhs) const noexcept -> bool
 		{
 			return nanosecs < rhs.nanosecs;
 		}
 
-		inline constexpr auto operator<=(const duration &rhs) const noexcept -> bool
+		[[nodiscard]] inline constexpr auto operator<=(const duration &rhs) const noexcept -> bool
 		{
 			return nanosecs <= rhs.nanosecs;
 		}
 
-		inline constexpr auto operator>(const duration &rhs) const noexcept -> bool
+		[[nodiscard]] inline constexpr auto operator>(const duration &rhs) const noexcept -> bool
 		{
 			return nanosecs > rhs.nanosecs;
 		}
 
-		inline constexpr auto operator>=(const duration &rhs) const noexcept -> bool
+		[[nodiscard]] inline constexpr auto operator>=(const duration &rhs) const noexcept -> bool
 		{
 			return nanosecs >= rhs.nanosecs;
 		}
@@ -132,17 +132,17 @@ export namespace fae
 		duration unscaled_elapsed{};
 		float scale = 1.f;
 
-		inline constexpr auto delta() const noexcept -> duration
+		[[nodiscard]] inline constexpr auto delta() const noexcept -> duration
 		{
 			return unscaled_delta * scale;
 		}
 
-		inline constexpr auto elapsed() const noexcept -> duration
+		[[nodiscard]] inline constexpr auto elapsed() const noexcept -> duration
 		{
 			return unscaled_elapsed * scale;
 		}
 
-		inline constexpr auto fps() const noexcept -> float
+		[[nodiscard]] inline constexpr auto fps() const noexcept -> float
 		{
 			auto dt = unscaled_delta.seconds_f32();
 			if (dt == 0.f)

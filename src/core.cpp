@@ -1,7 +1,9 @@
 module;
+#include <cstdint>
 #include <functional>
 #include <optional>
 #include <variant>
+#include <vector>
 
 export module fae:core;
 
@@ -88,5 +90,11 @@ export namespace fae
 	auto match(std::variant<ts...> variant, tarms &&...arms)
 	{
 		return std::visit(match_arms{std::forward<tarms>(arms)...}, variant);
+	}
+
+	template <typename t, typename t_alloc>
+	[[nodiscard]] inline constexpr auto sizeof_vector_data(const std::vector<t, t_alloc> &v) -> std::size_t
+	{
+		return v.size() * sizeof(typename std::vector<t, t_alloc>::value_type);
 	}
 } // namespace fae
