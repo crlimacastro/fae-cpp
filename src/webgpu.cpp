@@ -377,55 +377,66 @@ export namespace fae
 		log_limits(device);
 	}
 
-	[[nodiscard]] auto to_string(WGPUErrorType value) noexcept -> std::string
+	[[nodiscard]] auto to_string(wgpu::ErrorType value) noexcept -> std::string
 	{
 		switch (value)
 		{
-		case WGPUErrorType_NoError:
+		case wgpu::ErrorType::NoError:
 			return "NoError";
-		case WGPUErrorType_Validation:
+		case wgpu::ErrorType::Validation:
 			return "Validation";
-		case WGPUErrorType_OutOfMemory:
+		case wgpu::ErrorType::OutOfMemory:
 			return "OutOfMemory";
-		case WGPUErrorType_Internal:
+		case wgpu::ErrorType::Internal:
 			return "Internal";
-		case WGPUErrorType_Unknown:
+		case wgpu::ErrorType::Unknown:
 			return "Unknown";
-		case WGPUErrorType_DeviceLost:
+		case wgpu::ErrorType::DeviceLost:
 			return "DeviceLost";
-		case WGPUErrorType_Force32:
-			return "Force32";
 		}
 	}
 
-	auto get_sdl_webgpu_surface(WGPUInstance instance, SDL_Window *window) noexcept -> WGPUSurface
+	[[nodiscard]] auto to_string(wgpu::DeviceLostReason value) noexcept -> std::string
 	{
-		auto surface_descriptor = WGPUSurfaceDescriptor{};
+		switch (value)
+		{
+			case wgpu::DeviceLostReason::Undefined:
+			break;
+			case wgpu::DeviceLostReason::Destroyed:
+				return "Destroyed";
+			case wgpu::DeviceLostReason::InstanceDropped:
+				return "InstanceDropped";
+			case wgpu::DeviceLostReason::FailedCreation:
+				return "FailedCreation";
+		}
+		return "Undefined";
+	}
+
+	auto get_sdl_webgpu_surface(wgpu::Instance instance, SDL_Window *window) noexcept -> wgpu::Surface
+	{
+		auto surface_descriptor = wgpu::SurfaceDescriptor{};
 #if defined(SDL_PLATFORM_WIN32)
 		auto hwnd = (HWND)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 		auto hinstance = (HINSTANCE)GetModuleHandle(nullptr);
-		auto windows_surface_descriptor = WGPUSurfaceDescriptorFromWindowsHWND{
-			.chain = WGPUChainedStruct{
-				.sType = WGPUSType_SurfaceDescriptorFromWindowsHWND,
-			},
-			.hinstance = hinstance,
-			.hwnd = hwnd,
-		};
-		surface_descriptor.nextInChain = (const WGPUChainedStruct *)&windows_surface_descriptor;
+
+		auto windows_surface_descriptor = wgpu::SurfaceDescriptorFromWindowsHWND{};
+		windows_surface_descriptor.hinstance = hinstance;
+		windows_surface_descriptor.hwnd = hwnd;
+		surface_descriptor.nextInChain = (const wgpu::ChainedStruct *)&windows_surface_descriptor;
 		surface_descriptor.label = "windows_sdl_webgpu_surface";
 #elif defined(SDL_PLATFORM_)
 #elif defined(SDL_PLATFORM_MACOS)
 		NSWindow *nswindow = (__bridge NSWindow *)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
 		if (nswindow)
 		{
-			auto macos_surface_descriptor = WGPUSurfaceDescriptorFromMetalLayer{
-				.chain = WGPUChainedStruct{
-					.sType = WGPUSType_SurfaceDescriptorFromMetalLayer,
+			auto macos_surface_descriptor = wgpu::SurfaceDescriptorFromMetalLayer{
+				.chain = wgpu::ChainedStruct{
+					.sType = wgpu::SType::SurfaceDescriptorFromMetalLayer,
 				},
 				.layer = CAMetalLayer * nswindow->contentView.layer,
 			};
 		}
-		surface_descriptor.nextInChain = (const WGPUChainedStruct *)&macos_surface_descriptor;
+		surface_descriptor.nextInChain = (const wgpu::ChainedStruct *)&macos_surface_descriptor;
 		surface_descriptor.label = "macos_sdl_webgpu_surface";
 	}
 #elif defined(SDL_PLATFORM_LINUX)
@@ -435,14 +446,14 @@ export namespace fae
 			Window xwindow = (Window)SDL_GetNumberProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
 			if (xdisplay && xwindow)
 			{
-				auto linux_x11_surface_descriptor = WGPUSurfaceDescriptorFromXlib{
-					.chain = WGPUChainedStruct{
-						.sType = WGPUSType_SurfaceDescriptorFromXlib,
+				auto linux_x11_surface_descriptor = wgpu::SurfaceDescriptorFromXlib{
+					.chain = wgpu::ChainedStruct{
+						.sType = wgpu::SType::SurfaceDescriptorFromXlib,
 					},
 					.display = xdisplay,
 					.window = xwindow,
 				};
-				surface_descriptor.nextInChain = (const WGPUChainedStruct *)&linux_x11_surface_descriptor;
+				surface_descriptor.nextInChain = (const wgpu::ChainedStruct *)&linux_x11_surface_descriptor;
 				surface_descriptor.label = "linux_x11_sdl_webgpu_surface";
 			}
 		}
@@ -452,131 +463,140 @@ export namespace fae
 			struct wl_surface *surface = (struct wl_surface *)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
 			if (display && surface)
 			{
-				auto linux_wayland_surface_descriptor = WGPUSurfaceDescriptorFromWayland{
-					.chain = WGPUChainedStruct{
-						.sType = WGPUSType_SurfaceDescriptorFromWayland,
+				auto linux_wayland_surface_descriptor = wgpu::SurfaceDescriptorFromWayland{
+					.chain = wgpu::ChainedStruct{
+						.sType = wgpu::SType::SurfaceDescriptorFromWayland,
 					},
 					.display = display,
 					.surface = surface,
 				};
-				surface_descriptor.nextInChain = (const WGPUChainedStruct *)&linux_wayland_surface_descriptor;
+				surface_descriptor.nextInChain = (const wgpu::ChainedStruct *)&linux_wayland_surface_descriptor;
 				surface_descriptor.label = "linux_wayland_sdl_webgpu_surface";
 			}
 		}
 #error "unsupported platform"
 #endif
-		return wgpuInstanceCreateSurface(instance, &surface_descriptor);
+		return instance.CreateSurface(&surface_descriptor);
 	}
 
 	struct webgpu
 	{
-		WGPUInstance instance;
-		WGPUAdapter adapter;
-		WGPUDevice device;
-		WGPUSurface surface;
-		WGPURenderPipeline render_pipeline;
+		wgpu::Instance instance;
+		wgpu::Adapter adapter;
+		wgpu::Device device;
+		wgpu::Surface surface;
+		wgpu::RenderPipeline render_pipeline;
 
-		WGPUColor clear_color = {0, 0, 0, 1};
+		wgpu::Color clear_color = {0, 0, 0, 1};
 		struct current_render
 		{
-			WGPURenderPassEncoder render_pass;
-			WGPUCommandEncoder command_encoder;
+			wgpu::RenderPassEncoder render_pass;
+			wgpu::CommandEncoder command_encoder;
 		};
 		current_render current_render{};
 	};
 
 	struct webgpu_plugin
 	{
-		WGPUInstanceDescriptor instance_descriptor{};
-		WGPURequestAdapterOptions adapter_options{};
-		WGPUDeviceDescriptor device_descriptor{};
-		WGPUErrorCallback error_callback = [](WGPUErrorType type, const char *message, void *userdata)
+		wgpu::InstanceDescriptor instance_descriptor{};
+		wgpu::RequestAdapterOptions adapter_options{};
+		wgpu::DeviceDescriptor device_descriptor{};
+		wgpu::ErrorCallback error_callback = [](WGPUErrorType cType, const char *message, void *userdata)
 		{
+			auto type = static_cast<wgpu::ErrorType>(cType);
 			fae::log_error(std::format("[wgpu_error] type: {} - message: {}", to_string(type), message));
+		};
+		wgpu::DeviceLostCallback device_lost_callback = [](WGPUDeviceLostReason cReason, const char *message, void *userdata)
+		{
+			auto reason = static_cast<wgpu::DeviceLostReason>(cReason);
+			fae::log_error(std::format("[wgpu_device_lost] reason: {} - message: {}", to_string(reason), message));
 		};
 
 		auto init(application &app) const noexcept -> void
 		{
 			app.add_plugin(windowing_plugin{});
-			auto instance = wgpuCreateInstance(&instance_descriptor);
+			auto &webgpu = app.resources.emplace_and_get<fae::webgpu>(fae::webgpu{
+				.instance = wgpu::CreateInstance(&instance_descriptor),
+			});
 			struct request_adapter_data
 			{
 				const webgpu_plugin &plugin;
 				application &app;
-				WGPUInstance instance;
-				WGPUErrorCallback error_callback;
+				fae::webgpu &webgpu;
 			};
-			wgpuInstanceRequestAdapter(
-				instance, &adapter_options, [](WGPURequestAdapterStatus status, WGPUAdapter adapter, const char *message, void *userdata)
-				{
-                        if (status != WGPURequestAdapterStatus_Success)
-                        {
-                            fae::log_fatal(std::format("failed to request adapter: {}", message));
-                        }
-                        auto data = reinterpret_cast<request_adapter_data *>(userdata);
-                        struct request_device_data
-                        {
-                            const webgpu_plugin &plugin;
-                            application &app;
-                            WGPUInstance instance;
-                            WGPUErrorCallback error_callback;
-                            WGPUAdapter adapter;
-                        };
-                        wgpuAdapterRequestDevice(adapter, &data->plugin.device_descriptor, [](WGPURequestDeviceStatus status, WGPUDevice device, char const *message, void *userdata)
-                                {
-                                    if (status != WGPURequestDeviceStatus_Success)
-                                    {
-                                        fae::log_fatal(std::format("failed to request device: ", message));
-                                    }
-                                    auto data = reinterpret_cast<request_device_data *>(userdata);
-                                    wgpuDeviceSetUncapturedErrorCallback(device, data->error_callback, nullptr);
-                                    auto maybe_primary_window = data->app.resources.get<primary_window>();
-                                    if (!maybe_primary_window)
-                                    {
-                                        fae::log_fatal("primary window resource not found");
-                                    }
-                                    auto primary_window = *maybe_primary_window;
-                                    auto maybe_sdl_window = primary_window.window_entity.get_component<sdl_window>();
-                                    if (!maybe_sdl_window)
-                                    {
-                                        fae::log_fatal("sdl window component not found in primary window entity");
-                                    }
-                                    auto sdl_window = *maybe_sdl_window;
+
+			webgpu.instance.RequestAdapter(&adapter_options,
+				wgpu::RequestAdapterCallbackInfo{
+					.mode = wgpu::CallbackMode::AllowSpontaneous,
+					.callback = [](WGPURequestAdapterStatus cStatus, WGPUAdapter adapter, const char *message, void *userdata)
+					{
+						const auto status = static_cast<wgpu::RequestAdapterStatus>(cStatus);
+						if (status != wgpu::RequestAdapterStatus::Success)
+						{
+							fae::log_fatal(std::format("failed to request adapter: {}", message));
+						}
+						auto data = reinterpret_cast<request_adapter_data *>(userdata);
+						struct request_device_data
+						{
+							const webgpu_plugin &plugin;
+							application &app;
+							fae::webgpu &webgpu;
+						};
+						data->webgpu.adapter = wgpu::Adapter::Acquire(adapter);
+						data->webgpu.adapter.RequestDevice(&data->plugin.device_descriptor,
+							wgpu::RequestDeviceCallbackInfo{
+								.mode = wgpu::CallbackMode::AllowSpontaneous,
+								.callback = [](WGPURequestDeviceStatus cStatus, WGPUDevice device, char const *message, void *userdata)
+								{
+									const auto status = static_cast<wgpu::RequestDeviceStatus>(cStatus);
+									if (status != wgpu::RequestDeviceStatus::Success)
+									{
+										fae::log_fatal(std::format("failed to request device: ", message));
+									}
+									auto data = reinterpret_cast<request_device_data *>(userdata);
+									data->webgpu.device = wgpu::Device::Acquire(device);
+									data->webgpu.device.SetUncapturedErrorCallback(data->plugin.error_callback, nullptr);
+									data->webgpu.device.SetDeviceLostCallback(data->plugin.device_lost_callback, nullptr);
+									auto maybe_primary_window = data->app.resources.get<primary_window>();
+									if (!maybe_primary_window)
+									{
+										fae::log_fatal("primary window resource not found");
+									}
+									auto primary_window = *maybe_primary_window;
+									auto maybe_sdl_window = primary_window.window_entity.get_component<sdl_window>();
+									if (!maybe_sdl_window)
+									{
+										fae::log_fatal("sdl window component not found in primary window entity");
+									}
+									auto sdl_window = *maybe_sdl_window;
 
 #if defined(__EMSCRIPTEN__)
-                                    WGPUSurfaceDescriptorFromCanvasHTMLSelector canvas_desc
-                                    {
-                                        .selector = "#canvas",
-                                    };
-                                    WGPUSurfaceDescriptor surface_desc
-                                    {
-                                        .nextInChain = (const WGPUChainedStruct *)&canvas_desc,
-                                    };
-                                    auto surface = wgpuInstanceCreateSurface(data->instance, &surface_desc);
+									wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvas_desc{
+										.selector = "#canvas",
+									};
+									wgpu::SurfaceDescriptor surface_desc{
+										.nextInChain = (const wgpu::ChainedStruct *)&canvas_desc,
+									};
+									data->webgpu.surface = data->webgpu.instance.CreateSurface(&surface_desc);
 #else
-                                    auto surface = get_sdl_webgpu_surface(data->instance, sdl_window.raw);
+							data->webgpu.surface = get_sdl_webgpu_surface(data->webgpu.instance, sdl_window.raw);
 #endif
-                                    auto window = primary_window.window();
-                                    auto window_size = window.get_size();
+									auto window = primary_window.window();
+									auto window_size = window.get_size();
 
-                                    auto surface_format = wgpuSurfaceGetPreferredFormat(surface, data->adapter);
-                                    WGPUSurfaceConfiguration surface_config = WGPUSurfaceConfiguration
-                                    {
-                                        .device = device,
-                                        .format = surface_format,
-                                        .usage = WGPUTextureUsage_RenderAttachment,
-                                        .width = static_cast<std::uint32_t>(window_size.width),
-                                        .height = static_cast<std::uint32_t>(window_size.height),
-                                        .presentMode = WGPUPresentMode_Fifo,
-                                    };
-                                    wgpuSurfaceConfigure(surface, &surface_config);
+									auto surface_format = data->webgpu.surface.GetPreferredFormat(data->webgpu.adapter);
+									wgpu::SurfaceConfiguration surface_config = wgpu::SurfaceConfiguration{
+										.device = device,
+										.format = surface_format,
+										.usage = wgpu::TextureUsage::RenderAttachment,
+										.width = static_cast<std::uint32_t>(window_size.width),
+										.height = static_cast<std::uint32_t>(window_size.height),
+										.presentMode = wgpu::PresentMode::Fifo,
+									};
+									data->webgpu.surface.Configure(&surface_config);
 
-                                    WGPUShaderModuleWGSLDescriptor wgsl_desc
-                                    {
-                                        .chain = WGPUChainedStruct{
-                                            .sType = WGPUSType_ShaderModuleWGSLDescriptor,
-                                        },
-                                        .code = R"(
+									auto wgsl_desc = wgpu::ShaderModuleWGSLDescriptor{};
+									wgsl_desc.code = R"(
 @vertex
 fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) vec4f {
     const position = array(vec2f(0, 1), vec2f(-1, -1), vec2f(1, -1));
@@ -587,90 +607,74 @@ fn vs_main(@builtin(vertex_index) in_vertex_index: u32) -> @builtin(position) ve
 fn fs_main() -> @location(0) vec4f {
 	return vec4f(1.0, 1.0, 1.0, 1.0);
 }
-)",
-                                    };
-                                    WGPUShaderModuleDescriptor shader_module_descriptor
-                                    {
-                                        .nextInChain = (const WGPUChainedStruct *)&wgsl_desc,
-                                    };
-                                    WGPUShaderModule shader_module = wgpuDeviceCreateShaderModule(device, &shader_module_descriptor);
-                                    auto blend_state = WGPUBlendState
-	                                {
-	                                	.color = WGPUBlendComponent
-	                                	{
-	                                		.operation = WGPUBlendOperation_Add,
-	                                		.srcFactor = WGPUBlendFactor_SrcAlpha,
-	                                		.dstFactor = WGPUBlendFactor_OneMinusSrcAlpha,
-	                                	},
-	                                	.alpha = WGPUBlendComponent
-	                                	{
-	                                		.operation = WGPUBlendOperation_Add,
-	                                		.srcFactor = WGPUBlendFactor_Zero,
-	                                		.dstFactor = WGPUBlendFactor_One,
-	                                	},
-	                                };
-                                    WGPUColorTargetState color_target_state
-                                    {
-                                        .format = surface_format,
-                                        .blend = &blend_state,
-                                        .writeMask = WGPUColorWriteMask_All,
-                                    };
-                                    WGPUFragmentState fragment_state
-                                    {
-                                        .module = shader_module,
-                                        .entryPoint = "fs_main",
-                                        .constantCount = 0,
-                                        .constants = nullptr,
-                                        .targetCount = 1,
-                                        .targets = &color_target_state,
-                                    };
-                                    WGPURenderPipelineDescriptor pipeline_descriptor
-                                    {
-                                        .vertex = {
-                                            .module = shader_module,
-                                            .entryPoint = "vs_main",
-                                            .constantCount = 0,
-                                            .constants = nullptr,
-                                            .bufferCount = 0,
-                                            .buffers = nullptr,
-                                        },
-                                        .primitive = WGPUPrimitiveState
-                                		{
-                                			.topology = WGPUPrimitiveTopology_TriangleList,
-                                			.stripIndexFormat = WGPUIndexFormat_Undefined,
-                                			.frontFace = WGPUFrontFace_CCW,
-                                			.cullMode = WGPUCullMode_None,
-                                		},
-                                        .multisample = {
-                                            .count = 1,
-                                            .mask = ~0u,
-			                                .alphaToCoverageEnabled = false,
-                                        },
-                                        .fragment = &fragment_state,
-                                    };
-                                    auto render_pipeline = wgpuDeviceCreateRenderPipeline(device, &pipeline_descriptor);
-
-                                    data->app.emplace_resource<webgpu>(webgpu{
-                                        .instance = data->instance,
-                                        .adapter = data->adapter,
-                                        .device = device,
-                                        .surface = surface,
-                                        .render_pipeline = render_pipeline,
-                                    });
-                                    delete data;
-                                }, new request_device_data{
-                                    .plugin = data->plugin,
-                                    .app = data->app,
-                                    .instance = data->instance,
-                                    .error_callback = data->error_callback,
-                                    .adapter = adapter,
-                                });
-                        delete data; },
-				new request_adapter_data{
-					.plugin = *this,
-					.app = app,
-					.instance = instance,
-					.error_callback = error_callback,
+)";
+									wgpu::ShaderModuleDescriptor shader_module_descriptor{
+										.nextInChain = (const wgpu::ChainedStruct *)&wgsl_desc,
+									};
+									wgpu::ShaderModule shader_module = data->webgpu.device.CreateShaderModule(&shader_module_descriptor);
+									auto blend_state = wgpu::BlendState{
+										.color = wgpu::BlendComponent{
+											.operation = wgpu::BlendOperation::Add,
+											.srcFactor = wgpu::BlendFactor::SrcAlpha,
+											.dstFactor = wgpu::BlendFactor::OneMinusSrcAlpha,
+										},
+										.alpha = wgpu::BlendComponent{
+											.operation = wgpu::BlendOperation::Add,
+											.srcFactor = wgpu::BlendFactor::Zero,
+											.dstFactor = wgpu::BlendFactor::One,
+										},
+									};
+									wgpu::ColorTargetState color_target_state{
+										.format = surface_format,
+										.blend = &blend_state,
+										.writeMask = wgpu::ColorWriteMask::All,
+									};
+									wgpu::FragmentState fragment_state{
+										.module = shader_module,
+										.entryPoint = "fs_main",
+										.constantCount = 0,
+										.constants = nullptr,
+										.targetCount = 1,
+										.targets = &color_target_state,
+									};
+									wgpu::RenderPipelineDescriptor pipeline_descriptor{
+										.vertex = {
+											.module = shader_module,
+											.entryPoint = "vs_main",
+											.constantCount = 0,
+											.constants = nullptr,
+											.bufferCount = 0,
+											.buffers = nullptr,
+										},
+										.primitive = wgpu::PrimitiveState{
+											.topology = wgpu::PrimitiveTopology::TriangleList,
+											.stripIndexFormat = wgpu::IndexFormat::Undefined,
+											.frontFace = wgpu::FrontFace::CCW,
+											.cullMode = wgpu::CullMode::None,
+										},
+										.multisample = {
+											.count = 1,
+											.mask = ~0u,
+											.alphaToCoverageEnabled = false,
+										},
+										.fragment = &fragment_state,
+									};
+									data->webgpu.render_pipeline = data->webgpu.device.CreateRenderPipeline(&pipeline_descriptor);
+									delete data;
+								},
+								.userdata = new request_device_data{
+									.plugin = data->plugin,
+									.app = data->app,
+									.webgpu = data->webgpu,
+								},
+							});
+						delete data;
+					},
+					.userdata = new request_adapter_data{
+						.plugin = *this,
+						.app = app,
+						.webgpu = webgpu,
+					},
 				});
 		}
 	};

@@ -153,7 +153,7 @@ export namespace fae
 				resources.use_resource<fae::webgpu>(
 					[&](webgpu &webgpu)
 					{
-						webgpu.clear_color = WGPUColor{
+						webgpu.clear_color = wgpu::Color{
 							.r = value.r / 255.0f,
 							.g = value.g / 255.0f,
 							.b = value.b / 255.0f,
@@ -172,38 +172,31 @@ export namespace fae
 				resources.use_resource<fae::webgpu>(
 					[&](webgpu &webgpu)
 					{
-						WGPUSurfaceTexture surface_texture;
-						wgpuSurfaceGetCurrentTexture(webgpu.surface,
-							&surface_texture);
-						auto surface_texture_view = wgpuTextureCreateView(
-							surface_texture.texture, nullptr);
+						wgpu::SurfaceTexture surface_texture;
+						webgpu.surface.GetCurrentTexture(&surface_texture);
+						auto surface_texture_view = surface_texture.texture.CreateView();
 
 						auto command_encoder_desc =
-							WGPUCommandEncoderDescriptor{};
-						auto command_encoder = wgpuDeviceCreateCommandEncoder(
-							webgpu.device, &command_encoder_desc);
-						auto color_attachment = WGPURenderPassColorAttachment{
+							wgpu::CommandEncoderDescriptor{};
+						auto command_encoder = webgpu.device.CreateCommandEncoder(&command_encoder_desc);
+						auto color_attachment = wgpu::RenderPassColorAttachment{
 							.view = surface_texture_view,
 							.depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
 							.resolveTarget = nullptr,
-							.loadOp = WGPULoadOp_Clear,
-							.storeOp = WGPUStoreOp_Store,
+							.loadOp = wgpu::LoadOp::Clear,
+							.storeOp = wgpu::StoreOp::Store,
 							.clearValue = webgpu.clear_color,
 						};
-						auto render_pass_desc = WGPURenderPassDescriptor{
+						auto render_pass_desc = wgpu::RenderPassDescriptor{
 							.colorAttachmentCount = 1,
 							.colorAttachments = &color_attachment,
 							.depthStencilAttachment = nullptr,
 						};
-						auto render_pass = wgpuCommandEncoderBeginRenderPass(
-							command_encoder, &render_pass_desc);
-						wgpuRenderPassEncoderSetPipeline(
-							render_pass, webgpu.render_pipeline);
-						wgpuRenderPassEncoderDraw(render_pass, 3, 1, 0, 0);
+						auto render_pass = command_encoder.BeginRenderPass(&render_pass_desc);
+						render_pass.SetPipeline(webgpu.render_pipeline);
+						render_pass.Draw(3, 1, 0, 0);
 						webgpu.current_render.render_pass = render_pass;
 						webgpu.current_render.command_encoder = command_encoder;
-
-						wgpuTextureViewRelease(surface_texture_view);
 					});
 			},
 			.end =
@@ -212,17 +205,12 @@ export namespace fae
 				resources.use_resource<fae::webgpu>(
 					[&](webgpu &webgpu)
 					{
-						wgpuRenderPassEncoderEnd(
-							webgpu.current_render.render_pass);
-						auto command_buffer_desc =
-							WGPUCommandBufferDescriptor{};
-						auto command_buffer = wgpuCommandEncoderFinish(
-							webgpu.current_render.command_encoder,
-							&command_buffer_desc);
-						auto queue = wgpuDeviceGetQueue(webgpu.device);
-						wgpuQueueSubmit(queue, 1, &command_buffer);
-						wgpuSurfacePresent(webgpu.surface);
-						wgpuInstanceProcessEvents(webgpu.instance);
+						webgpu.current_render.render_pass.End();
+						auto command_buffer = webgpu.current_render.command_encoder.Finish();
+						auto queue = webgpu.device.GetQueue();
+						queue.Submit(1, &command_buffer);
+						webgpu.surface.Present();
+						webgpu.instance.ProcessEvents();
 					});
 			},
 		};
