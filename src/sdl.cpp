@@ -1,7 +1,8 @@
 module;
 #include <SDL3/SDL.h>
+#include <bitset>
+#include <cstdint>
 #include <format>
-#include <unordered_map>
 
 export module fae:sdl;
 
@@ -14,7 +15,7 @@ export namespace fae
 	{
 		auto press_key(const SDL_Keycode key) noexcept -> void
 		{
-			m_is_key_pressed[key] = true;
+			m_is_key_pressed->set(static_cast<std::size_t>(key), true);
 		}
 
 		auto press_key(const SDL_Scancode key) noexcept -> void
@@ -24,7 +25,7 @@ export namespace fae
 
 		auto release_key(const SDL_Keycode key) noexcept -> void
 		{
-			m_is_key_pressed[key] = false;
+			m_is_key_pressed->set(static_cast<std::size_t>(key), false);
 		}
 
 		auto release_key(const SDL_Scancode key) noexcept -> void
@@ -34,8 +35,7 @@ export namespace fae
 
 		[[nodiscard]] auto is_key_pressed(const SDL_Keycode key) const noexcept -> bool
 		{
-			const auto it = m_is_key_pressed.find(key);
-			return (it != m_is_key_pressed.end()) ? it->second : false;
+			return m_is_key_pressed->test(static_cast<std::size_t>(key));
 		}
 
 		[[nodiscard]] auto is_key_pressed(const SDL_Scancode key) const noexcept -> bool
@@ -75,25 +75,22 @@ export namespace fae
 
 		auto udpate() noexcept -> void
 		{
-			m_was_key_pressed = m_is_key_pressed;
+			*m_was_key_pressed = *m_is_key_pressed;
 		}
 
 	private:
 		[[nodiscard]] auto was_key_pressed(const SDL_Keycode key) const noexcept -> bool
 		{
-			const auto it = m_was_key_pressed.find(key);
-			return (it != m_was_key_pressed.end()) ? it->second : false;
+			return m_was_key_pressed->test(static_cast<std::size_t>(key));
 		}
 
 		[[nodiscard]] auto was_key_pressed(const SDL_Scancode key) const noexcept -> bool
 		{
-			const auto it = m_was_key_pressed.find(SDL_SCANCODE_TO_KEYCODE(key));
-			return (it != m_was_key_pressed.end()) ? it->second : false;
+			return was_key_pressed(SDL_SCANCODE_TO_KEYCODE(key));
 		}
 
-		// TODO change to bitset, it is faster
-		std::unordered_map<SDL_Keycode, bool> m_is_key_pressed{};
-		std::unordered_map<SDL_Keycode, bool> m_was_key_pressed{};
+		std::shared_ptr<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>> m_is_key_pressed = std::make_shared<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>>();
+		std::shared_ptr<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>> m_was_key_pressed = std::make_shared<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>>();
 	};
 
 	struct sdl_window
@@ -211,6 +208,7 @@ export namespace fae
 				return;
 			}
 			app
+				.emplace_resource<sdl_input>(sdl_input{})
 				.add_system<update_step>(update_sdl)
 				.add_system<deinit_step>(deinit_sdl);
 		}

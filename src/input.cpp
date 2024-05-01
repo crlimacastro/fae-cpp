@@ -837,7 +837,7 @@ export namespace fae
 		{
 			app.add_plugin(sdl_plugin{});
 
-			auto &input = app.resources.emplace_and_get<sdl_input>(sdl_input{});
+			auto &input = app.resources.get_or_emplace<sdl_input>(sdl_input{});
 			app
 				.emplace_resource<fae::input>(input_from(input))
 				.add_system<update_step>(toggle_fullscreen_on_alt_enter);

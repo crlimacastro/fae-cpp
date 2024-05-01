@@ -12,10 +12,10 @@ export namespace fae
 
 	struct default_plugins
 	{
-		time_plugin time_plugin;
-		windowing_plugin windowing_plugin;
-		input_plugin input_plugin;
-		rendering_plugin rendering_plugin;
+		time_plugin time_plugin{};
+		windowing_plugin windowing_plugin{};
+		input_plugin input_plugin{};
+		rendering_plugin rendering_plugin{};
 
 		auto init(application &app) const noexcept -> void
 		{
