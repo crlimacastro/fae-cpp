@@ -17,7 +17,7 @@ export namespace fae
 
 	struct duration
 	{
-		static constexpr auto nanoseconds_to_seconds = 1.23e-9f;
+		static constexpr auto nanoseconds_to_seconds = 1e-9f;
 
 		constexpr duration() = default;
 		constexpr duration(const std::chrono::nanoseconds &nanosecs) : nanosecs(nanosecs) {}
