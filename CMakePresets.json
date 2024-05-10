@@ -3,24 +3,27 @@
     "configurePresets": [
         {
             "name": "default",
-            "generator": "Ninja",
             "hidden": true,
+            "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/install/${presetName}",
-            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "CPM_USE_LOCAL_PACKAGES" : "ON"
+            }
         },
         {
             "name": "debug",
-            "displayName": "Debug Config",
             "inherits": "default",
+            "displayName": "Debug Config",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
             }
         },
         {
             "name": "release",
-            "displayName": "Release Config",
             "inherits": "default",
+            "displayName": "Release Config",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
@@ -29,12 +32,13 @@
     "buildPresets": [
         {
             "name": "default",
-            "hidden": true
+            "hidden": true,
+            "jobs": 8
         },
         {
             "name": "debug",
-            "displayName": "Debug Build",
             "inherits": "default",
+            "displayName": "Debug Build",
             "configurePreset": "debug"
         },
         {

@@ -42,12 +42,32 @@ auto render(const fae::render_step &step) noexcept -> void
 		{
 			renderer.current_render.vertex_data = std::vector<float>{
 				// clang-format off
-    -.5f, .5f, 0.f, 1.f, 1.f, 0.f, 0.f, 1.f, -.5f, -.5f, 0.f, 1.f,
-    0.f, 1.f, 0.f, 1.f, .5f, -.5f, 0.f, 1.f, 0.f,  0.f,  1.f, 1.f,
-	.5f, .5f, 0.f, 1.f, 1.f, 1.f, 0.f, 1.f,
+				-.5f, .5f, -.5f, 1.f, 		1.f, 0.f, 0.f, 1.f,			0.f, 1.f, // 0 left up back
+				-.5f, -.5f, -.5f, 1.f,		0.f, 1.f, 0.f, 1.f,			0.f, 0.f, // 1 left down back
+				.5f, -.5f, -.5f, 1.f,		0.f, 0.f, 1.f, 1.f,			1.f, 0.f, // 2 right down back
+				.5f, .5f, -.5f, 1.f,		1.f, 1.f, 0.f, 1.f,			1.f, 1.f, // 3 right up back
+				-.5f, .5f, .5f, 1.f, 		1.f, 0.f, 0.f, 1.f,			0.f, 1.f, // 4 left up front
+				-.5f, -.5f, .5f, 1.f,		0.f, 1.f, 0.f, 1.f,			0.f, 0.f, // 5 left down front
+				.5f, -.5f, .5f, 1.f,		0.f, 0.f, 1.f, 1.f,			1.f, 0.f, // 6 right down front
+				.5f, .5f, .5f, 1.f,			1.f, 1.f, 0.f, 1.f,			1.f, 1.f, // 7 right up front
 				// clang-format on
 			};
-			renderer.current_render.index_data = std::vector<std::uint32_t>{0, 1, 2, 0, 2, 3};
+			renderer.current_render.index_data = std::vector<std::uint32_t>{
+				// clang-format off
+				0, 1, 2,
+				0, 2, 3,
+				3, 2, 6,
+				3, 6, 7,
+				7, 6, 5,
+				7, 5, 4,
+				4, 5, 1,
+				4, 1, 0,
+				0, 3, 7,
+				0, 7, 4,
+				1, 5, 6,
+				1, 6, 2,
+				// clang-format on
+			};
 		});
 }
 

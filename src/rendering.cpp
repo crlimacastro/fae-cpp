@@ -1,22 +1,25 @@
 module;
 
+#include "fae/webgpu.hpp"
+#include <SDL3/SDL.h>
 #include <cstdint>
 #include <format>
 #include <functional>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
+#include <numbers>
 #include <optional>
 #include <string_view>
 #include <variant>
 
-#include <SDL3/SDL.h>
-#ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten.h>
-#else
-#include <webgpu/webgpu_cpp.h>
-#endif
-
 export module fae:rendering;
 
 import :core;
+import :math;
 import :color;
 import :resource_manager;
 import :logging;
@@ -24,6 +27,7 @@ import :application;
 import :sdl;
 import :webgpu;
 import :windowing;
+import :time;
 
 export namespace fae
 {
@@ -67,12 +71,6 @@ export namespace fae
 					first_render_happened = true;
 				}
 			});
-	}
-
-	auto deinit_rendering(const deinit_step &step) noexcept -> void
-	{
-		step.resources.erase<fae::sdl_renderer>();
-		step.resources.erase<fae::renderer>();
 	}
 
 	/* incomplete/deprecated for now */
@@ -175,10 +173,33 @@ export namespace fae
 					{
 						webgpu.current_render.vertex_data.clear();
 						webgpu.current_render.index_data.clear();
+						webgpu.current_render.uniform_data.clear();
+						webgpu.current_render.uniform_data.resize(4 * 16 * 3);
 
 						wgpu::SurfaceTexture surface_texture;
 						webgpu.surface.GetCurrentTexture(&surface_texture);
 						auto surface_texture_view = surface_texture.texture.CreateView();
+
+						auto fov = 45.f;
+						auto aspect = 1920.f / 1080.f;
+						auto near = 0.1f;
+						auto far = 1000.f;
+
+						static auto transform = fae::transform{};
+
+						auto time = resources.get_or_emplace<fae::time>(fae::time{});
+						auto dt = time.delta().seconds_f32();
+						auto t = time.elapsed().seconds_f32();
+						transform.position = {1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f};
+						transform.rotation *= math::angleAxis(math::radians(60.f) * dt, vec3(0.0f, 1.0f, 0.0f));
+						auto model = transform.to_mat4();
+						auto view = math::mat4(1.f);
+						auto projection = math::perspective(math::radians(fov), aspect, near, far);
+						std::memcpy(webgpu.current_render.uniform_data.data(), &model, sizeof(model));
+						std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model), &view, sizeof(view));
+						std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model) + sizeof(view), &projection, sizeof(projection));
+
+						webgpu.device.GetQueue().WriteBuffer(webgpu.uniform_buffer.buffer, 0, webgpu.current_render.uniform_data.data(), webgpu.uniform_buffer.size);
 						auto command_encoder = webgpu.device.CreateCommandEncoder();
 						auto color_attachment = wgpu::RenderPassColorAttachment{
 							.view = surface_texture_view,
@@ -188,13 +209,20 @@ export namespace fae
 							.storeOp = wgpu::StoreOp::Store,
 							.clearValue = webgpu.clear_color,
 						};
+						auto depth_attachment = wgpu::RenderPassDepthStencilAttachment{
+							.view = webgpu.depth_texture.CreateView(),
+							.depthLoadOp = wgpu::LoadOp::Clear,
+							.depthStoreOp = wgpu::StoreOp::Store,
+							.depthClearValue = 1.0,
+						};
 						auto render_pass_desc = wgpu::RenderPassDescriptor{
 							.colorAttachmentCount = 1,
 							.colorAttachments = &color_attachment,
-							.depthStencilAttachment = nullptr,
+							.depthStencilAttachment = &depth_attachment,
 						};
 						auto render_pass = command_encoder.BeginRenderPass(&render_pass_desc);
 						render_pass.SetPipeline(webgpu.render_pipeline);
+						render_pass.SetBindGroup(0, webgpu.uniform_buffer.bind_group);
 						webgpu.current_render.render_pass = render_pass;
 						webgpu.current_render.command_encoder = command_encoder;
 					});
@@ -331,8 +359,7 @@ export namespace fae
 				[&]([[maybe_unused]] auto other)
 				{ fae::log_error("unknown renderer type"); });
 
-			app.add_system<update_step>(update_rendering)
-				.add_system<deinit_step>(deinit_rendering);
+			app.add_system<update_step>(update_rendering);
 		}
 	};
 } // namespace fae

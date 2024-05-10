@@ -2,7 +2,7 @@ module;
 #include <concepts>
 #include <typeindex>
 #include <unordered_set>
-#if defined(__EMSCRIPTEN__)
+#ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 #endif
 
@@ -106,6 +106,13 @@ export namespace fae
 			});
 		}
 
+#ifdef __EMSCRIPTEN__
+		static auto step_callback(void *arg) -> void
+		{
+			static_cast<application *>(arg)->step();
+		}
+#endif
+
 		auto run() -> void
 		{
 			is_running = true;
@@ -124,8 +131,8 @@ export namespace fae
 				.scheduler = scheduler,
 				.ecs_world = ecs_world,
 			});
-#if defined(__EMSCRIPTEN__)
-			emscripten_set_main_loop(step, 0, false);
+#ifdef __EMSCRIPTEN__
+			emscripten_set_main_loop_arg(&application::step_callback, this, 0, 1);
 			// emscripten set cleanup function like stop & deinit steps below?
 #else
 			while (is_running)

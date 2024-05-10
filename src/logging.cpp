@@ -1,10 +1,14 @@
 module;
-#include <chrono>
 #include <format>
-#include <print>
 #include <source_location>
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+#else
+#include <chrono>
+#include <print>
 #include <stacktrace>
 #include <string>
+#endif
 
 export module fae:logging;
 
@@ -65,12 +69,22 @@ export namespace fae
 		bool show_level = true;
 		log_level level = log_level::debug;
 		bool show_stacktrace = false;
+#ifndef __EMSCRIPTEN__
 		std::stacktrace stacktrace = std::stacktrace::current();
+#endif
 	};
 
 	template <std::formattable<char> t_log_arg>
-	constexpr auto log(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
+#ifndef __EMSCRIPTEN__
+	constexpr
+#endif
+		auto
+		log(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
+#ifdef __EMSCRIPTEN__
+		EM_ASM(console.log(msg));
+		return;
+#else
 		if constexpr (config::is_release_build)
 		{
 			if (options.level == log_level::fatal)
@@ -95,10 +109,12 @@ export namespace fae
 
 		result_msg << std::format("{}", msg) << std::endl;
 
+#ifndef __EMSCRIPTEN__
 		if (options.show_stacktrace)
 		{
 			result_msg << std::format("{}", options.stacktrace) << std::endl;
 		}
+#endif
 
 		std::print("{}", result_msg.str());
 
@@ -106,10 +122,11 @@ export namespace fae
 		{
 			std::exit(EXIT_FAILURE);
 		}
+#endif
 	}
 
 	template <typename t_log_arg>
-	auto log_debug(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
+	constexpr auto log_debug(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
 		auto debug_options = options;
 		debug_options.level = log_level::debug;
@@ -117,7 +134,7 @@ export namespace fae
 	}
 
 	template <typename t_log_arg>
-	auto log_info(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
+	constexpr auto log_info(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
 		auto info_options = options;
 		info_options.level = log_level::info;
@@ -125,7 +142,7 @@ export namespace fae
 	}
 
 	template <typename t_log_arg>
-	auto log_warning(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
+	constexpr auto log_warning(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
 		auto warning_options = options;
 		warning_options.level = log_level::warning;
@@ -133,7 +150,7 @@ export namespace fae
 	}
 
 	template <typename t_log_arg>
-	auto log_error(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
+	constexpr auto log_error(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
 		auto error_options = options;
 		error_options.level = log_level::error;
@@ -141,7 +158,7 @@ export namespace fae
 	}
 
 	template <typename t_log_arg>
-	auto log_fatal(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
+	constexpr auto log_fatal(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
 		auto error_options = options;
 		error_options.level = log_level::fatal;

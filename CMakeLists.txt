@@ -4,6 +4,7 @@ project(
 	fae
 	VERSION 0.0.2
 	LANGUAGES CXX
+	DESCRIPTION "fae game framework (core library of the fae game engine)"
 )
 
 # includes
@@ -22,13 +23,15 @@ option(FAE_BUILD_EXAMPLES "Build examples" OFF)
 # dependencies
 get_cpm(VERSION ${FAE_CPM_VERSION})
 CPMUsePackageLock(package-lock.cmake)
-CPMAddPackage("gh:g-truc/glm#1.0.0")
-CPMAddPackage("gh:skypjack/entt#v3.13.1")
+CPMAddPackage("gh:g-truc/glm#1.0.1")
+CPMAddPackage("gh:skypjack/entt#v3.13.2")
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
 	GIT_TAG prerelease-3.1.1
 	OPTIONS
+		"EXCLUDE_FROM_ALL ON"
+		"SYSTEM ON"
 		"SDL_DISABLE_INSTALL OFF"
 		if(${BUILD_SHARED_LIBS})
 			"SDL_SHARED ON"
@@ -42,10 +45,11 @@ if(NOT EMSCRIPTEN)
 	CPMAddPackage(
 		NAME dawn
   		GIT_REPOSITORY https://dawn.googlesource.com/dawn
-  		GIT_TAG chromium/6433
+  		GIT_TAG chromium/6452
   		OPTIONS
+		  	"EXCLUDE_FROM_ALL ON"
+		  	"SYSTEM ON"
 			"DAWN_FETCH_DEPENDENCIES ON"
-			"EXCLUDE_FROM_ALL ON"
 )
 endif()
 
@@ -81,19 +85,33 @@ target_compile_options(${PROJECT_NAME}
 		${FAE_WARNINGS}
 )
 
-#includes
-target_include_directories(${PROJECT_NAME}
-	PUBLIC
-		${glm_SOURCE_DIR}
+# includes
+set(FAE_PUBLIC_INCLUDES
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+	$<INSTALL_INTERFACE:include>
 )
 
-# files
+target_include_directories(${PROJECT_NAME} PUBLIC
+	${FAE_PUBLIC_INCLUDES}
+)
+
+# sources
+file(GLOB_RECURSE FAE_HEADERS CONFIGURE_DEPENDS
+	${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
+)
+
 file(GLOB_RECURSE FAE_MODULES CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
 
 target_sources(${PROJECT_NAME}
 	PUBLIC
+		FILE_SET HEADERS
+		BASE_DIRS
+			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+			$<INSTALL_INTERFACE:include>
+		FILES
+			${FAE_HEADERS}
 		FILE_SET CXX_MODULES
 		BASE_DIRS
 			${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -101,14 +119,14 @@ target_sources(${PROJECT_NAME}
 		FILES
 			${FAE_MODULES}
 			${CMAKE_CURRENT_BINARY_DIR}/src/config.cpp
-	PRIVATE
 )	
 
 set(FAE_PUBLIC_LIBRARIES
+	glm::glm
 	EnTT::EnTT
 	SDL3::SDL3
 )
-if (NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN)
 	list(APPEND FAE_PUBLIC_LIBRARIES
 		webgpu_cpp
 		webgpu_dawn
@@ -117,7 +135,6 @@ endif()
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		${FAE_PUBLIC_LIBRARIES}
-	PRIVATE
 )
 
 if(FAE_BUILD_EXAMPLES)

@@ -1,5 +1,11 @@
 module;
+#include <array>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/transform.hpp>
 
 export module fae:math;
 
@@ -25,5 +31,35 @@ export namespace fae
 	namespace math
 	{
 		using namespace glm;
+	}
+
+	struct transform
+	{
+		vec3 position = {0.f, 0.f, 0.f};
+		quat rotation = {0.f, 0.f, 0.f, 1.f};
+		vec3 scale = {1.f, 1.f, 1.f};
+
+		auto to_mat4() const -> mat4
+		{
+			return math::translate(mat4{1.f}, position) *
+				   math::toMat4(rotation) *
+				   math::scale(mat4{1.f}, scale);
+		}
+
+		auto to_bytes() const -> std::array<std::uint8_t, 64>
+		{
+			std::array<std::uint8_t, 64> data{};
+			std::memcpy(data.data(), &position, sizeof(vec3));
+			std::memcpy(data.data() + sizeof(vec3), &rotation, sizeof(quat));
+			std::memcpy(data.data() + sizeof(vec3) + sizeof(quat), &scale, sizeof(vec3));
+			return data;
+		}
+	};
+
+	auto to_bytes(mat4 value) -> std::array<uint8_t, 64>
+	{
+		std::array<uint8_t, 64> data{};
+		std::memcpy(data.data(), &value, sizeof(mat4));
+		return data;
 	}
 } // namespace fae

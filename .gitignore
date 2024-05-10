@@ -5,6 +5,7 @@
 CMakeUserPresets.json
 
 # build
+[Bb]in/
 [Bb]uild/
 [Oo]ut/
 *.pdb
@@ -13,3 +14,4 @@ CMakeUserPresets.json
 .vs/
 CMakeSettings.json
 .vscode/
+.idea/

@@ -1,9 +1,4 @@
 module;
-#ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten.h>
-#else
-#include <webgpu/webgpu_cpp.h>
-#endif
 #include <SDL3/SDL.h>
 #include <format>
 #include <string>
@@ -11,6 +6,7 @@ module;
 #ifdef SDL_PLATFORM_WIN32
 #include <Windows.h>
 #endif
+#include "fae/webgpu.hpp"
 #include <ostream>
 
 export module fae:webgpu;
@@ -147,6 +143,8 @@ export namespace fae
 			return "YCbCrVulkanSamplers";
 		case wgpu::FeatureName::ShaderModuleCompilationOptions:
 			return "ShaderModuleCompilationOptions";
+		case wgpu::FeatureName::DawnLoadResolveTexture:
+			return "DawnLoadResolveTexture";
 		case wgpu::FeatureName::Undefined:
 			break;
 		}
@@ -535,6 +533,13 @@ export namespace fae
 		return instance.CreateSurface(&surface_descriptor);
 	}
 
+	struct uniform_buffer
+	{
+		wgpu::Buffer buffer;
+		std::size_t size;
+		wgpu::BindGroup bind_group;
+	};
+
 	struct webgpu
 	{
 		wgpu::Instance instance;
@@ -543,6 +548,9 @@ export namespace fae
 		wgpu::Surface surface;
 		wgpu::RenderPipeline render_pipeline;
 
+		uniform_buffer uniform_buffer;
+		wgpu::Texture depth_texture;
+
 		wgpu::Color clear_color = {0, 0, 0, 1};
 		struct current_render
 		{
@@ -550,20 +558,10 @@ export namespace fae
 			wgpu::CommandEncoder command_encoder;
 			std::vector<float> vertex_data;
 			std::vector<std::uint32_t> index_data;
+			std::vector<std::uint8_t> uniform_data;
 		};
 		current_render current_render{};
 	};
-
-	auto deinit_webgpu(const deinit_step &step) noexcept -> void
-	{
-		step.resources.use_resource<webgpu>(
-			[&](webgpu &webgpu)
-			{
-				{
-					auto release_instance = std::move(webgpu.instance);
-				}
-			});
-	}
 
 	struct webgpu_plugin
 	{
@@ -572,10 +570,20 @@ export namespace fae
 		wgpu::DeviceDescriptor device_descriptor{
 			.deviceLostCallbackInfo = wgpu::DeviceLostCallbackInfo{
 				.mode = wgpu::CallbackMode::AllowSpontaneous,
-				.callback = [](WGPUDevice const * device, WGPUDeviceLostReason cReason, char const * message, void * userdata)
+				.callback = [](WGPUDevice const *device, WGPUDeviceLostReason cReason, char const *message, void *userdata)
 				{
 					auto reason = static_cast<wgpu::DeviceLostReason>(cReason);
-					fae::log_info(std::format("[wgpu] Device lost. [reason] {} [message] {}", to_string(reason), message));
+					switch (reason)
+					{
+					case wgpu::DeviceLostReason::Destroyed:
+						// don't log this reason to not scare the user, happens naturally at the end of the application lifecycle
+						break;
+					case wgpu::DeviceLostReason::Undefined:
+					case wgpu::DeviceLostReason::InstanceDropped:
+					case wgpu::DeviceLostReason::FailedCreation:
+						fae::log_info(std::format("[wgpu] Device lost. [reason] {} [message] {}", to_string(reason), message));
+						break;
+					}
 				},
 			}};
 		wgpu::LoggingCallback logging_callback = [](WGPULoggingType cType, char const *message, void *userdata)
@@ -673,22 +681,34 @@ export namespace fae
 									data->webgpu.surface.Configure(&surface_config);
 
 									auto shader_module = create_shader_module(data->webgpu.device, "shader_module", R"(
+struct t_uniforms
+{
+	model : mat4x4f,
+	view : mat4x4f,
+	projection : mat4x4f,
+};
+@group(0) @binding(0) var<uniform> uniforms : t_uniforms;
+
 struct vertex_input {
 	@builtin(vertex_index) vertex_index: u32,
 	@location(0) position: vec4f,
 	@location(1) color: vec4f,
+	@location(2) uv: vec2f,
 };
 
 struct vertex_output {
 	@builtin(position) position: vec4f,
 	@location(0) color: vec4f,
+	@location(1) uv: vec2f,
 };
 
 @vertex
 fn vs_main(in: vertex_input) -> vertex_output {
+	var model_view_projection_matrix = uniforms.projection * uniforms.view * uniforms.model;
 	var out: vertex_output;
-	out.position = in.position;
+	out.position = model_view_projection_matrix * in.position;
 	out.color = in.color;
+	out.uv = in.uv;
     return out;
 }
 
@@ -698,7 +718,7 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 }
 )");
 
-									auto vertex_attributes = std::array<wgpu::VertexAttribute, 2>{
+									auto vertex_attributes = std::array<wgpu::VertexAttribute, 3>{
 										wgpu::VertexAttribute{
 											.format = wgpu::VertexFormat::Float32x4,
 											.offset = 0,
@@ -709,10 +729,15 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 											.offset = 4 * sizeof(float),
 											.shaderLocation = 1,
 										},
+										wgpu::VertexAttribute{
+											.format = wgpu::VertexFormat::Float32x2,
+											.offset = 2 * sizeof(float),
+											.shaderLocation = 2,
+										},
 									};
 
 									auto vertex_buffer_layout = wgpu::VertexBufferLayout{
-										.arrayStride = 8 * sizeof(float),
+										.arrayStride = 10 * sizeof(float),
 										.stepMode = wgpu::VertexStepMode::Vertex,
 										.attributeCount = static_cast<std::uint32_t>(vertex_attributes.size()),
 										.attributes = vertex_attributes.data(),
@@ -743,7 +768,13 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 										.targetCount = 1,
 										.targets = &color_target_state,
 									};
+									auto depth_stencil = wgpu::DepthStencilState{
+										.format = wgpu::TextureFormat::Depth24Plus,
+										.depthWriteEnabled = true,
+										.depthCompare = wgpu::CompareFunction::Less,
+									};
 									wgpu::RenderPipelineDescriptor pipeline_descriptor{
+										.label = "fae_render_pipeline",
 										.vertex = wgpu::VertexState{
 											.module = shader_module,
 											.entryPoint = "vs_main",
@@ -758,6 +789,7 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 											.frontFace = wgpu::FrontFace::CCW,
 											.cullMode = wgpu::CullMode::None,
 										},
+										.depthStencil = &depth_stencil,
 										.multisample = wgpu::MultisampleState{
 											.count = 1,
 											.mask = ~0u,
@@ -766,6 +798,37 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 										.fragment = &fragment_state,
 									};
 									data->webgpu.render_pipeline = data->webgpu.device.CreateRenderPipeline(&pipeline_descriptor);
+
+									data->webgpu.depth_texture = create_texture(
+										data->webgpu.device, "Depth texture",
+										{
+											.width = static_cast<std::uint32_t>(window_size.width),
+											.height = static_cast<std::uint32_t>(window_size.height),
+										},
+										wgpu::TextureFormat::Depth24Plus, wgpu::TextureUsage::RenderAttachment);
+
+									constexpr std::uint64_t uniform_buffer_size = 4 * 16 * 3; // mat4x4<f32> * 3
+									auto uniform_buffer = create_buffer(device, "uniform_buffer", uniform_buffer_size, wgpu::BufferUsage::Uniform);
+									auto bind_entries = std::array<wgpu::BindGroupEntry, 1>{
+										wgpu::BindGroupEntry{
+											.binding = 0,
+											.buffer = uniform_buffer,
+											.size = uniform_buffer_size,
+										},
+									};
+									auto bind_group_descriptor = wgpu::BindGroupDescriptor{
+										.layout = data->webgpu.render_pipeline.GetBindGroupLayout(0),
+										.entryCount = static_cast<std::uint32_t>(bind_entries.size()),
+										.entries = bind_entries.data(),
+									};
+									auto uniform_bind_group = data->webgpu.device.CreateBindGroup(&bind_group_descriptor);
+
+									data->webgpu.uniform_buffer = fae::uniform_buffer{
+										.buffer = uniform_buffer,
+										.size = uniform_buffer_size,
+										.bind_group = uniform_bind_group,
+									};
+
 									delete data;
 								},
 								.userdata = new request_device_data{
@@ -782,8 +845,6 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 						.webgpu = webgpu,
 					},
 				});
-
-			app.add_system<deinit_step>(deinit_webgpu);
 		}
 	};
 } // namespace fae

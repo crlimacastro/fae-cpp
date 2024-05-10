@@ -25,16 +25,23 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 			"${SUBDIRECTORY}/*.cpp"
 		)
 		add_executable(${SUBDIRECTORY_NAME})
+
 		if(EMSCRIPTEN)
 			set_target_properties(${SUBDIRECTORY_NAME} PROPERTIES SUFFIX ".html")
-			target_link_options(${SUBDIRECTORY_NAME} PRIVATE "-sUSE_WEBGPU=1" "-sUSE_SDL=3")
+			target_link_options(${SUBDIRECTORY_NAME}
+				PRIVATE
+				"-sUSE_WEBGPU=1"
+				"--use-port=sdl2"
+				"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
+				"--use-port=sdl2_net"
+			)
 	  	endif()
 
 		target_sources(${SUBDIRECTORY_NAME}
-		PUBLIC
-			FILE_SET CXX_MODULES
-			FILES
-			${SUBDIRECTORY_FILES}
+			PRIVATE
+				FILE_SET CXX_MODULES
+				FILES
+					${SUBDIRECTORY_FILES}
 		)
 		target_link_libraries(${SUBDIRECTORY_NAME} PRIVATE ${PROJECT_NAME}::${PROJECT_NAME})
 	endif()
