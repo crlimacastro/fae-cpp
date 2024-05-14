@@ -4,7 +4,7 @@ module;
 #include <string>
 #include <string_view>
 #include <format>
-#include <SDL3/SDL.h>
+#include "fae/sdl.hpp"
 
 export module fae:windowing;
 

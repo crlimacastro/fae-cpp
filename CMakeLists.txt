@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29.2)
+cmake_minimum_required(VERSION 3.29.3)
 
 project(
 	fae
@@ -25,6 +25,7 @@ get_cpm(VERSION ${FAE_CPM_VERSION})
 CPMUsePackageLock(package-lock.cmake)
 CPMAddPackage("gh:g-truc/glm#1.0.1")
 CPMAddPackage("gh:skypjack/entt#v3.13.2")
+if(NOT DEFINED EMSCRIPTEN)
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
@@ -41,7 +42,7 @@ CPMAddPackage(
 			"SDL_STATIC ON"
 		endif()
 )
-if(NOT EMSCRIPTEN)
+
 	CPMAddPackage(
 		NAME dawn
   		GIT_REPOSITORY https://dawn.googlesource.com/dawn
@@ -124,10 +125,10 @@ target_sources(${PROJECT_NAME}
 set(FAE_PUBLIC_LIBRARIES
 	glm::glm
 	EnTT::EnTT
-	SDL3::SDL3
-)
-if(NOT EMSCRIPTEN)
+	)
+	if(NOT DEFINED EMSCRIPTEN)
 	list(APPEND FAE_PUBLIC_LIBRARIES
+		SDL3::SDL3
 		webgpu_cpp
 		webgpu_dawn
 	)

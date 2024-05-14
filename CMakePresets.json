@@ -4,13 +4,8 @@
         {
             "name": "default",
             "hidden": true,
-            "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "installDir": "${sourceDir}/out/install/${presetName}",
-            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-            "cacheVariables": {
-                "CPM_USE_LOCAL_PACKAGES" : "ON"
-            }
+            "installDir": "${sourceDir}/out/install/${presetName}"
         },
         {
             "name": "debug",
@@ -32,8 +27,7 @@
     "buildPresets": [
         {
             "name": "default",
-            "hidden": true,
-            "jobs": 8
+            "hidden": true
         },
         {
             "name": "debug",

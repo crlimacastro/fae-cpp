@@ -1,5 +1,5 @@
 module;
-#include <SDL3/SDL.h>
+#include "fae/sdl.hpp"
 #include <format>
 #include <string>
 #include <string_view>
@@ -491,7 +491,6 @@ export namespace fae
 		windows_surface_descriptor.hwnd = hwnd;
 		surface_descriptor.nextInChain = (const wgpu::ChainedStruct *)&windows_surface_descriptor;
 		surface_descriptor.label = "windows_sdl_webgpu_surface";
-#elif defined(SDL_PLATFORM_)
 #elif defined(SDL_PLATFORM_MACOS)
 		NSWindow *nswindow = (__bridge NSWindow *)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
 		auto macos_surface_descriptor = wgpu::SurfaceDescriptorFromMetalLayer{};
@@ -528,6 +527,7 @@ export namespace fae
 			surface_descriptor.nextInChain = (const wgpu::ChainedStruct *)&linux_wayland_surface_descriptor;
 			surface_descriptor.label = "linux_wayland_sdl_webgpu_surface";
 		}
+#else
 #error "unsupported platform"
 #endif
 		return instance.CreateSurface(&surface_descriptor);

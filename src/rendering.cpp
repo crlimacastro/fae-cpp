@@ -1,7 +1,7 @@
 module;
 
 #include "fae/webgpu.hpp"
-#include <SDL3/SDL.h>
+#include "fae/sdl.hpp"
 #include <cstdint>
 #include <format>
 #include <functional>

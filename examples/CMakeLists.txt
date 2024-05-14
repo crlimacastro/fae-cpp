@@ -26,14 +26,13 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 		)
 		add_executable(${SUBDIRECTORY_NAME})
 
-		if(EMSCRIPTEN)
+		if(DEFINED EMSCRIPTEN)
 			set_target_properties(${SUBDIRECTORY_NAME} PROPERTIES SUFFIX ".html")
 			target_link_options(${SUBDIRECTORY_NAME}
 				PRIVATE
 				"-sUSE_WEBGPU=1"
 				"--use-port=sdl2"
 				"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
-				"--use-port=sdl2_net"
 			)
 	  	endif()
 

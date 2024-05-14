@@ -1,5 +1,5 @@
 module;
-#include <SDL3/SDL.h>
+#include "fae/sdl.hpp"
 #include <bitset>
 #include <cstdint>
 #include <format>
