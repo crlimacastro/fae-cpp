@@ -63,7 +63,6 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
 	CXX_STANDARD 23
-	CXX_STANDARD_REQUIRED ON
 	COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
 	LINKER_LANGUAGE CXX
 )
@@ -71,6 +70,13 @@ target_compile_features(${PROJECT_NAME}
 	PUBLIC
 		cxx_std_23
 )
+
+if(DEFINED EMSCRIPTEN)
+	target_compile_definitions(${PROJECT_NAME}
+		PUBLIC
+			__EMSCRIPTEN__
+	)
+endif()
 
 # warnings
 if(FAE_ENABLE_WARNINGS)

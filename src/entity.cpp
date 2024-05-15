@@ -1,4 +1,5 @@
 module;
+
 #include <any>
 #include <entt/entt.hpp>
 #include <vector>
@@ -74,7 +75,7 @@ export namespace fae
 			return *this;
 		}
 
-		inline constexpr auto destroy() noexcept -> void
+		inline auto destroy() noexcept -> void
 		{
 			registry.destroy(id);
 		}

@@ -1,4 +1,5 @@
 module;
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -23,7 +24,7 @@ export namespace fae
 		float v = 0.f;
 		std::uint8_t a = 255;
 
-		static inline constexpr auto from_rgba(const color_rgba &color) noexcept
+		static inline auto from_rgba(const color_rgba &color) noexcept
 			-> color_hsva
 		{
 			float r_norm = color.r / 255.f;
@@ -76,7 +77,7 @@ export namespace fae
 			return color_hsva{.h = h, .s = s, .v = v, .a = color.a};
 		}
 
-		inline constexpr auto to_rgba() const noexcept -> color_rgba
+		inline auto to_rgba() const noexcept -> color_rgba
 		{
 			float fc = v * s;
 			float h_prime = std::fmod(h / 60.0, 6);

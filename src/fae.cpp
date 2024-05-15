@@ -1,3 +1,5 @@
+module;
+
 export module fae;
 
 export import :config;

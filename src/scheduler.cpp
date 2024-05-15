@@ -1,4 +1,5 @@
 module;
+
 #include <any>
 #include <typeindex>
 #include <unordered_map>
@@ -50,7 +51,7 @@ export namespace fae
 			return *this;
 		}
 
-		[[maybe_unused]] inline constexpr auto clear_systems() noexcept -> scheduler &
+		[[maybe_unused]] inline auto clear_systems() noexcept -> scheduler &
 		{
 			m_systems.clear();
 			return *this;

@@ -1,11 +1,16 @@
 module;
+
 #include "fae/sdl.hpp"
+#include <atomic>
 #include <bitset>
+#include <cstddef>
 #include <cstdint>
+#include <expected>
 #include <format>
 
 export module fae:sdl;
 
+import :core;
 import :application;
 import :logging;
 
@@ -104,6 +109,107 @@ export namespace fae
 		SDL_Renderer *raw;
 	};
 
+	struct sdl_error
+	{
+		int code;
+		std::string message;
+	};
+
+	struct sdl
+	{
+		static std::atomic<std::size_t> ref_count;
+
+		struct sdl_options
+		{
+			bool init_timer = true;
+			bool init_audio = true;
+			bool init_video = true;
+			bool init_haptic = false;
+			bool init_gamepad = false;
+			bool init_sensor = false;
+			bool init_camera = false;
+		};
+
+		static auto init(const sdl_options &options) noexcept -> std::expected<sdl, sdl_error>
+		{
+			if (ref_count == 0)
+			{
+				Uint32 flags = SDL_INIT_EVENTS;
+				if (options.init_timer)
+				{
+					flags |= SDL_INIT_TIMER;
+				}
+				if (options.init_audio)
+				{
+					flags |= SDL_INIT_AUDIO;
+				}
+				if (options.init_video)
+				{
+					flags |= SDL_INIT_VIDEO;
+				}
+				if (options.init_haptic)
+				{
+					flags |= SDL_INIT_HAPTIC;
+				}
+				if (options.init_gamepad)
+				{
+					flags |= SDL_INIT_GAMEPAD;
+				}
+				if (options.init_sensor)
+				{
+					flags |= SDL_INIT_SENSOR;
+				}
+				if (options.init_camera)
+				{
+					flags |= SDL_INIT_CAMERA;
+				}
+
+				if (const auto error_code = SDL_Init(flags))
+				{
+					return std::unexpected(sdl_error{
+						.code = error_code,
+						.message = SDL_GetError()});
+				}
+			}
+			return sdl{};
+		}
+
+		~sdl() noexcept
+		{
+			--ref_count;
+			if (ref_count == 0)
+			{
+				SDL_Quit();
+			}
+		}
+
+		sdl(const sdl &) noexcept
+		{
+			++ref_count;
+		}
+		auto operator=(const sdl &) noexcept -> sdl &
+		{
+			++ref_count;
+			return *this;
+		}
+		sdl(sdl &&) noexcept
+		{
+			++ref_count;
+		}
+		auto operator=(sdl &&) noexcept -> sdl &
+		{
+			++ref_count;
+			return *this;
+		}
+
+	private:
+		sdl() noexcept
+		{
+			++ref_count;
+		}
+	};
+	auto sdl::ref_count = std::atomic<std::size_t>{0};
+
 	auto update_sdl(const update_step &step) noexcept -> void
 	{
 		step.resources.use_resource<sdl_input>([&](sdl_input &input)
@@ -156,61 +262,24 @@ export namespace fae
 			}
 		}
 	}
-	auto deinit_sdl(const deinit_step &step) noexcept -> void
-	{
-		SDL_Quit();
-	}
 
 	struct sdl_plugin
 	{
-		bool init_timer = true;
-		bool init_audio = true;
-		bool init_video = true;
-		bool init_haptic = false;
-		bool init_gamepad = false;
-		bool init_sensor = false;
-		bool init_camera = false;
+		sdl::sdl_options options{};
 
 		auto init(application &app) const noexcept -> void
 		{
-			Uint32 flags = SDL_INIT_EVENTS;
-			if (init_timer)
+			auto maybe_sdl = sdl::init(options);
+			if (!maybe_sdl)
 			{
-				flags |= SDL_INIT_TIMER;
-			}
-			if (init_audio)
-			{
-				flags |= SDL_INIT_AUDIO;
-			}
-			if (init_video)
-			{
-				flags |= SDL_INIT_VIDEO;
-			}
-			if (init_haptic)
-			{
-				flags |= SDL_INIT_HAPTIC;
-			}
-			if (init_gamepad)
-			{
-				flags |= SDL_INIT_GAMEPAD;
-			}
-			if (init_sensor)
-			{
-				flags |= SDL_INIT_SENSOR;
-			}
-			if (init_camera)
-			{
-				flags |= SDL_INIT_CAMERA;
-			}
-			if (const auto error_code = SDL_Init(flags))
-			{
-				fae::log_error(std::format("could not initialize SDL: error code {}: error message: {}", error_code, SDL_GetError()));
+				fae::log_error(std::format("could not initialize SDL: error code {}: error message: {}", maybe_sdl.error().code, maybe_sdl.error().message));
 				return;
 			}
+			auto &sdl = *maybe_sdl;
 			app
+				.insert_resource<fae::sdl>(std::move(sdl))
 				.emplace_resource<sdl_input>(sdl_input{})
-				.add_system<update_step>(update_sdl)
-				.add_system<deinit_step>(deinit_sdl);
+				.add_system<update_step>(update_sdl);
 		}
 	};
 } // namespace fae

@@ -1,4 +1,5 @@
 module;
+
 #include "fae/sdl.hpp"
 #include <functional>
 

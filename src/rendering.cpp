@@ -234,11 +234,11 @@ export namespace fae
 					[&](webgpu &webgpu)
 					{
 						const auto vertex_buffer = create_buffer_with_data(
-							webgpu.device, "vertex_buffer", webgpu.current_render.vertex_data.data(), sizeof_vector_data(webgpu.current_render.vertex_data),
+							webgpu.device, "vertex_buffer", webgpu.current_render.vertex_data.data(), sizeof_data(webgpu.current_render.vertex_data),
 							wgpu::BufferUsage::Vertex);
 						webgpu.current_render.render_pass.SetVertexBuffer(0, vertex_buffer);
 						const auto index_buffer = create_buffer_with_data(
-							webgpu.device, "index_buffer", webgpu.current_render.index_data.data(), sizeof_vector_data(webgpu.current_render.index_data),
+							webgpu.device, "index_buffer", webgpu.current_render.index_data.data(), sizeof_data(webgpu.current_render.index_data),
 							wgpu::BufferUsage::Index);
 						webgpu.current_render.render_pass.SetIndexBuffer(index_buffer, wgpu::IndexFormat::Uint32);
 						webgpu.current_render.render_pass.DrawIndexed(webgpu.current_render.index_data.size());

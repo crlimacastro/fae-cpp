@@ -3,7 +3,7 @@ module;
 #include <chrono>
 #include <format>
 #include <limits>
-#include <print>
+#include <iostream>
 #include <string>
 
 export module fae:time;

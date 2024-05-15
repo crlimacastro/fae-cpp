@@ -1,75 +1,95 @@
 {
-    "version": 6,
-    "configurePresets": [
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "default",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "23"
+      }
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "displayName": "Debug Config",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "default",
+      "displayName": "Release Config",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "web_debug",
+      "inherits": "default",
+      "displayName": "Web Debug Config",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE" : "${env.EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        "CMAKE_CXX_COMPILER": "em++",
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "hidden": true
+    },
+    {
+      "name": "debug",
+      "inherits": "default",
+      "displayName": "Debug Build",
+      "configurePreset": "debug"
+    },
+    {
+      "name": "release",
+      "displayName": "Release Build",
+      "inherits": "default",
+      "configurePreset": "release"
+    },
+    {
+      "name": "web debug",
+      "displayName": "Web Debug Build",
+      "inherits": "default",
+      "configurePreset": "web_debug"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "debug",
+      "displayName": "Debug Workflow",
+      "steps": [
         {
-            "name": "default",
-            "hidden": true,
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "installDir": "${sourceDir}/out/install/${presetName}"
+          "type": "configure",
+          "name": "debug"
         },
         {
-            "name": "debug",
-            "inherits": "default",
-            "displayName": "Debug Config",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "release",
-            "inherits": "default",
-            "displayName": "Release Config",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
+          "type": "build",
+          "name": "debug"
         }
-    ],
-    "buildPresets": [
+      ]
+    },
+    {
+      "name": "release",
+      "displayName": "Release Workflow",
+      "steps": [
         {
-            "name": "default",
-            "hidden": true
+          "type": "configure",
+          "name": "release"
         },
         {
-            "name": "debug",
-            "inherits": "default",
-            "displayName": "Debug Build",
-            "configurePreset": "debug"
-        },
-        {
-            "name": "release",
-            "displayName": "Release Build",
-            "inherits": "default",
-            "configurePreset": "release"
+          "type": "build",
+          "name": "release"
         }
-    ],
-    "workflowPresets": [
-        {
-            "name": "debug",
-            "displayName": "Debug Workflow",
-            "steps": [
-                {
-                    "type": "configure",
-                    "name": "debug"
-                },
-                {
-                    "type": "build",
-                    "name": "debug"
-                }
-            ]
-        },
-        {
-            "name": "release",
-            "displayName": "Release Workflow",
-            "steps": [
-                {
-                    "type": "configure",
-                    "name": "release"
-                },
-                {
-                    "type": "build",
-                    "name": "release"
-                }
-            ]
-        }
-    ]
+      ]
+    }
+  ]
 }

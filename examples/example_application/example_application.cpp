@@ -1,6 +1,6 @@
 module;
-#include "fae/sdl.hpp"
 
+#include "fae/sdl.hpp"
 #include <format>
 #include <type_traits>
 

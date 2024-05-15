@@ -1,4 +1,5 @@
 module;
+
 #include <format>
 #include <source_location>
 #ifdef __EMSCRIPTEN__

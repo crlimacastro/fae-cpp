@@ -1,3 +1,5 @@
+module;
+
 export module fae:default_plugins;
 
 import :application;

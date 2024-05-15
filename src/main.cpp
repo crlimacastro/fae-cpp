@@ -1,4 +1,5 @@
 module;
+
 #ifndef __EMSCRIPTEN__
 #include <SDL3/SDL_main.h>
 #endif

@@ -4,7 +4,7 @@
 emcmake cmake -B out/build/web
 
 # Build with the generated build system
-cmake --build out/build/web
+cmake --build out/build/web --parallel 8
 
 # Start a HTTP server (The address, most likely localhost:8080, will be pointing to the root of the project. Navigate desired example's HTML file to see the result.)
 npx http-server
