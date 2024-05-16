@@ -13,7 +13,12 @@ export namespace fae
 	[[nodiscard]] auto get_sdl_webgpu_surface(wgpu::Instance instance, SDL_Window *window) noexcept -> wgpu::Surface
 	{
 		auto surface_descriptor = wgpu::SurfaceDescriptor{};
-#if defined(SDL_PLATFORM_WIN32)
+#if defined(__EMSCRIPTEN__)
+		wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvas_desc{
+			.selector = "#canvas",
+		};
+		surface_descriptor.nextInChain = (const wgpu::ChainedStruct *)&canvas_desc;
+#elif defined(SDL_PLATFORM_WIN32)
 		auto hwnd = (HWND)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
 		auto hinstance = (HINSTANCE)GetModuleHandle(nullptr);
 
