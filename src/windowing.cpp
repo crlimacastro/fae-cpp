@@ -1,11 +1,11 @@
 module;
 
+#include "fae/sdl.hpp"
 #include <cstddef>
+#include <format>
 #include <functional>
 #include <string>
 #include <string_view>
-#include <format>
-#include "fae/sdl.hpp"
 
 export module fae:windowing;
 
@@ -62,7 +62,7 @@ export namespace fae
 	auto show_primary_window_after_first_render(const fae::first_render_end &e) noexcept -> void
 	{
 		e.resources.use_resource<fae::primary_window>([](primary_window &primary)
-													  { primary.window().show(); });
+			{ primary.window().show(); });
 	}
 
 	auto update_windows(const update_step &step) noexcept -> void
@@ -77,24 +77,24 @@ export namespace fae
 	{
 		return fae::window{
 			.get_title = [&]()
-			{ return SDL_GetWindowTitle(window.raw); },
+			{ return SDL_GetWindowTitle(window.raw.get()); },
 			.set_title = [&](std::string_view value)
-			{ SDL_SetWindowTitle(window.raw, value.data()); },
+			{ SDL_SetWindowTitle(window.raw.get(), value.data()); },
 			.get_size = [&]()
-															  {
-																  int width{}, height{};
-			SDL_GetWindowSize(window.raw, &width, &height);
-			return fae::window::size
 			{
-				.width = static_cast<std::size_t>(width),
-				.height = static_cast<std::size_t>(height),
-			}; },
+				int width{}, height{};
+				SDL_GetWindowSize(window.raw.get(), &width, &height);
+				return fae::window::size
+				{
+					.width = static_cast<std::size_t>(width),
+					.height = static_cast<std::size_t>(height),
+				}; },
 			.set_size = [&](std::size_t width, std::size_t height)
-			{ SDL_SetWindowSize(window.raw, static_cast<int>(width), static_cast<int>(height)); },
+			{ SDL_SetWindowSize(window.raw.get(), static_cast<int>(width), static_cast<int>(height)); },
 			.show = [&]()
-			{ SDL_ShowWindow(window.raw); },
+			{ SDL_ShowWindow(window.raw.get()); },
 			.hide = [&]()
-			{ SDL_HideWindow(window.raw); },
+			{ SDL_HideWindow(window.raw.get()); },
 			.update = [&]()
 			{
 				// do nothing
@@ -102,17 +102,15 @@ export namespace fae
 			.should_close = [&]()
 			{ return window.should_close; },
 			.close = [&]()
-			{
-			window.should_close = true;
-			SDL_DestroyWindow(window.raw); },
+			{ window.should_close = true; },
 			.is_fullscreen = [&]()
-			{ return SDL_GetWindowFlags(window.raw) & SDL_WINDOW_FULLSCREEN; },
+			{ return SDL_GetWindowFlags(window.raw.get()) & SDL_WINDOW_FULLSCREEN; },
 			.set_fullscreen = [&](bool value)
-			{ SDL_SetWindowFullscreen(window.raw, value ? SDL_TRUE : SDL_FALSE); },
+			{ SDL_SetWindowFullscreen(window.raw.get(), value ? SDL_TRUE : SDL_FALSE); },
 			.toggle_fullscreen = [&]()
-														   {
-				const auto is_fullscreen = SDL_GetWindowFlags(window.raw) & SDL_WINDOW_FULLSCREEN;
-				SDL_SetWindowFullscreen(window.raw, is_fullscreen ? SDL_FALSE : SDL_TRUE); },
+			{
+				const auto is_fullscreen = SDL_GetWindowFlags(window.raw.get()) & SDL_WINDOW_FULLSCREEN;
+				SDL_SetWindowFullscreen(window.raw.get(), is_fullscreen ? SDL_FALSE : SDL_TRUE); },
 		};
 	}
 
@@ -142,15 +140,22 @@ export namespace fae
 			{
 				flags |= SDL_WINDOW_FULLSCREEN;
 			}
-			const auto maybe_sdl_window = SDL_CreateWindow(window_title.data(), static_cast<int>(window_width), static_cast<int>(window_height), flags);
+
+			auto maybe_sdl_window = sdl_window::create(sdl_window::options{
+				.title = window_title,
+				.width = window_width,
+				.height = window_height,
+				.is_resizable = is_window_resizable,
+				.is_hidden = should_hide_window_until_first_render,
+				.is_fullscreen = is_window_fullscreen,
+			});
 			if (!maybe_sdl_window)
 			{
-				fae::log_error(std::format("could not create window: {}", SDL_GetError()));
+				const auto &error = maybe_sdl_window.error();
+				fae::log_error(std::format("could not create window: {}", error.message));
 				return;
 			}
-			auto sdl_window = fae::sdl_window{
-				.raw = maybe_sdl_window,
-			};
+			auto &sdl_window = *maybe_sdl_window;
 			auto window_entity = app.ecs_world.create_entity();
 			auto &sdl_window_component = window_entity.set_and_get_component<fae::sdl_window>(std::move(sdl_window));
 			auto window = make_sdl_window(sdl_window_component);
@@ -165,4 +170,4 @@ export namespace fae
 				.add_system<update_step>(update_windows);
 		}
 	};
-}
+} // namespace fae

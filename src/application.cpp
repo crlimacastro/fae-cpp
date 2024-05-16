@@ -153,6 +153,14 @@ export namespace fae
 #endif
 		}
 
+		template <typename t_resource, typename... t_args>
+		[[maybe_unused]] inline constexpr auto
+		emplace_resource(t_args &&...args) noexcept -> application &
+		{
+			resources.emplace<t_resource>(std::forward<t_args>(args)...);
+			return *this;
+		}
+
 		template <typename t_resource>
 		[[maybe_unused]] inline constexpr auto
 		insert_resource(t_resource &&resource = {}) noexcept -> application &
@@ -161,11 +169,11 @@ export namespace fae
 			return *this;
 		}
 
-		template <typename t_resource, typename... t_args>
-		[[maybe_unused]] inline constexpr auto
-		emplace_resource(t_args &&...args) noexcept -> application &
+		template <typename t_resource>
+		[[nodiscard]] inline constexpr auto
+		insert_or_assign_resource(t_resource &&resource) noexcept -> application &
 		{
-			resources.emplace<t_resource>(std::forward<t_args>(args)...);
+			resources.insert_or_assign(std::forward<t_resource>(resource));
 			return *this;
 		}
 

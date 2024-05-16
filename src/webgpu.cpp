@@ -193,7 +193,7 @@ export namespace fae
 									{
 										fae::log_fatal("sdl window component not found in primary window entity");
 									}
-									auto sdl_window = *maybe_sdl_window;
+									auto &sdl_window = *maybe_sdl_window;
 
 #if defined(__EMSCRIPTEN__)
 									wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvas_desc{
@@ -204,7 +204,7 @@ export namespace fae
 									};
 									data->webgpu.surface = data->webgpu.instance.CreateSurface(&surface_desc);
 #else
-							data->webgpu.surface = get_sdl_webgpu_surface(data->webgpu.instance, sdl_window.raw);
+							data->webgpu.surface = get_sdl_webgpu_surface(data->webgpu.instance, sdl_window.raw.get());
 #endif
 									auto window = primary_window.window();
 									auto window_size = window.get_size();

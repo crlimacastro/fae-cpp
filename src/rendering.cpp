@@ -1,7 +1,7 @@
 module;
 
-#include "fae/webgpu.hpp"
 #include "fae/sdl.hpp"
+#include "fae/webgpu.hpp"
 #include <cstdint>
 #include <format>
 #include <functional>
@@ -85,7 +85,7 @@ export namespace fae
 					[&](sdl_renderer &renderer)
 					{
 						std::uint8_t r{}, g{}, b{}, a{};
-						SDL_GetRenderDrawColor(renderer.raw, &r, &g, &b, &a);
+						SDL_GetRenderDrawColor(renderer.raw.get(), &r, &g, &b, &a);
 						clear_color = color{r, g, b, a};
 					});
 				return clear_color;
@@ -96,7 +96,7 @@ export namespace fae
 				resources.use_resource<sdl_renderer>(
 					[&](sdl_renderer &renderer)
 					{
-						SDL_SetRenderDrawColor(renderer.raw, value.r, value.g,
+						SDL_SetRenderDrawColor(renderer.raw.get(), value.r, value.g,
 							value.b, value.a);
 					});
 			},
@@ -105,7 +105,7 @@ export namespace fae
 			{
 				resources.use_resource<sdl_renderer>(
 					[&](sdl_renderer &renderer)
-					{ SDL_RenderClear(renderer.raw); });
+					{ SDL_RenderClear(renderer.raw.get()); });
 			},
 			.begin =
 				[&]()
@@ -117,7 +117,7 @@ export namespace fae
 			{
 				resources.use_resource<sdl_renderer>(
 					[&](sdl_renderer &renderer)
-					{ SDL_RenderPresent(renderer.raw); });
+					{ SDL_RenderPresent(renderer.raw.get()); });
 			},
 		};
 	}
@@ -255,33 +255,20 @@ export namespace fae
 
 	struct rendering_plugin
 	{
-		struct sdl_renderer_config
-		{
-			std::optional<std::string_view> rendering_driver_name =
-				std::nullopt;
-			enum class sdl_renderer_type
-			{
-				software,
-				hardware,
-			};
-			sdl_renderer_type type = sdl_renderer_type::hardware;
-			bool vsync = true;
-		};
-
-		struct webgpu_renderer_config
+		struct webgpu_renderer_options
 		{
 		};
 
-		std::variant<sdl_renderer_config, webgpu_renderer_config>
-			renderer_config = webgpu_renderer_config{};
+		std::variant<sdl_renderer::options, webgpu_renderer_options>
+			renderer_options = webgpu_renderer_options{};
 
 		auto init(application &app) const noexcept -> void
 		{
 			app.add_plugin(windowing_plugin{});
 
 			fae::match(
-				renderer_config,
-				[&](sdl_renderer_config config)
+				renderer_options,
+				[&](sdl_renderer::options options)
 				{
 					app.add_plugin(sdl_plugin{});
 					auto maybe_primary = app.resources.get<primary_window>();
@@ -300,49 +287,18 @@ export namespace fae
 					}
 					auto &sdl_window = *maybe_sdl_window;
 
-					Uint32 flags = 0;
-
-					switch (config.type)
+					auto maybe_sdl_renderer = sdl_renderer::create(sdl_window, options);
+					if (!maybe_sdl_renderer)
 					{
-					case sdl_renderer_config::sdl_renderer_type::software:
-					{
-						flags |= SDL_RENDERER_SOFTWARE;
-						break;
-					}
-					case sdl_renderer_config::sdl_renderer_type::hardware:
-					{
-						flags |= SDL_RENDERER_ACCELERATED;
-						break;
-					}
-					default:
-					{
-						fae::log_error("unknown sdl renderer type");
+						const auto &error = maybe_sdl_renderer.error();
+						fae::log_error(std::format("could not create renderer: {}", error.message));
 						return;
 					}
-					}
-					if (config.vsync)
-					{
-						flags |= SDL_RENDERER_PRESENTVSYNC;
-					}
-					const auto rendering_driver_name =
-						config.rendering_driver_name.has_value()
-							? config.rendering_driver_name.value().data()
-							: nullptr;
-					const auto maybe_renderer = SDL_CreateRenderer(
-						sdl_window.raw, rendering_driver_name, flags);
-					if (!maybe_renderer)
-					{
-						fae::log_error(std::format(
-							"could not create renderer: {}", SDL_GetError()));
-						return;
-					}
-					app.resources.emplace<sdl_renderer>(sdl_renderer{
-						.raw = maybe_renderer,
-					});
-					app.emplace_resource<renderer>(
-						make_sdl_renderer(app.resources));
+					auto &sdl_renderer = *maybe_sdl_renderer;
+					app.emplace_resource<fae::sdl_renderer>(std::move(sdl_renderer));
+					app.insert_resource<renderer>(std::move(make_sdl_renderer(app.resources)));
 				},
-				[&](webgpu_renderer_config config)
+				[&](webgpu_renderer_options options)
 				{
 					app.add_plugin(webgpu_plugin{});
 					const auto maybe_webgpu_renderer =
