@@ -174,7 +174,7 @@ export namespace fae
 						webgpu.current_render.vertex_data.clear();
 						webgpu.current_render.index_data.clear();
 						webgpu.current_render.uniform_data.clear();
-						webgpu.current_render.uniform_data.resize(4 * 16 * 3);
+						webgpu.current_render.uniform_data.resize((3 * 4 * 16) + (1 * 4 * 4));
 
 						wgpu::SurfaceTexture surface_texture;
 						webgpu.surface.GetCurrentTexture(&surface_texture);
@@ -190,14 +190,19 @@ export namespace fae
 						auto time = resources.get_or_emplace<fae::time>(fae::time{});
 						auto dt = time.delta().seconds_f32();
 						auto t = time.elapsed().seconds_f32();
+
 						transform.position = {1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f};
 						transform.rotation *= math::angleAxis(math::radians(60.f) * dt, vec3(0.0f, 1.0f, 0.0f));
 						auto model = transform.to_mat4();
-						auto view = math::mat4(1.f);
+						auto view = mat4(1.f);
 						auto projection = math::perspective(math::radians(fov), aspect, near, far);
+						static auto hsva = color_hsva::from_rgba(colors::red);
+						hsva.h = static_cast<float>(static_cast<int>(hsva.h + dt * 120) % 360);
+						auto tint = hsva.to_rgba().to_vec4f();
 						std::memcpy(webgpu.current_render.uniform_data.data(), &model, sizeof(model));
 						std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model), &view, sizeof(view));
 						std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model) + sizeof(view), &projection, sizeof(projection));
+						std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model) + sizeof(view) + sizeof(projection), &tint, sizeof(tint));
 
 						webgpu.device.GetQueue().WriteBuffer(webgpu.uniform_buffer.buffer, 0, webgpu.current_render.uniform_data.data(), webgpu.uniform_buffer.size);
 						auto command_encoder = webgpu.device.CreateCommandEncoder();

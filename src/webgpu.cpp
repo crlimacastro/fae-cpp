@@ -46,10 +46,10 @@ export namespace fae
 
 	wgpu::ShaderModule create_shader_module(const wgpu::Device &device,
 		std::string_view label,
-		const char *src)
+		std::string_view src)
 	{
 		wgpu::ShaderModuleWGSLDescriptor wgsl_desc;
-		wgsl_desc.code = src;
+		wgsl_desc.code = src.data();
 		wgpu::ShaderModuleDescriptor desc{
 			.nextInChain = &wgsl_desc,
 			.label = label.data(),
@@ -209,17 +209,19 @@ export namespace fae
 									};
 									data->webgpu.surface.Configure(&surface_config);
 
-									auto shader_module = create_shader_module(data->webgpu.device, "shader_module", R"(
+									auto shader_source = std::string(R"(
 struct t_uniforms
 {
 	model : mat4x4f,
 	view : mat4x4f,
 	projection : mat4x4f,
+	tint: vec4f,
 };
 @group(0) @binding(0) var<uniform> uniforms : t_uniforms;
 
 struct vertex_input {
 	@builtin(vertex_index) vertex_index: u32,
+	@builtin(instance_index) instance_index: u32,
 	@location(0) position: vec4f,
 	@location(1) color: vec4f,
 	@location(2) uv: vec2f,
@@ -236,7 +238,7 @@ fn vs_main(in: vertex_input) -> vertex_output {
 	var model_view_projection_matrix = uniforms.projection * uniforms.view * uniforms.model;
 	var out: vertex_output;
 	out.position = model_view_projection_matrix * in.position;
-	out.color = in.color;
+	out.color = uniforms.tint * in.color;
 	out.uv = in.uv;
     return out;
 }
@@ -246,6 +248,7 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 	return in.color;
 }
 )");
+									auto shader_module = create_shader_module(data->webgpu.device, "shader_module", shader_source);
 
 									auto vertex_attributes = std::array<wgpu::VertexAttribute, 3>{
 										wgpu::VertexAttribute{
@@ -336,7 +339,7 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 										},
 										wgpu::TextureFormat::Depth24Plus, wgpu::TextureUsage::RenderAttachment);
 
-									constexpr std::uint64_t uniform_buffer_size = 4 * 16 * 3; // mat4x4<f32> * 3
+									constexpr std::uint64_t uniform_buffer_size = (3 * 4 * 16) + (1 * 4 * 4); // (3 * mat4x4<f32>) + (1 * vec4f)
 									auto uniform_buffer = create_buffer(device, "uniform_buffer", uniform_buffer_size, wgpu::BufferUsage::Uniform);
 									auto bind_entries = std::array<wgpu::BindGroupEntry, 1>{
 										wgpu::BindGroupEntry{

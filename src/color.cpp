@@ -3,6 +3,7 @@ module;
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <array>
 
 export module fae:color;
 
@@ -14,6 +15,11 @@ export namespace fae
 		std::uint8_t g = 0;
 		std::uint8_t b = 0;
 		std::uint8_t a = 255;
+
+		[[nodiscard]] inline constexpr auto to_vec4f() const noexcept -> std::array<float, 4>
+		{
+			return {r / 255.f, g / 255.f, b / 255.f, a / 255.f};
+		}
 	};
 	using color = color_rgba;
 
@@ -24,7 +30,7 @@ export namespace fae
 		float v = 0.f;
 		std::uint8_t a = 255;
 
-		static inline auto from_rgba(const color_rgba &color) noexcept
+		[[nodiscard]] static inline auto from_rgba(const color_rgba &color) noexcept
 			-> color_hsva
 		{
 			float r_norm = color.r / 255.f;
@@ -77,7 +83,7 @@ export namespace fae
 			return color_hsva{.h = h, .s = s, .v = v, .a = color.a};
 		}
 
-		inline auto to_rgba() const noexcept -> color_rgba
+		[[nodiscard]] inline auto to_rgba() const noexcept -> color_rgba
 		{
 			float fc = v * s;
 			float h_prime = std::fmod(h / 60.0, 6);
