@@ -61,11 +61,22 @@ configure_file(config.cpp.in src/config.cpp)
 add_library(${PROJECT_NAME})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
+set(FAE_PROPERTIES 
 	CXX_STANDARD 23
 	COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
 	LINKER_LANGUAGE CXX
 )
+if(DEFINED EMSCRIPTEN)
+	set(FAE_PROPERTIES ${FAE_PROPERTIES} SUFFIX ".wasm")
+	target_link_options(${PROJECT_NAME}
+		PRIVATE
+			"-sUSE_WEBGPU=1"
+			"--use-port=sdl2"
+			"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
+		)
+endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES ${FAE_PROPERTIES})
 target_compile_features(${PROJECT_NAME}
 	PUBLIC
 		cxx_std_23

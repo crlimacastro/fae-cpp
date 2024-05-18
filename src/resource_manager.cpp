@@ -5,6 +5,7 @@ module;
 #include <optional>
 #include <typeindex>
 #include <unordered_map>
+#include <concepts>
 
 export module fae:resource_manager;
 
@@ -115,6 +116,20 @@ export namespace fae
 		}
 
 		template <typename t_resource>
+		[[nodiscard]] inline constexpr auto
+		get_or_insert_or_assign(t_resource &&default_resource = {}) noexcept
+			-> t_resource &
+		{
+			auto maybe_resource = get<t_resource>();
+			if (!maybe_resource)
+			{
+				return insert_or_assign_and_get(
+					std::forward<t_resource &&>(default_resource));
+			}
+			return *maybe_resource;
+		}
+
+		template <typename t_resource>
 		[[maybe_unused]] inline constexpr auto erase() noexcept
 			-> resource_manager &
 		{
@@ -130,7 +145,7 @@ export namespace fae
 		}
 
 		template <typename t_resource>
-		[[maybe_unused]] inline constexpr auto use_resource(std::function<void(t_resource &)> callback) noexcept
+		[[maybe_unused]] inline constexpr auto use_resource(std::invocable<t_resource &> auto callback) noexcept
 			-> resource_manager &
 		{
 			const auto key = std::type_index(typeid(t_resource));
@@ -142,7 +157,7 @@ export namespace fae
 		}
 
 		template <typename t_resource>
-		[[maybe_unused]] inline constexpr auto use_resource(std::function<void(const t_resource &)> callback) const noexcept -> const resource_manager &
+		[[maybe_unused]] inline constexpr auto use_resource(std::invocable<t_resource &> auto callback) const noexcept -> const resource_manager &
 		{
 			const auto key = std::type_index(typeid(t_resource));
 			if (m_resources.contains(key))
