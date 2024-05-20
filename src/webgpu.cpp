@@ -224,7 +224,8 @@ struct vertex_input {
 	@builtin(instance_index) instance_index: u32,
 	@location(0) position: vec4f,
 	@location(1) color: vec4f,
-	@location(2) uv: vec2f,
+	@location(2) normal: vec4f,
+	@location(3) uv: vec2f,
 };
 
 struct vertex_output {
@@ -250,7 +251,7 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 )");
 									auto shader_module = create_shader_module(data->webgpu.device, "shader_module", shader_source);
 
-									auto vertex_attributes = std::array<wgpu::VertexAttribute, 3>{
+									auto vertex_attributes = std::array<wgpu::VertexAttribute, 4>{
 										wgpu::VertexAttribute{
 											.format = wgpu::VertexFormat::Float32x4,
 											.offset = 0,
@@ -262,14 +263,19 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 											.shaderLocation = 1,
 										},
 										wgpu::VertexAttribute{
-											.format = wgpu::VertexFormat::Float32x2,
-											.offset = 2 * sizeof(float),
+											.format = wgpu::VertexFormat::Float32x4,
+											.offset = 8 * sizeof(float),
 											.shaderLocation = 2,
+										},
+										wgpu::VertexAttribute{
+											.format = wgpu::VertexFormat::Float32x2,
+											.offset = 12 * sizeof(float),
+											.shaderLocation = 3,
 										},
 									};
 
 									auto vertex_buffer_layout = wgpu::VertexBufferLayout{
-										.arrayStride = 10 * sizeof(float),
+										.arrayStride = 14 * sizeof(float),
 										.stepMode = wgpu::VertexStepMode::Vertex,
 										.attributeCount = static_cast<std::uint32_t>(vertex_attributes.size()),
 										.attributes = vertex_attributes.data(),
