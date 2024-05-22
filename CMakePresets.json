@@ -28,20 +28,36 @@
       }
     },
     {
-      "name": "web_debug",
+      "name": "web",
       "inherits": "default",
-      "displayName": "Web Debug Config",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE" : "${env.EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
-        "CMAKE_CXX_COMPILER": "em++",
+        "CMAKE_CXX_COMPILER": "em++"
+      }
+    },
+    {
+      "name": "web_debug",
+      "inherits": "web",
+      "displayName": "Web Debug Config",
+      "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "web_release",
+      "inherits": "web",
+      "displayName": "Web Release Config",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
       }
     }
   ],
   "buildPresets": [
     {
       "name": "default",
-      "hidden": true
+      "hidden": true,
+      "jobs": 0
     },
     {
       "name": "debug",
@@ -56,10 +72,16 @@
       "configurePreset": "release"
     },
     {
-      "name": "web debug",
-      "displayName": "Web Debug Build",
+      "name": "web_debug",
       "inherits": "default",
+      "displayName": "Web Debug Build",
       "configurePreset": "web_debug"
+    },
+    {
+      "name": "web_release",
+      "inherits": "default",
+      "displayName": "Web Release Build",
+      "configurePreset": "web_release"
     }
   ],
   "workflowPresets": [
@@ -88,6 +110,34 @@
         {
           "type": "build",
           "name": "release"
+        }
+      ]
+    },
+    {
+      "name": "web_debug",
+      "displayName": "Web Debug Workflow",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "web_debug"
+        },
+        {
+          "type": "build",
+          "name": "web_debug"
+        }
+      ]
+    },
+    {
+      "name": "web_release",
+      "displayName": "Web Release Workflow",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "web_release"
+        },
+        {
+          "type": "build",
+          "name": "web_release"
         }
       ]
     }

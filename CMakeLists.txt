@@ -156,7 +156,15 @@ target_sources(${PROJECT_NAME}
 			${FAE_CXX_MODULES}
 	PRIVATE
 		${FAE_SOURCES}
-)	
+)
+
+if(${BUILD_SHARED_LIBS} AND WIN32)
+    add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3::SDL3-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
+        VERBATIM
+    )
+endif()
 
 set(FAE_PUBLIC_LIBRARIES
 	glm::glm
