@@ -1,14 +1,11 @@
-module;
+#pragma once
 
 #include "fae/webgpu.hpp"
+#include "fae/logging.hpp"
 #include <string>
 #include <sstream>
 
-export module fae:webgpu.string_utils;
-
-import :logging;
-
-export namespace fae
+namespace fae
 {
 	[[nodiscard]] auto to_string(wgpu::FeatureName feature_name) noexcept -> std::string
 	{

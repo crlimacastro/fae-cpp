@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <any>
 #include <functional>
@@ -7,11 +7,9 @@ module;
 #include <unordered_map>
 #include <concepts>
 
-export module fae:resource_manager;
+#include "fae/core.hpp"
 
-import :core;
-
-export namespace fae
+namespace fae
 {
 	struct resource_manager
 	{

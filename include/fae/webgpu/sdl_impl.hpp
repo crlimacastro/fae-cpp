@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include "fae/sdl.hpp"
 #include "fae/webgpu.hpp"
@@ -6,14 +6,12 @@ module;
 #include <Windows.h>
 #endif
 
-export module fae:webgpu.sdl_impl;
-
-export namespace fae
+namespace fae
 {
 	[[nodiscard]] auto get_sdl_webgpu_surface(wgpu::Instance instance, SDL_Window *window) noexcept -> wgpu::Surface
 	{
 		auto surface_descriptor = wgpu::SurfaceDescriptor{};
-#if defined(__EMSCRIPTEN__)
+#ifdef FAE_PLATFORM_WEB
 		wgpu::SurfaceDescriptorFromCanvasHTMLSelector canvas_desc{
 			.selector = "#canvas",
 		};

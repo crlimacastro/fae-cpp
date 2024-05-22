@@ -1,14 +1,12 @@
-module;
+#pragma once
 
 #include <any>
 #include <entt/entt.hpp>
 #include <vector>
 
-export module fae:entity;
+#include "fae/core.hpp"
 
-import :core;
-
-export namespace fae
+namespace fae
 {
 	struct entity
 	{

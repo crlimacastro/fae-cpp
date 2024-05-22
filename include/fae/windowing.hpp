@@ -1,20 +1,17 @@
-module;
+#pragma once
 
-#include "fae/sdl.hpp"
 #include <cstddef>
 #include <format>
 #include <functional>
 #include <string>
 #include <string_view>
 
-export module fae:windowing;
+#include "fae/logging.hpp"
+#include "fae/entity.hpp"
+#include "fae/application.hpp"
+#include "fae/sdl.hpp"
 
-import :logging;
-import :entity;
-import :application;
-import :sdl;
-
-export namespace fae
+namespace fae
 {
 	struct application;
 	struct application_step;

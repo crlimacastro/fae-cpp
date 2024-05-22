@@ -1,12 +1,10 @@
-module;
+#pragma once
 
 #include <functional>
 #include <vector>
 #include <algorithm>
 
-export module fae:event;
-
-export namespace fae
+namespace fae
 {
     template <typename... t_args>
     struct event

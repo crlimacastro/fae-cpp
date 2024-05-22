@@ -1,14 +1,12 @@
-module;
+#pragma once
 
 #include <any>
 #include <typeindex>
 #include <unordered_map>
 
-export module fae:scheduler;
+#include "fae/event.hpp"
 
-import :event;
-
-export namespace fae
+namespace fae
 {
 	struct scheduler
 	{

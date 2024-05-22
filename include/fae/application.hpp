@@ -1,22 +1,19 @@
-module;
+#pragma once
 
 #include <concepts>
 #include <typeindex>
 #include <unordered_set>
-#ifdef __EMSCRIPTEN__
+#ifdef FAE_PLATFORM_WEB
 #include <emscripten/emscripten.h>
 #endif
 
-export module fae:application;
+#include "fae/core.hpp"
+#include "fae/event.hpp"
+#include "fae/resource_manager.hpp"
+#include "fae/scheduler.hpp"
+#include "fae/ecs_world.hpp"
 
-import :core;
-import :event;
-
-export import :resource_manager;
-export import :scheduler;
-export import :ecs_world;
-
-export namespace fae
+namespace fae
 {
 	struct application;
 
@@ -107,7 +104,7 @@ export namespace fae
 			});
 		}
 
-#ifdef __EMSCRIPTEN__
+#ifdef FAE_PLATFORM_WEB
 		static auto step_callback(void *arg) -> void
 		{
 			static_cast<application *>(arg)->step();
@@ -132,7 +129,7 @@ export namespace fae
 				.scheduler = scheduler,
 				.ecs_world = ecs_world,
 			});
-#ifdef __EMSCRIPTEN__
+#ifdef FAE_PLATFORM_WEB
 			emscripten_set_main_loop_arg(&application::step_callback, this, 0, 1);
 			// emscripten set cleanup function like stop & deinit steps below?
 #else

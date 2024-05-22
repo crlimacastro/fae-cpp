@@ -1,8 +1,8 @@
-module;
+#pragma once
 
 #include <format>
 #include <source_location>
-#ifdef __EMSCRIPTEN__
+#ifdef FAE_PLATFORM_WEB
 #include <emscripten/emscripten.h>
 #else
 #include <chrono>
@@ -11,12 +11,10 @@ module;
 #include <string>
 #endif
 
-export module fae:logging;
+#include "fae/config.hpp"
+#include "fae/core.hpp"
 
-import :config;
-import :core;
-
-export namespace fae
+namespace fae
 {
 	enum struct log_level
 	{
@@ -28,7 +26,7 @@ export namespace fae
 	};
 }
 
-export template <>
+template <>
 struct std::formatter<fae::log_level> : std::formatter<std::string>
 {
 	auto format(fae::log_level value, std::format_context &ctx) const
@@ -60,7 +58,7 @@ struct std::formatter<fae::log_level> : std::formatter<std::string>
 	}
 };
 
-export namespace fae
+namespace fae
 {
 	struct log_options
 	{
@@ -70,19 +68,19 @@ export namespace fae
 		bool show_level = true;
 		log_level level = log_level::debug;
 		bool show_stacktrace = false;
-#ifndef __EMSCRIPTEN__
+#ifndef FAE_PLATFORM_WEB
 		std::stacktrace stacktrace = std::stacktrace::current();
 #endif
 	};
 
 	template <std::formattable<char> t_log_arg>
-#ifndef __EMSCRIPTEN__
+#ifndef FAE_PLATFORM_WEB
 	constexpr
 #endif
 		auto
 		log(const t_log_arg &msg, const log_options &options = {}) noexcept -> void
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef FAE_PLATFORM_WEB
 		EM_ASM(console.log(msg));
 		return;
 #else
@@ -110,7 +108,7 @@ export namespace fae
 
 		result_msg << std::format("{}", msg) << std::endl;
 
-#ifndef __EMSCRIPTEN__
+#ifndef FAE_PLATFORM_WEB
 		if (options.show_stacktrace)
 		{
 			result_msg << std::format("{}", options.stacktrace) << std::endl;

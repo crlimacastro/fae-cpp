@@ -1,6 +1,7 @@
-module;
+#pragma once
 
 #include <array>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -8,9 +9,7 @@ module;
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 
-export module fae:math;
-
-export namespace fae
+namespace fae
 {
 	using vec2 = glm::vec2;
 	using vec3 = glm::vec3;

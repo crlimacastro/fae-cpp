@@ -55,28 +55,36 @@ CPMAddPackage(
 endif()
 
 # configure
-configure_file(config.cpp.in src/config.cpp)
+configure_file(config.hpp.in include/fae/config.hpp)
 
 # library
 add_library(${PROJECT_NAME})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-set(FAE_PROPERTIES 
+set(FAE_PROPERTIES
 	CXX_STANDARD 23
 	COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
 	LINKER_LANGUAGE CXX
 )
-if(DEFINED EMSCRIPTEN)
-	set(FAE_PROPERTIES ${FAE_PROPERTIES} SUFFIX ".wasm")
-	target_link_options(${PROJECT_NAME}
-		PRIVATE
-			"-sUSE_WEBGPU=1"
-			"--use-port=sdl2"
-			"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
-		)
-endif()
+
+# if(DEFINED EMSCRIPTEN)
+# 	list(APPEND FAE_PROPERTIES
+# 		COMPILE_FLAGS "-Os -s SIDE_MODULE=1 "
+# 		LINK_FLAGS "-Os -s WASM=1 -s SIDE_MODULE=1 -s STANDALONE_WASM --no-entry"
+# 	)
+# endif()
+
+# if(DEFINED EMSCRIPTEN)
+# 	target_link_options(${PROJECT_NAME}
+# 		PRIVATE
+# 			"-sUSE_WEBGPU=1"
+# 			"--use-port=sdl2"
+# 			"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
+# 		)
+# endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES ${FAE_PROPERTIES})
+
 target_compile_features(${PROJECT_NAME}
 	PUBLIC
 		cxx_std_23
@@ -85,7 +93,7 @@ target_compile_features(${PROJECT_NAME}
 if(DEFINED EMSCRIPTEN)
 	target_compile_definitions(${PROJECT_NAME}
 		PUBLIC
-			__EMSCRIPTEN__
+			FAE_PLATFORM_WEB
 	)
 endif()
 
@@ -94,7 +102,7 @@ if(FAE_ENABLE_WARNINGS)
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 		set(FAE_WARNINGS "/W4")
 	elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-		set(FAE_WARNINGS "-Wall -Wextra -Wpedantic")
+		set(FAE_WARNINGS "-Wall -Wextra -Wpedantic -Wshadow")
 	endif()
 endif()
 
@@ -108,6 +116,11 @@ set(FAE_PUBLIC_INCLUDES
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
 	$<INSTALL_INTERFACE:include>
 )
+if(DEFINED EMSCRIPTEN)
+	list(APPEND FAE_PUBLIC_INCLUDES
+		"$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include"
+	)
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${FAE_PUBLIC_INCLUDES}
@@ -118,7 +131,11 @@ file(GLOB_RECURSE FAE_HEADERS CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
 )
 
-file(GLOB_RECURSE FAE_MODULES CONFIGURE_DEPENDS
+file(GLOB_RECURSE FAE_CXX_MODULES CONFIGURE_DEPENDS
+	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cppm
+)
+
+file(GLOB_RECURSE FAE_SOURCES CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
 
@@ -128,6 +145,7 @@ target_sources(${PROJECT_NAME}
 		BASE_DIRS
 			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
 			$<INSTALL_INTERFACE:include>
+			${CMAKE_CURRENT_BINARY_DIR}/include
 		FILES
 			${FAE_HEADERS}
 		FILE_SET CXX_MODULES
@@ -135,21 +153,24 @@ target_sources(${PROJECT_NAME}
 			${CMAKE_CURRENT_SOURCE_DIR}/src
 			${CMAKE_CURRENT_BINARY_DIR}/src
 		FILES
-			${FAE_MODULES}
-			${CMAKE_CURRENT_BINARY_DIR}/src/config.cpp
+			${FAE_CXX_MODULES}
+	PRIVATE
+		${FAE_SOURCES}
 )	
 
 set(FAE_PUBLIC_LIBRARIES
 	glm::glm
 	EnTT::EnTT
-	)
-	if(NOT DEFINED EMSCRIPTEN)
+)
+
+if(NOT DEFINED EMSCRIPTEN)
 	list(APPEND FAE_PUBLIC_LIBRARIES
 		SDL3::SDL3
 		webgpu_cpp
 		webgpu_dawn
 	)
 endif()
+
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		${FAE_PUBLIC_LIBRARIES}

@@ -1,13 +1,13 @@
-module;
+#pragma once
 
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <array>
 
-export module fae:color;
+#include "fae/color.hpp"
 
-export namespace fae
+namespace fae
 {
 	struct color_rgba
 	{

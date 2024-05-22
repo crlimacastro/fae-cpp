@@ -1,15 +1,12 @@
-module;
+#pragma once
 
-#include "fae/sdl.hpp"
 #include <functional>
 
-export module fae:input;
+#include "fae/application.hpp"
+#include "fae/sdl.hpp"
+#include "fae/windowing.hpp"
 
-import :application;
-import :sdl;
-import :windowing;
-
-export namespace fae
+namespace fae
 {
 	struct application;
 	struct update_step;

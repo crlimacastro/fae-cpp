@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <chrono>
 #include <format>
@@ -6,11 +6,7 @@ module;
 #include <iostream>
 #include <string>
 
-export module fae:time;
-
-import :application;
-
-export namespace fae
+namespace fae
 {
 	struct application;
 	struct update_step;
@@ -177,7 +173,7 @@ export namespace fae
 	};
 } // namespace fae
 
-export template <>
+template <>
 struct std::formatter<fae::duration> : std::formatter<std::string>
 {
 	auto format(fae::duration value, std::format_context &ctx) const

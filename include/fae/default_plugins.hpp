@@ -1,14 +1,12 @@
-module;
+#pragma once
 
-export module fae:default_plugins;
+#include "fae/application.hpp"
+#include "fae/time.hpp"
+#include "fae/windowing.hpp"
+#include "fae/input.hpp"
+#include "fae/rendering.hpp"
 
-import :application;
-import :time;
-import :windowing;
-import :input;
-import :rendering;
-
-export namespace fae
+namespace fae
 {
 	struct application;
 

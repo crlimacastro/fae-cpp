@@ -1,35 +1,32 @@
-module;
+#pragma once
 
-#include "fae/sdl.hpp"
-#include "fae/webgpu.hpp"
 #include <cstdint>
 #include <format>
 #include <functional>
+#include <numbers>
+#include <optional>
+#include <string_view>
+#include <variant>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
-#include <numbers>
-#include <optional>
-#include <string_view>
-#include <variant>
 
-export module fae:rendering;
+#include "fae/application.hpp"
+#include "fae/color.hpp"
+#include "fae/core.hpp"
+#include "fae/logging.hpp"
+#include "fae/math.hpp"
+#include "fae/resource_manager.hpp"
+#include "fae/sdl.hpp"
+#include "fae/time.hpp"
+#include "fae/webgpu.hpp"
+#include "fae/windowing.hpp"
 
-import :core;
-import :math;
-import :color;
-import :resource_manager;
-import :logging;
-import :application;
-import :sdl;
-import :webgpu;
-import :windowing;
-import :time;
-
-export namespace fae
+namespace fae
 {
 	struct renderer
 	{
@@ -182,8 +179,8 @@ export namespace fae
 
 						auto fov = 45.f;
 						auto aspect = 1920.f / 1080.f;
-						auto near = 0.1f;
-						auto far = 1000.f;
+						auto near_plane = 0.1f;
+						auto far_plane = 1000.f;
 
 						static auto transform = fae::transform{};
 
@@ -195,7 +192,7 @@ export namespace fae
 						transform.rotation *= math::angleAxis(math::radians(60.f) * dt, vec3(0.0f, 1.0f, 0.0f));
 						auto model = transform.to_mat4();
 						auto view = mat4(1.f);
-						auto projection = math::perspective(math::radians(fov), aspect, near, far);
+						auto projection = math::perspective(math::radians(fov), aspect, near_plane, far_plane);
 						static auto hsva = color_hsva::from_rgba(colors::red);
 						hsva.h = static_cast<float>(static_cast<int>(hsva.h + dt * 120) % 360);
 						auto tint = hsva.to_rgba().to_vec4f();

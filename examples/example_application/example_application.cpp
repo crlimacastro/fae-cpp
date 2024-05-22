@@ -1,12 +1,6 @@
-module;
-
-#include "fae/sdl.hpp"
+#include "fae/fae.hpp"
 #include <format>
 #include <type_traits>
-
-export module example_application;
-
-import fae;
 
 auto start(const fae::start_step &step) noexcept -> void
 {

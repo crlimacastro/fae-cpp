@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <algorithm>
 #include <entt/entt.hpp>
@@ -7,11 +7,9 @@ module;
 #include <tuple>
 #include <vector>
 
-export module fae:ecs_world;
+#include "fae/entity.hpp"
 
-import :entity;
-
-export namespace fae
+namespace fae
 {
 	struct ecs_world
 	{

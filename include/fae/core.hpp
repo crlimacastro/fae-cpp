@@ -1,4 +1,4 @@
-module;
+#pragma once
 
 #include <cstdint>
 #include <functional>
@@ -6,9 +6,7 @@ module;
 #include <variant>
 #include <vector>
 
-export module fae:core;
-
-export namespace fae
+namespace fae
 {
 	constexpr int exit_success = 0;
 	constexpr int exit_failure = 1;

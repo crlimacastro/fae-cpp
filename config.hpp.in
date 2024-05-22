@@ -1,10 +1,7 @@
-module;
-
+#pragma once
 #include <string_view>
 
-export module fae:config;
-
-export namespace fae::config
+namespace fae::config
 {
 	constexpr std::string_view project_name = "@PROJECT_NAME@";
 	constexpr std::string_view project_version = "@PROJECT_VERSION@";
