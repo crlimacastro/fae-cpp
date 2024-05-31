@@ -1,8 +1,9 @@
 #pragma once
 
 #include <any>
-#include <entt/entt.hpp>
 #include <vector>
+
+#include <entt/entt.hpp>
 
 #include "fae/core.hpp"
 

@@ -1,13 +1,21 @@
 #include "fae/main.hpp"
 
-#ifndef FAE_PLATFORM_WEB
-int SDL_main(int argc, char *argv[])
+#ifdef FAE_PLATFORM_WEB
+#include <emscripten/emscripten.h>
+#else
+#undef main
+#include <SDL3/SDL_main.h>
+#endif
+#undef main
+
+#ifdef FAE_PLATFORM_WEB
+auto main(int argc, char* argv[]) -> int
 {
-	return fae_main(argc, argv);
+    return fae_main(argc, argv);
 }
 #else
-int main(int argc, char *argv[])
+auto SDL_main(int argc, char* argv[]) -> int
 {
-	return fae_main(argc, argv);
+    return fae_main(argc, argv);
 }
 #endif

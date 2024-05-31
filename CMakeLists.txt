@@ -1,93 +1,77 @@
 cmake_minimum_required(VERSION 3.29.3)
 
 project(
-	fae
-	VERSION 0.0.2
-	LANGUAGES CXX
-	DESCRIPTION "fae game framework (core library of the fae game engine)"
+    fae
+    VERSION 0.0.2
+    LANGUAGES CXX
+    DESCRIPTION "fae game framework (core library of the fae game engine)"
 )
-
-# includes
-include(cmake/get_cpm.cmake)
 
 # options
 set(FAE_CPM_VERSION "v0.39.0" CACHE STRING "Which version of CPM to use (tag or \"master\")")
 option(FAE_ENABLE_WARNINGS "Enable compilation warnings" OFF)
 option(FAE_ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
-option(FAE_BUILD_EXAMPLES "Build examples" OFF)
-# # TODO option(FAE_BUILD_TESTS "Build tests" OFF)
-# # TODO option(FAE_BUILD_BENCHMARKS "Build benchmarks" OFF))
-# # TODO option(FAE_BUILD_DOCS "Build documentation" OFF)
-# # TODO option(FAE_ENABLE_INSTALL "Enable to install." OFF)
+option(FAE_BUILD_EXAMPLES "Build examples" ON)
+# TODO option(FAE_BUILD_TESTS "Build tests" OFF)
+# TODO option(FAE_BUILD_BENCHMARKS "Build benchmarks" OFF))
+# TODO option(FAE_BUILD_DOCS "Build documentation" OFF)
 
 # dependencies
+include(cmake/get_cpm.cmake)
 get_cpm(VERSION ${FAE_CPM_VERSION})
 CPMUsePackageLock(package-lock.cmake)
 CPMAddPackage("gh:g-truc/glm#1.0.1")
 CPMAddPackage("gh:skypjack/entt#v3.13.2")
-if(NOT DEFINED EMSCRIPTEN)
+set(CPM_SDL_OPTIONS
+	"EXCLUDE_FROM_ALL ON"
+	"SYSTEM ON"
+	# "SDL_DISABLE_INSTALL OFF"
+)
+
+if(${BUILD_SHARED_LIBS})
+	set(CPM_SDL_OPTIONS
+		${CPM_SDL_OPTIONS}
+		"SDL_SHARED ON"
+		"SDL_STATIC OFF"
+	)
+else()
+	set(CPM_SDL_OPTIONS
+		${CPM_SDL_OPTIONS}
+		"SDL_SHARED OFF"
+		"SDL_STATIC ON"
+	)
+endif()
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
-	GIT_TAG prerelease-3.1.1
+	GIT_TAG prerelease-3.1.2
 	OPTIONS
-		"EXCLUDE_FROM_ALL ON"
-		"SYSTEM ON"
-		"SDL_DISABLE_INSTALL OFF"
-		if(${BUILD_SHARED_LIBS})
-			"SDL_SHARED ON"
-			"SDL_STATIC OFF"
-		else()
-			"SDL_SHARED OFF"
-			"SDL_STATIC ON"
-		endif()
+		${CPM_SDL_OPTIONS}
 )
-
+if(NOT DEFINED EMSCRIPTEN)
 	CPMAddPackage(
 		NAME dawn
-  		GIT_REPOSITORY https://dawn.googlesource.com/dawn
-  		GIT_TAG chromium/6452
-  		OPTIONS
+		GITHUB_REPOSITORY google/dawn
+	 	GIT_TAG main
+	 	OPTIONS
 		  	"EXCLUDE_FROM_ALL ON"
 		  	"SYSTEM ON"
 			"DAWN_FETCH_DEPENDENCIES ON"
-)
+	)
 endif()
 
-# configure
-configure_file(config.hpp.in include/fae/config.hpp)
+configure_file(config.hpp.in "include/${PROJECT_NAME}/config.hpp")
 
-# library
 add_library(${PROJECT_NAME})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-set(FAE_PROPERTIES
-	CXX_STANDARD 23
-	COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
-	LINKER_LANGUAGE CXX
-)
-
-# if(DEFINED EMSCRIPTEN)
-# 	list(APPEND FAE_PROPERTIES
-# 		COMPILE_FLAGS "-Os -s SIDE_MODULE=1 "
-# 		LINK_FLAGS "-Os -s WASM=1 -s SIDE_MODULE=1 -s STANDALONE_WASM --no-entry"
-# 	)
-# endif()
-
-# if(DEFINED EMSCRIPTEN)
-# 	target_link_options(${PROJECT_NAME}
-# 		PRIVATE
-# 			"-sUSE_WEBGPU=1"
-# 			"--use-port=sdl2"
-# 			"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
-# 		)
-# endif()
-
-set_target_properties(${PROJECT_NAME} PROPERTIES ${FAE_PROPERTIES})
-
-target_compile_features(${PROJECT_NAME}
-	PUBLIC
-		cxx_std_23
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+        CXX_STANDARD 23
+        CXX_STANDARD_REQUIRED ON
+		CXX_EXTENSIONS OFF
+        COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
+        LINKER_LANGUAGE CXX
 )
 
 if(DEFINED EMSCRIPTEN)
@@ -97,42 +81,32 @@ if(DEFINED EMSCRIPTEN)
 	)
 endif()
 
-# warnings
+target_compile_features(${PROJECT_NAME}
+	PUBLIC
+		cxx_std_23
+)
+
 if(FAE_ENABLE_WARNINGS)
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-		set(FAE_WARNINGS "/W4")
+		target_compile_options(${PROJECT_NAME}
+			PRIVATE
+				"/W4"
+		)
 	elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-		set(FAE_WARNINGS "-Wall -Wextra -Wpedantic -Wshadow")
+		target_compile_options(${PROJECT_NAME}
+			PRIVATE
+				"-Wall"
+				"-Wextra"
+				"-Wpedantic"
+		)
 	endif()
 endif()
 
-target_compile_options(${PROJECT_NAME}
-	PRIVATE
-		${FAE_WARNINGS}
-)
-
-# includes
-set(FAE_PUBLIC_INCLUDES
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-	$<INSTALL_INTERFACE:include>
-)
-if(DEFINED EMSCRIPTEN)
-	list(APPEND FAE_PUBLIC_INCLUDES
-		"$ENV{EMSDK}/upstream/emscripten/cache/sysroot/include"
-	)
-endif()
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-	${FAE_PUBLIC_INCLUDES}
-)
-
-# sources
-file(GLOB_RECURSE FAE_HEADERS CONFIGURE_DEPENDS
-	${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp
-)
-
-file(GLOB_RECURSE FAE_CXX_MODULES CONFIGURE_DEPENDS
-	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cppm
+target_include_directories(${PROJECT_NAME}
+	PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+		$<INSTALL_INTERFACE:include>
 )
 
 file(GLOB_RECURSE FAE_SOURCES CONFIGURE_DEPENDS
@@ -140,50 +114,24 @@ file(GLOB_RECURSE FAE_SOURCES CONFIGURE_DEPENDS
 )
 
 target_sources(${PROJECT_NAME}
-	PUBLIC
-		FILE_SET HEADERS
-		BASE_DIRS
-			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-			$<INSTALL_INTERFACE:include>
-			${CMAKE_CURRENT_BINARY_DIR}/include
-		FILES
-			${FAE_HEADERS}
-		FILE_SET CXX_MODULES
-		BASE_DIRS
-			${CMAKE_CURRENT_SOURCE_DIR}/src
-			${CMAKE_CURRENT_BINARY_DIR}/src
-		FILES
-			${FAE_CXX_MODULES}
 	PRIVATE
 		${FAE_SOURCES}
 )
 
-if(${BUILD_SHARED_LIBS} AND WIN32)
-    add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_FILE:SDL3::SDL3-shared> $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        VERBATIM
-    )
-endif()
-
-set(FAE_PUBLIC_LIBRARIES
-	glm::glm
-	EnTT::EnTT
-)
-
-if(NOT DEFINED EMSCRIPTEN)
-	list(APPEND FAE_PUBLIC_LIBRARIES
+target_link_libraries(${PROJECT_NAME}
+	PUBLIC
+		glm::glm
+		EnTT::EnTT
 		SDL3::SDL3
-		webgpu_cpp
-		webgpu_dawn
+)
+if(NOT DEFINED EMSCRIPTEN)
+	target_link_libraries(${PROJECT_NAME}
+		PUBLIC
+			webgpu_cpp
+			webgpu_dawn
 	)
 endif()
 
-target_link_libraries(${PROJECT_NAME}
-	PUBLIC
-		${FAE_PUBLIC_LIBRARIES}
-)
-
 if(FAE_BUILD_EXAMPLES)
-	add_subdirectory(examples)
+    add_subdirectory(examples)
 endif()

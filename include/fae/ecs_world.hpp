@@ -1,11 +1,12 @@
 #pragma once
 
 #include <algorithm>
-#include <entt/entt.hpp>
 #include <ranges>
 #include <span>
 #include <tuple>
 #include <vector>
+
+#include <entt/entt.hpp>
 
 #include "fae/entity.hpp"
 

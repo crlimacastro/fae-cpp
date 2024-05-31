@@ -12,6 +12,5 @@ CMakeUserPresets.json
 
 # IDE
 .vs/
-CMakeSettings.json
 .vscode/
 .idea/

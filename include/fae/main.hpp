@@ -1,10 +1,6 @@
 #pragma once
 
-#ifndef FAE_PLATFORM_WEB
-#include <SDL3/SDL_main.h>
-#endif
-
-auto fae_main(int argc, char *argv[]) -> int;
+auto fae_main(int argc, char* argv[]) -> int;
 
 #undef main
 #define main fae_main

@@ -148,8 +148,7 @@ namespace fae
 			});
 			if (!maybe_sdl_window)
 			{
-				const auto &error = maybe_sdl_window.error();
-				fae::log_error(std::format("could not create window: {}", error.message));
+				fae::log_error(std::format("could not create window: {}", SDL_GetError()));
 				return;
 			}
 			auto &sdl_window = *maybe_sdl_window;

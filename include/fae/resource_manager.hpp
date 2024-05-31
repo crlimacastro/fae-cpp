@@ -14,7 +14,7 @@ namespace fae
 	struct resource_manager
 	{
 		template <typename t_resource, typename... t_args>
-		[[nodiscard]] inline constexpr auto
+		[[nodiscard]] inline auto
 		emplace_and_get(t_args &&...args) noexcept -> t_resource &
 		{
 			const auto key = std::type_index(typeid(t_resource));
@@ -23,7 +23,7 @@ namespace fae
 		}
 
 		template <typename t_resource, typename... t_args>
-		[[maybe_unused]] inline constexpr auto
+		[[maybe_unused]] inline auto
 		emplace(t_args &&...args) noexcept -> resource_manager &
 		{
 			[[maybe_unused]] const auto &res = emplace_and_get<const t_resource>(std::forward<t_args &&>(args)...);
@@ -31,7 +31,7 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto insert_and_get(t_resource &&resource = {}) noexcept -> t_resource &
+		[[nodiscard]] inline auto insert_and_get(t_resource &&resource = {}) noexcept -> t_resource &
 		{
 			const auto key = std::type_index(typeid(t_resource));
 			m_resources.insert({key, std::any(std::forward<t_resource &&>(resource))});
@@ -39,14 +39,14 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[maybe_unused]] inline constexpr auto insert(t_resource &&resource = {}) noexcept -> resource_manager &
+		[[maybe_unused]] inline auto insert(t_resource &&resource = {}) noexcept -> resource_manager &
 		{
 			[[maybe_unused]] const auto &res = insert_and_get(std::forward<t_resource &&>(resource));
 			return *this;
 		}
 
 		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto insert_or_assign_and_get(t_resource &&resource = {}) noexcept -> t_resource &
+		[[nodiscard]] inline auto insert_or_assign_and_get(t_resource &&resource = {}) noexcept -> t_resource &
 		{
 			const auto key = std::type_index(typeid(t_resource));
 			m_resources.insert_or_assign(key, std::any(std::forward<t_resource &&>(resource)));
@@ -54,14 +54,14 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[maybe_unused]] inline constexpr auto insert_or_assign(t_resource &&resource = {}) noexcept -> resource_manager &
+		[[maybe_unused]] inline auto insert_or_assign(t_resource &&resource = {}) noexcept -> resource_manager &
 		{
 			[[maybe_unused]] const auto &res = insert_or_assign_and_get(std::forward<t_resource &&>(resource));
 			return *this;
 		}
 
 		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto get() noexcept
+		[[nodiscard]] inline auto get() noexcept
 			-> optional_reference<t_resource>
 		{
 			const auto key = std::type_index(typeid(t_resource));
@@ -74,7 +74,7 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto get() const noexcept
+		[[nodiscard]] inline auto get() const noexcept
 			-> optional_reference<const t_resource>
 		{
 			const auto key = std::type_index(typeid(t_resource));
@@ -87,7 +87,7 @@ namespace fae
 		}
 
 		template <typename t_resource, typename... t_args>
-		[[nodiscard]] inline constexpr auto
+		[[nodiscard]] inline auto
 		get_or_emplace(t_args &&...args) noexcept -> t_resource &
 		{
 			auto maybe_resource = get<t_resource>();
@@ -100,7 +100,7 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto
+		[[nodiscard]] inline auto
 		get_or_insert(t_resource &&default_resource = {}) noexcept
 			-> t_resource &
 		{
@@ -114,7 +114,7 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[nodiscard]] inline constexpr auto
+		[[nodiscard]] inline auto
 		get_or_insert_or_assign(t_resource &&default_resource = {}) noexcept
 			-> t_resource &
 		{
@@ -128,7 +128,7 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[maybe_unused]] inline constexpr auto erase() noexcept
+		[[maybe_unused]] inline auto erase() noexcept
 			-> resource_manager &
 		{
 			const auto key = std::type_index(typeid(t_resource));
@@ -143,7 +143,7 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[maybe_unused]] inline constexpr auto use_resource(std::invocable<t_resource &> auto callback) noexcept
+		[[maybe_unused]] inline auto use_resource(std::invocable<t_resource &> auto callback) noexcept
 			-> resource_manager &
 		{
 			const auto key = std::type_index(typeid(t_resource));
@@ -155,7 +155,7 @@ namespace fae
 		}
 
 		template <typename t_resource>
-		[[maybe_unused]] inline constexpr auto use_resource(std::invocable<t_resource &> auto callback) const noexcept -> const resource_manager &
+		[[maybe_unused]] inline auto use_resource(std::invocable<t_resource &> auto callback) const noexcept -> const resource_manager &
 		{
 			const auto key = std::type_index(typeid(t_resource));
 			if (m_resources.contains(key))
