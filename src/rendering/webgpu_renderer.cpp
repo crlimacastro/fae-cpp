@@ -65,14 +65,9 @@ namespace fae
                         webgpu.current_render.uniform_data.clear();
                         webgpu.current_render.uniform_data.resize((3 * 4 * 16) + (1 * 4 * 4));
 
-#ifndef FAE_PLATFORM_WEB
                         wgpu::SurfaceTexture surface_texture;
                         webgpu.surface.GetCurrentTexture(&surface_texture);
                         auto surface_texture_view = surface_texture.texture.CreateView();
-#else
-                        auto surface_texture_view = webgpu.swapchain.GetCurrentTextureView();
-                        webgpu.current_render.surface_texture_view = surface_texture_view;
-#endif
 
                         auto fov = 45.f;
                         auto aspect = 1920.f / 1080.f;
@@ -85,7 +80,7 @@ namespace fae
                         auto dt = time.delta().seconds_f32();
                         auto t = time.elapsed().seconds_f32();
 
-                        transform.position = {1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f};
+                        transform.position = { 1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f };
                         transform.rotation *= math::angleAxis(math::radians(60.f) * dt, vec3(0.0f, 1.0f, 0.0f));
                         auto model = transform.to_mat4();
                         auto view = mat4(1.f);

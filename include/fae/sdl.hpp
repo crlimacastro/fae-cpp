@@ -11,10 +11,6 @@
 
 #include "SDL3/SDL.h"
 
-#ifdef FAE_PLATFORM_WEB
-#include <emscripten/emscripten.h>
-#endif
-
 #include "fae/application.hpp"
 #include "fae/core.hpp"
 #include "fae/logging.hpp"
