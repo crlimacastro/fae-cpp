@@ -161,12 +161,6 @@ namespace fae
             return !is_key_pressed(key) && was_key_pressed(key);
         }
 
-        auto udpate() noexcept -> void
-        {
-            *m_was_key_pressed = *m_is_key_pressed;
-        }
-
-      private:
         [[nodiscard]] auto was_key_pressed(const SDL_Keycode key) const noexcept -> bool
         {
             return m_was_key_pressed->test(static_cast<std::size_t>(key));
@@ -176,6 +170,9 @@ namespace fae
         {
             return was_key_pressed(SDL_SCANCODE_TO_KEYCODE(key));
         }
+
+      private:
+        friend auto update_sdl(const update_step& step) noexcept -> void;
 
         std::shared_ptr<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>> m_is_key_pressed = std::make_shared<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>>();
         std::shared_ptr<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>> m_was_key_pressed = std::make_shared<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>>();
@@ -194,130 +191,20 @@ namespace fae
             bool init_sensor = false;
         };
 
-        static auto init(const options& options) noexcept -> std::optional<sdl>
-        {
-            if (ref_count == 0)
-            {
-                Uint32 flags = SDL_INIT_EVENTS;
-                if (options.init_timer)
-                {
-                    flags |= SDL_INIT_TIMER;
-                }
-                if (options.init_audio)
-                {
-                    flags |= SDL_INIT_AUDIO;
-                }
-                if (options.init_video)
-                {
-                    flags |= SDL_INIT_VIDEO;
-                }
-                if (options.init_haptic)
-                {
-                    flags |= SDL_INIT_HAPTIC;
-                }
-                if (options.init_sensor)
-                {
-                    flags |= SDL_INIT_SENSOR;
-                }
+        static auto init(const options& options) noexcept -> std::optional<sdl>;
 
-                if (const auto error_code = SDL_Init(flags))
-                {
-                    return std::nullopt;
-                }
-            }
-            return sdl{};
-        }
-
-        ~sdl() noexcept
-        {
-            --ref_count;
-            if (ref_count == 0)
-            {
-                SDL_Quit();
-            }
-        }
-
-        sdl(const sdl& other) noexcept
-        {
-            ++ref_count;
-        }
-        auto operator=(const sdl& other) noexcept -> sdl&
-        {
-            ++ref_count;
-            return *this;
-        }
-        sdl(sdl&& other) noexcept
-        {
-            ++ref_count;
-        }
-        auto operator=(sdl&& other) noexcept -> sdl&
-        {
-            ++ref_count;
-            return *this;
-        }
+        ~sdl() noexcept;
+        sdl(const sdl& other) noexcept;
+        auto operator=(const sdl& other) noexcept -> sdl&;
+        sdl(sdl&& other) noexcept;
+        auto operator=(sdl&& other) noexcept -> sdl&;
 
       private:
-        sdl() noexcept
-        {
-            ++ref_count;
-        }
+        sdl() noexcept;
     };
-    auto sdl::ref_count = std::atomic<std::size_t>{0};
 
-    auto update_sdl(const update_step& step) noexcept -> void
-    {
-        step.resources.use_resource<sdl_input>([&](sdl_input& input)
-            { input.udpate(); });
-
-        SDL_Event event;
-        while (SDL_PollEvent(&event) != 0)
-        {
-            switch (event.type)
-            {
-            case SDL_EVENT_QUIT:
-            {
-                step.scheduler.invoke(application_quit{});
-                break;
-            }
-            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
-            {
-                auto* window = SDL_GetWindowFromID(event.window.windowID);
-                for (auto [entity, sdl_window] : step.ecs_world.query<sdl_window>())
-                {
-                    if (sdl_window.raw.get() == window)
-                    {
-                        sdl_window.should_close = true;
-                        break;
-                    }
-                }
-                break;
-            }
-            case SDL_EVENT_KEY_DOWN:
-            {
-                step.resources.use_resource<sdl_input>([&](sdl_input& input)
-                    { input.press_key(event.key.keysym.sym); });
-                break;
-            }
-            case SDL_EVENT_KEY_UP:
-            {
-                step.resources.use_resource<sdl_input>([&](sdl_input& input)
-                    { input.release_key(event.key.keysym.sym); });
-                break;
-            }
-            }
-        }
-    }
-
-    auto destroy_sdl_window_entities_that_should_close(const update_step& step) noexcept -> void
-    {
-        for (auto [entity, sdl_window] : step.ecs_world.query<sdl_window>())
-        {
-            if (sdl_window.should_close)
-            {
-                entity.destroy();
-            }
-        }
-    }
+    auto update_sdl(const update_step& step) noexcept -> void;
+    auto destroy_sdl_window_entities_that_should_close(const update_step& step) noexcept -> void;
 
     struct sdl_plugin
     {
@@ -338,4 +225,4 @@ namespace fae
                 .add_system<update_step>(update_sdl);
         }
     };
-} // namespace fae
+}

@@ -1,12 +1,7 @@
 #pragma once
 
 #include <concepts>
-#include <typeindex>
 #include <unordered_set>
-
-#ifdef FAE_PLATFORM_WEB
-#include <emscripten/emscripten.h>
-#endif
 
 #include "fae/core.hpp"
 #include "fae/ecs_world.hpp"
@@ -86,76 +81,9 @@ namespace fae
         ecs_world ecs_world{};
         std::unordered_set<std::type_index> plugins{};
 
-        auto step() -> void
-        {
-            scheduler.invoke(pre_update_step{
-                .resources = resources,
-                .scheduler = scheduler,
-                .ecs_world = ecs_world,
-            });
-            scheduler.invoke(update_step{
-                .resources = resources,
-                .scheduler = scheduler,
-                .ecs_world = ecs_world,
-            });
-            scheduler.invoke(post_update_step{
-                .resources = resources,
-                .scheduler = scheduler,
-                .ecs_world = ecs_world,
-            });
-
-            if (!is_running)
-            {
-                scheduler.invoke(stop_step{
-                    .resources = resources,
-                    .scheduler = scheduler,
-                    .ecs_world = ecs_world,
-                });
-                scheduler.invoke(deinit_step{
-                    .resources = resources,
-                    .scheduler = scheduler,
-                    .ecs_world = ecs_world,
-                });
-#ifdef FAE_PLATFORM_WEB
-                emscripten_cancel_main_loop();
-#endif
-            }
-        }
-
-#ifdef FAE_PLATFORM_WEB
-        static auto emscripten_step(void* arg) -> void
-        {
-            static_cast<application*>(arg)->step();
-        }
-#endif
-
-        auto run() -> void
-        {
-            is_running = true;
-            scheduler.add_system<application_quit>(
-                [&]([[maybe_unused]] const application_quit& event)
-                {
-                    is_running = false;
-                });
-            scheduler.invoke(init_step{
-                .resources = resources,
-                .scheduler = scheduler,
-                .ecs_world = ecs_world,
-            });
-            scheduler.invoke(start_step{
-                .resources = resources,
-                .scheduler = scheduler,
-                .ecs_world = ecs_world,
-            });
-#ifdef FAE_PLATFORM_WEB
-            emscripten_set_main_loop_arg(&application::emscripten_step, this, 0, 1);
-#else
-            do
-            {
-                step();
-            } while (is_running);
-#endif
-        }
+        auto step() -> void;
+        ;
+        auto run() -> void;
 
         template <typename t_resource, typename... t_args>
         [[maybe_unused]] inline auto
@@ -203,4 +131,4 @@ namespace fae
             return *this;
         }
     };
-} // namespace fae
+}

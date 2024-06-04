@@ -6,10 +6,6 @@
 
 #include <webgpu/webgpu_cpp.h>
 
-#ifdef FAE_PLATFORM_WEB
-#include <emscripten/emscripten.h>
-#endif
-
 #include "fae/application.hpp"
 #include "fae/logging.hpp"
 #include "fae/sdl.hpp"
@@ -27,9 +23,9 @@ namespace fae
         wgpu::Adapter adapter;
         wgpu::Device device;
         wgpu::Surface surface;
-        #ifdef FAE_PLATFORM_WEB
+#ifdef FAE_PLATFORM_WEB
         wgpu::SwapChain swapchain;
-        #endif
+#endif
         wgpu::RenderPipeline render_pipeline;
 
         uniform_buffer uniform_buffer;
@@ -38,9 +34,9 @@ namespace fae
         wgpu::Color clear_color = {0, 0, 0, 1};
         struct current_render
         {
-            #ifdef FAE_PLATFORM_WEB
+#ifdef FAE_PLATFORM_WEB
             wgpu::TextureView surface_texture_view;
-            #endif
+#endif
             wgpu::RenderPassEncoder render_pass;
             wgpu::CommandEncoder command_encoder;
             std::vector<float> vertex_data;
@@ -129,8 +125,7 @@ namespace fae
             };
             webgpu.surface.Configure(&surface_config);
 #else
-            auto swap_chain_descriptor = wgpu::SwapChainDescriptor
-            {
+            auto swap_chain_descriptor = wgpu::SwapChainDescriptor{
                 .usage = wgpu::TextureUsage::RenderAttachment,
                 .format = surface_format,
                 .width = static_cast<std::uint32_t>(window_size.width),
@@ -299,4 +294,4 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
             };
         }
     };
-} // namespace fae
+}

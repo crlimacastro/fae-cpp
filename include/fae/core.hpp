@@ -96,4 +96,4 @@ namespace fae
     {
         return v.size() * sizeof(typename std::vector<t, t_alloc>::value_type);
     }
-} // namespace fae
+}

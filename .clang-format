@@ -3,9 +3,11 @@ IndentWidth: 4
 ColumnLimit: 0
 NamespaceIndentation: All
 AlignAfterOpenBracket: false
----
-Language: Cpp
 DerivePointerAlignment: false
 PointerAlignment: Left
 BreakBeforeBraces: Allman
 LambdaBodyIndentation: Signature
+SortIncludes: false
+FixNamespaceComments: false
+InsertNewlineAtEOF: true
+Cpp11BracedListStyle: false

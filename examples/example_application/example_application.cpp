@@ -1,30 +1,3 @@
-// #include "fae/fae.hpp"
-// #include "fae/main.hpp"
-
-// auto start(const fae::start_step& step) -> void
-// {
-//     fae::log("start");
-// }
-
-// auto update(const fae::update_step& step) -> void
-// {
-// }
-
-// auto main(int argc, char* argv[]) -> int
-// {
-//     fae::application{}
-//         .add_plugin(fae::default_plugins{
-//             .windowing_plugin = fae::windowing_plugin{
-//                 .should_hide_window_until_first_render = false,
-//             },
-//         })
-//         .add_system<fae::update_step>(fae::quit_on_esc)
-//         .add_system<fae::start_step>(start)
-//         .add_system<fae::update_step>(update)
-//         .run();
-//     return fae::exit_success;
-// }
-
 #include <format>
 #include <type_traits>
 
@@ -45,10 +18,8 @@ auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void
         {
             const auto speed = 200.f;
             const auto delta_h = speed * time.delta().seconds_f32();
-            auto clear_color_hsva =
-                fae::color_hsva::from_rgba(renderer.get_clear_color());
-            clear_color_hsva.h =
-                static_cast<int>((clear_color_hsva.h + delta_h)) % 360;
+            auto clear_color_hsva = renderer.get_clear_color().to_hsva();
+            clear_color_hsva.h = static_cast<int>((clear_color_hsva.h + delta_h)) % 360;
             auto new_clear_color = clear_color_hsva.to_rgba();
             renderer.set_clear_color(new_clear_color);
         });

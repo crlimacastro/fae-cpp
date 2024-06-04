@@ -79,6 +79,21 @@ if(DEFINED EMSCRIPTEN)
 		PUBLIC
 			FAE_PLATFORM_WEB
 	)
+elseif(WIN32)
+	target_compile_definitions(${PROJECT_NAME}
+		PUBLIC
+			FAE_PLATFORM_WINDOWS
+	)
+elseif(APPLE)
+	target_compile_definitions(${PROJECT_NAME}
+		PUBLIC
+			FAE_PLATFORM_MACOS
+	)
+elseif(UNIX)
+	target_compile_definitions(${PROJECT_NAME}
+		PUBLIC
+			FAE_PLATFORM_LINUX
+	)
 endif()
 
 target_compile_features(${PROJECT_NAME}

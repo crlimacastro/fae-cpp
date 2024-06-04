@@ -17,14 +17,6 @@ namespace fae
         input_plugin input_plugin{};
         rendering_plugin rendering_plugin{};
 
-        auto init(application& app) const noexcept -> void
-        {
-            app
-                .add_plugin(time_plugin)
-                .add_plugin(windowing_plugin)
-                .add_plugin(input_plugin)
-                .add_plugin(rendering_plugin)
-                ;
-        }
+        auto init(application& app) const noexcept -> void;
     };
-} // namespace fae
+}

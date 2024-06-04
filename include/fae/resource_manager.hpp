@@ -169,4 +169,4 @@ namespace fae
 	private:
 		std::unordered_map<std::type_index, std::any> m_resources{};
 	};
-} // namespace fae
+}

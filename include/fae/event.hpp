@@ -103,4 +103,4 @@ namespace fae
       private:
         std::vector<t_listener> m_listeners{};
     };
-} // namespace fae
+}

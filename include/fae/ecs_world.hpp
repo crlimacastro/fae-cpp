@@ -33,4 +33,4 @@ namespace fae
 			return query_results;
 		}
 	};
-} // namespace fae
+}

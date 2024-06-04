@@ -142,4 +142,4 @@ namespace fae
         error_options.level = log_level::fatal;
         log(msg, error_options);
     }
-} // namespace fae
+}

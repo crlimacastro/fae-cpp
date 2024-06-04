@@ -51,12 +51,12 @@ namespace fae
 
         [[nodiscard]] inline constexpr auto operator*(float scalar) const noexcept -> duration
         {
-            return duration{std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() * scalar)}};
+            return duration{std::chrono::nanoseconds{static_cast<std::int64_t>(nanosecs.count() * scalar)}};
         }
 
         [[nodiscard]] inline constexpr auto operator/(float scalar) const noexcept -> duration
         {
-            return duration{std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() / scalar)}};
+            return duration{std::chrono::nanoseconds{static_cast<std::int64_t>(nanosecs.count() / scalar)}};
         }
 
         [[nodiscard]] inline constexpr auto operator-(const duration& rhs) const noexcept -> duration
@@ -78,13 +78,13 @@ namespace fae
 
         [[maybe_unused]] inline constexpr auto operator*=(float scalar) noexcept -> duration&
         {
-            nanosecs = std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() * scalar)};
+            nanosecs = std::chrono::nanoseconds{static_cast<std::int64_t>(nanosecs.count() * scalar)};
             return *this;
         }
 
         [[maybe_unused]] inline constexpr auto operator/=(float scalar) noexcept -> duration&
         {
-            nanosecs = std::chrono::nanoseconds{static_cast<int64_t>(nanosecs.count() / scalar)};
+            nanosecs = std::chrono::nanoseconds{static_cast<std::int64_t>(nanosecs.count() / scalar)};
             return *this;
         }
 
@@ -149,29 +149,13 @@ namespace fae
         }
     };
 
-    auto update_time(const update_step& step) noexcept -> void
-    {
-        auto& time = step.resources.use_resource<fae::time>(
-            [](fae::time& time)
-            {
-                static auto last_time = std::chrono::high_resolution_clock::now();
-                auto current_time = std::chrono::high_resolution_clock::now();
-                time.unscaled_delta = current_time - last_time;
-                time.unscaled_elapsed += time.unscaled_delta;
-                last_time = current_time;
-            });
-    }
+    auto update_time(const update_step& step) noexcept -> void;
 
     struct time_plugin
     {
-        auto init(application& app) const noexcept -> void
-        {
-            app
-                .emplace_resource<time>(time{})
-                .add_system<update_step>(update_time);
-        }
+        auto init(application& app) const noexcept -> void;
     };
-} // namespace fae
+}
 
 template <>
 struct std::formatter<fae::duration> : std::formatter<std::string>

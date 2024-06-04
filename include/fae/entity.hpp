@@ -79,4 +79,4 @@ namespace fae
 			registry.destroy(id);
 		}
 	};
-} // namespace fae
+}
