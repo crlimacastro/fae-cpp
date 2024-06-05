@@ -41,7 +41,10 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 		)
 
 		if(DEFINED EMSCRIPTEN)
-			set_target_properties(${SUBDIRECTORY_NAME} PROPERTIES SUFFIX ".html")
+			set_target_properties(${SUBDIRECTORY_NAME} PROPERTIES
+				OUTPUT_NAME "index"
+				SUFFIX ".html"
+			)
 			target_link_options(${SUBDIRECTORY_NAME}
 				PRIVATE
 				"-sUSE_WEBGPU=1"
