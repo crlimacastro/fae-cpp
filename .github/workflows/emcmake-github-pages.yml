@@ -38,9 +38,6 @@ jobs:
         uses: mymindstorm/setup-emsdk@v14
         with:
           version: 3.1.61
-          actions-cache-folder: "emsdk_cache"
-      - name: Configure Emscripten in PATH
-        run: source ${{github.workspace}}/emsdk_cache/emsdk-main/emsdk_env.sh --permanent
 
       - uses: actions/checkout@v4
 
