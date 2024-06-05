@@ -21,9 +21,8 @@ jobs:
 
     steps:
     - name: Setup Emscripten
-      uses: lovasoa/setup-emscripten@v1
+      uses: mymindstorm/setup-emsdk@v14
             
-    
     - uses: actions/checkout@v4
 
     - name: Configure CMake
