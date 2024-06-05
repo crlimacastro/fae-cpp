@@ -20,6 +20,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Setup Emscripten
+      uses: lovasoa/setup-emscripten@v1
+            
+    
     - uses: actions/checkout@v4
 
     - name: Configure CMake
