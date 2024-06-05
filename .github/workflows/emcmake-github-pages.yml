@@ -39,6 +39,8 @@ jobs:
         with:
           version: 3.1.61
           actions-cache-folder: "emsdk_cache"
+      - name: Configure Emscripten in PATH
+        run: source ${{ steps.setup-emsdk.outputs.emscripten_path }}/emsdk_env.sh
 
       - uses: actions/checkout@v4
 
