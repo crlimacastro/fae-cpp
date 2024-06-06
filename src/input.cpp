@@ -43,8 +43,8 @@ namespace fae
             return SDLK_SPACE;
         case fae::key::exclaim:
             return SDLK_EXCLAIM;
-        case fae::key::quotedbl:
-            return SDLK_QUOTEDBL;
+        case fae::key::dblapostrophe:
+            return SDLK_DBLAPOSTROPHE;
         case fae::key::hash:
             return SDLK_HASH;
         case fae::key::percent:
@@ -53,8 +53,8 @@ namespace fae
             return SDLK_DOLLAR;
         case fae::key::ampersand:
             return SDLK_AMPERSAND;
-        case fae::key::quote:
-            return SDLK_QUOTE;
+        case fae::key::apostrophe:
+            return SDLK_APOSTROPHE;
         case fae::key::leftparen:
             return SDLK_LEFTPAREN;
         case fae::key::rightparen:
@@ -115,8 +115,8 @@ namespace fae
             return SDLK_CARET;
         case fae::key::underscore:
             return SDLK_UNDERSCORE;
-        case fae::key::backquote:
-            return SDLK_BACKQUOTE;
+        case fae::key::grave:
+            return SDLK_GRAVE;
         case fae::key::a:
             return SDLK_a;
         case fae::key::b:

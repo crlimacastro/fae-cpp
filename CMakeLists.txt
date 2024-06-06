@@ -44,7 +44,7 @@ endif()
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
-	GIT_TAG prerelease-3.1.2
+	GIT_TAG b6d7adfec11c355cdbb5ebde26ed5a5c958ce489
 	OPTIONS
 		${CPM_SDL_OPTIONS}
 )

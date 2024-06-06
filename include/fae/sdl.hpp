@@ -52,7 +52,8 @@ namespace fae
             if (auto maybe_window = SDL_CreateWindow(options.title.data(), static_cast<int>(options.width), static_cast<int>(options.height), flags); maybe_window)
             {
                 return sdl_window{
-                    .raw = unique_sdl_window_ptr(maybe_window, SDL_DestroyWindow)};
+                    .raw = unique_sdl_window_ptr(maybe_window, SDL_DestroyWindow)
+                };
             }
             return std::nullopt;
         }
@@ -79,13 +80,12 @@ namespace fae
         {
             Uint32 flags = 0;
 
-            if (options.vsync)
+            if (auto maybe_renderer = SDL_CreateRenderer(window.raw.get(), options.get_rendering_driver_name()))
             {
-                flags |= SDL_RENDERER_PRESENTVSYNC;
-            }
-
-            if (auto maybe_renderer = SDL_CreateRenderer(window.raw.get(), options.get_rendering_driver_name(), flags))
-            {
+                if (options.vsync)
+                {
+                    SDL_SetRenderVSync(maybe_renderer, 1);
+                }
                 return sdl_renderer{
                     .raw = std::shared_ptr<SDL_Renderer>(maybe_renderer, SDL_DestroyRenderer),
                 };
