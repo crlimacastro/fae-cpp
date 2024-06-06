@@ -4,6 +4,17 @@ permissions:
   pull-requests: write
   issues: write
   repository-projects: write
+  actions: write
+  deployments: write
+  pages: write
+  contents: write
+  attestations: write
+  checks: write
+  discussions: write
+  id-token: write
+  packages: write
+  security-events: write
+  statuses: write
 
 on:
   push:
