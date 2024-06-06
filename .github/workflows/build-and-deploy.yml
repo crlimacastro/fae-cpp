@@ -1,5 +1,10 @@
 name: Build and Deploy with Emscripten
 
+permissions:
+  pull-requests: write
+  issues: write
+  repository-projects: write
+
 on:
   push:
     branches:
@@ -39,7 +44,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Download artifact
       uses: actions/download-artifact@v3
