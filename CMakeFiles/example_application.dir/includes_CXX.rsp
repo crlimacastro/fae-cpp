@@ -1,0 +1,1 @@
+-I/home/runner/work/fae/fae/include -I/home/runner/work/fae/fae/build/include -I"/home/runner/work/fae/fae/build/_deps/sdl-build/include" -I"/home/runner/work/fae/fae/build/_deps/sdl-src/include" -isystem "/home/runner/work/fae/fae/build/_deps/glm-src" -isystem "/home/runner/work/fae/fae/build/_deps/entt-src/src"

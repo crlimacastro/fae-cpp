@@ -1,0 +1,1 @@
+ ../libfae.a "../_deps/glm-build/glm/libglm.a" "../_deps/sdl-build/libSDL3.a" -lm 
