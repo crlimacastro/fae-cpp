@@ -1,4 +1,4 @@
-name: Build and Deploy with Emscripten
+name: Web Build and Deploy With Emscripten
 
 permissions:
   pull-requests: write
@@ -23,6 +23,10 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:
+    
+  
+    
 
 jobs:
   build:
@@ -37,7 +41,7 @@ jobs:
       with:
         version: 3.1.61
 
-    - name: Configure CMake
+    - name: Configure CMake with Emscripten
       run: emcmake cmake -B build
 
     - name: Build
