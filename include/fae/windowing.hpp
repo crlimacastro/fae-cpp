@@ -52,6 +52,7 @@ namespace fae
 	struct first_render_end
 	{
 		resource_manager &resources;
+		asset_manager& assets;
 		scheduler &scheduler;
 		ecs_world &ecs_world;
 	};

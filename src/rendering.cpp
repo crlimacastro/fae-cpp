@@ -8,12 +8,14 @@
 #include <string_view>
 #include <variant>
 
+#include "fae/application.hpp"
 #include "fae/color.hpp"
 #include "fae/core.hpp"
 #include "fae/logging.hpp"
 #include "fae/math.hpp"
 #include "fae/time.hpp"
 #include "fae/webgpu.hpp"
+#include "fae/windowing.hpp"
 
 namespace fae
 {
@@ -27,6 +29,7 @@ namespace fae
                 renderer.clear();
                 step.scheduler.invoke<render_step>(render_step{
                     .resources = step.resources,
+                    .assets = step.assets,
                     .scheduler = step.scheduler,
                     .ecs_world = step.ecs_world,
                 });
@@ -35,6 +38,7 @@ namespace fae
                 {
                     step.scheduler.invoke(fae::first_render_end{
                         .resources = step.resources,
+                        .assets = step.assets,
                         .scheduler = step.scheduler,
                         .ecs_world = step.ecs_world,
                     });

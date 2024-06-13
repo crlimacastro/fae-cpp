@@ -10,16 +10,19 @@ namespace fae
     {
         scheduler.invoke(pre_update_step{
             .resources = resources,
+            .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });
         scheduler.invoke(update_step{
             .resources = resources,
+            .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });
         scheduler.invoke(post_update_step{
             .resources = resources,
+            .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });
@@ -28,11 +31,13 @@ namespace fae
         {
             scheduler.invoke(stop_step{
                 .resources = resources,
+                .assets = assets,
                 .scheduler = scheduler,
                 .ecs_world = ecs_world,
             });
             scheduler.invoke(deinit_step{
                 .resources = resources,
+                .assets = assets,
                 .scheduler = scheduler,
                 .ecs_world = ecs_world,
             });
@@ -52,11 +57,13 @@ namespace fae
             });
         scheduler.invoke(init_step{
             .resources = resources,
+            .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });
         scheduler.invoke(start_step{
             .resources = resources,
+            .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });

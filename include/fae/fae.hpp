@@ -5,11 +5,13 @@
 #include "fae/core.hpp"
 
 #include "fae/color.hpp"
+#include "fae/angle.hpp"
 #include "fae/event.hpp"
 #include "fae/logging.hpp"
 #include "fae/math.hpp"
 
 #include "fae/resource_manager.hpp"
+#include "fae/asset_manager.hpp"
 #include "fae/scheduler.hpp"
 
 #include "fae/ecs_world.hpp"

@@ -12,6 +12,7 @@ namespace fae
     struct render_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };

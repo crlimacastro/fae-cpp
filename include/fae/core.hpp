@@ -6,6 +6,8 @@
 #include <variant>
 #include <vector>
 
+#include <magic_enum.hpp>
+
 namespace fae
 {
     constexpr int exit_success = 0;
@@ -95,5 +97,11 @@ namespace fae
     [[nodiscard]] inline constexpr auto sizeof_data(const std::vector<t, t_alloc>& v) -> std::size_t
     {
         return v.size() * sizeof(typename std::vector<t, t_alloc>::value_type);
+    }
+
+    template <typename t>
+    [[nodiscard]] inline constexpr auto to_string(const t& value) -> std::string
+    {
+        return std::string(magic_enum::enum_name(value));
     }
 }

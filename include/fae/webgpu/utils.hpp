@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string_view>
+#include <optional>
+#include <filesystem>
 
 #include <webgpu/webgpu_cpp.h>
 
@@ -26,9 +28,12 @@ namespace fae
         const void* data,
         std::size_t size,
         wgpu::BufferUsage usage);
-    [[nodiscard]] wgpu::ShaderModule create_shader_module(const wgpu::Device& device,
+    [[nodiscard]] wgpu::ShaderModule create_shader_module_from_str(const wgpu::Device& device,
         std::string_view label,
         std::string_view src);
+    [[nodiscard]] std::optional<wgpu::ShaderModule> create_shader_module_from_path(const wgpu::Device& device,
+        std::string_view label,
+        const std::filesystem::path& path);
     [[nodiscard]] wgpu::Texture create_texture(const wgpu::Device& device,
         std::string_view label,
         wgpu::Extent3D extent,

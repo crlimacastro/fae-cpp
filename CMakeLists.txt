@@ -11,6 +11,7 @@ project(
 set(FAE_CPM_VERSION "v0.39.0" CACHE STRING "Which version of CPM to use (tag or \"master\")")
 option(FAE_ENABLE_WARNINGS "Enable compilation warnings" OFF)
 option(FAE_ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
+option(FAE_USE_BUILD_ASSET_DIR "Use assets directory in the build folder. Switch ON for release builds" OFF)
 option(FAE_BUILD_EXAMPLES "Build examples" ON)
 # TODO option(FAE_BUILD_TESTS "Build tests" OFF)
 # TODO option(FAE_BUILD_BENCHMARKS "Build benchmarks" OFF))
@@ -20,6 +21,7 @@ option(FAE_BUILD_EXAMPLES "Build examples" ON)
 include(cmake/get_cpm.cmake)
 get_cpm(VERSION ${FAE_CPM_VERSION})
 CPMUsePackageLock(package-lock.cmake)
+CPMAddPackage("gh:Neargye/magic_enum#v0.9.5")
 CPMAddPackage("gh:g-truc/glm#1.0.1")
 CPMAddPackage("gh:skypjack/entt#v3.13.2")
 set(CPM_SDL_OPTIONS
@@ -96,6 +98,18 @@ elseif(UNIX)
 	)
 endif()
 
+if(FAE_USE_BUILD_ASSET_DIR)
+	target_compile_definitions(${PROJECT_NAME}
+	PUBLIC
+	FAE_ASSET_DIR="./assets/"
+	)
+else()
+	target_compile_definitions(${PROJECT_NAME}
+		PUBLIC
+	    	FAE_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
+	)
+endif()
+
 target_compile_features(${PROJECT_NAME}
 	PUBLIC
 		cxx_std_23
@@ -137,6 +151,7 @@ target_sources(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
+		magic_enum::magic_enum
 		glm::glm
 		EnTT::EnTT
 		SDL3::SDL3

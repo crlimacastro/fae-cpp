@@ -7,6 +7,7 @@
 #include "fae/ecs_world.hpp"
 #include "fae/event.hpp"
 #include "fae/resource_manager.hpp"
+#include "fae/asset_manager.hpp"
 #include "fae/scheduler.hpp"
 
 namespace fae
@@ -33,42 +34,49 @@ namespace fae
     struct init_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };
     struct start_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };
     struct pre_update_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };
     struct update_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };
     struct post_update_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };
     struct stop_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };
     struct deinit_step
     {
         resource_manager& resources;
+        asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
     };
@@ -77,6 +85,7 @@ namespace fae
     {
         bool is_running{};
         resource_manager resources{};
+        asset_manager assets{};
         scheduler scheduler{};
         ecs_world ecs_world{};
         std::unordered_set<std::type_index> plugins{};

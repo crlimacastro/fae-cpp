@@ -1,5 +1,8 @@
 #include "fae/webgpu/utils.hpp"
 
+#include <fstream>
+#include <string>
+
 #ifdef FAE_PLATFORM_WEB
 #include <emscripten/emscripten.h>
 #endif
@@ -143,7 +146,7 @@ namespace fae
         return buffer;
     }
 
-    wgpu::ShaderModule create_shader_module(const wgpu::Device& device,
+    wgpu::ShaderModule create_shader_module_from_str(const wgpu::Device& device,
         std::string_view label,
         std::string_view src)
     {
@@ -156,6 +159,24 @@ namespace fae
         auto shader = device.CreateShaderModule(&desc);
         return shader;
     }
+
+    std::optional<wgpu::ShaderModule> create_shader_module_from_path(const wgpu::Device& device,
+        std::string_view label,
+        const std::filesystem::path& path)
+        {
+            auto file = std::ifstream(path);
+            if (!file.is_open())
+            {
+                return std::nullopt;
+            }
+            file.seekg(0, std::ios::end);
+            std::size_t size = file.tellg();
+            auto shader_src = std::string(size, ' ');
+            file.seekg(0);
+            file.read(shader_src.data(), size);
+
+            return create_shader_module_from_str(device, label, shader_src);
+        }
 
     wgpu::Texture create_texture(const wgpu::Device& device,
         std::string_view label,
