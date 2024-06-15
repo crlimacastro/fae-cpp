@@ -31,37 +31,25 @@ auto update(const fae::update_step& step) noexcept -> void
 
 auto render(const fae::render_step& step) noexcept -> void
 {
-    step.resources.use_resource<fae::webgpu>(
-        [&](fae::webgpu& renderer)
+    step.resources.use_resource<fae::renderer>(
+        [&](fae::renderer& renderer)
         {
-            renderer.current_render.vertex_data = std::vector<float>{
-                // clang-format off
-				-.5f, .5f, -.5f, 1.f, 		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 1.f, // 0 left up back
-				-.5f, -.5f, -.5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 0.f, // 1 left down back
-				.5f, -.5f, -.5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 0.f, // 2 right down back
-				.5f, .5f, -.5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 1.f, // 3 right up back
-				-.5f, .5f, .5f, 1.f, 		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 1.f, // 4 left up front
-				-.5f, -.5f, .5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 0.f, // 5 left down front
-				.5f, -.5f, .5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 0.f, // 6 right down front
-				.5f, .5f, .5f, 1.f,			1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 1.f, // 7 right up front
-                // clang-format on
-            };
-            renderer.current_render.index_data = std::vector<std::uint32_t>{
-                // clang-format off
-				0, 1, 2,
-				0, 2, 3,
-				3, 2, 6,
-				3, 6, 7,
-				7, 6, 5,
-				7, 5, 4,
-				4, 5, 1,
-				4, 1, 0,
-				0, 3, 7,
-				0, 7, 4,
-				1, 5, 6,
-				1, 6, 2,
-                // clang-format on
-            };
+            auto time = step.resources.get_or_emplace<fae::time>(fae::time{});
+            auto dt = time.delta().seconds_f32();
+            auto t = time.elapsed().seconds_f32();
+
+            static auto hsva = fae::color_hsva::from_rgba(fae::colors::red);
+            hsva.h = static_cast<float>(static_cast<int>(hsva.h + dt * 120) % 360);
+            auto tint = hsva.to_rgba();
+
+            static auto rotation = fae::quat(0.f, 0.f, 0.f, 1.f);
+            rotation *= fae::math::angleAxis(fae::math::radians(60.f) * dt, fae::vec3(0.0f, 1.0f, 0.0f));
+
+            renderer.draw_cube(fae::renderer::draw_cube_args{
+                .position = { 1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f },
+                .rotation = rotation,
+                .tint = tint,
+            });
         });
 }
 

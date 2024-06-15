@@ -14,6 +14,7 @@ namespace fae
 {
     auto webgpu_plugin::init(application& app) const noexcept -> void
     {
+        static_assert(sizeof(t_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
         app.add_plugin(windowing_plugin{});
         auto& webgpu = app.resources.emplace_and_get<fae::webgpu>(fae::webgpu{
             .instance = wgpu::CreateInstance(),

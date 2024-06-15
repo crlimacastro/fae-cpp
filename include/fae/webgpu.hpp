@@ -3,6 +3,7 @@
 #include <webgpu/webgpu_cpp.h>
 
 #include "fae/logging.hpp"
+#include "fae/math.hpp"
 
 #include "fae/webgpu/sdl_impl.hpp"
 #include "fae/webgpu/string_utils.hpp"
@@ -11,6 +12,18 @@
 namespace fae
 {
     struct application;
+
+    struct t_uniforms
+    {
+        mat4 model = mat4(1.f);
+        mat4 view = mat4(1.f);
+        mat4 projection = mat4(1.f);
+        vec4 tint = { 1.f, 1.f, 1.f, 1.f };
+        float time = 0;
+        float padding0;
+        float padding1;
+        float padding2;
+    };
 
     struct webgpu
     {

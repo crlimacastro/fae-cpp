@@ -8,6 +8,7 @@
 #include "fae/time.hpp"
 #include "fae/webgpu.hpp"
 #include "fae/color.hpp"
+#include "fae/rendering/renderer.hpp"
 
 namespace fae
 {
@@ -63,50 +64,11 @@ namespace fae
                         webgpu.current_render.vertex_data.clear();
                         webgpu.current_render.index_data.clear();
                         webgpu.current_render.uniform_data.clear();
-                        // webgpu.current_render.uniform_data.resize((3 * 4 * 16) + (1 * 4 * 4) + (4 * 4));
 
                         wgpu::SurfaceTexture surface_texture;
                         webgpu.surface.GetCurrentTexture(&surface_texture);
                         auto surface_texture_view = surface_texture.texture.CreateView();
 
-                        auto fov = 45.f;
-                        auto aspect = 1920.f / 1080.f;
-                        auto near_plane = 0.1f;
-                        auto far_plane = 1000.f;
-
-                        static auto transform = fae::transform{};
-
-                        auto time = resources.get_or_emplace<fae::time>(fae::time{});
-                        auto dt = time.delta().seconds_f32();
-                        auto t = time.elapsed().seconds_f32();
-
-                        transform.position = { 1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f };
-                        transform.rotation *= math::angleAxis(math::radians(60.f) * dt, vec3(0.0f, 1.0f, 0.0f));
-
-                        struct t_uniforms
-                        {
-                            mat4 model = mat4(1.f);
-                            mat4 view = mat4(1.f);
-                            mat4 projection = mat4(1.f);
-                            vec4 tint = { 1.f, 1.f, 1.f, 1.f };
-                            float time = 0;
-                            float padding0;
-                            float padding1;
-                            float padding2;
-                        };
-                        static_assert(sizeof(t_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
-                        t_uniforms uniforms;
-                        uniforms.model = transform.to_mat4();
-                        uniforms.projection = math::perspective(math::radians(fov), aspect, near_plane, far_plane);
-                        static auto hsva = color_hsva::from_rgba(colors::red);
-                        hsva.h = static_cast<float>(static_cast<int>(hsva.h + dt * 120) % 360);
-                        auto tint = hsva.to_rgba().to_array();
-                        uniforms.tint = hsva.to_rgba().to_vec4();
-                        uniforms.time = t;
-                        webgpu.current_render.uniform_data.resize(sizeof(uniforms));
-                        std::memcpy(webgpu.current_render.uniform_data.data(), &uniforms, sizeof(uniforms));
-
-                        webgpu.device.GetQueue().WriteBuffer(webgpu.uniform_buffer.buffer, 0, &uniforms, sizeof(uniforms));
                         auto command_encoder = webgpu.device.CreateCommandEncoder();
                         auto color_attachment = wgpu::RenderPassColorAttachment{
                             .view = surface_texture_view,
@@ -140,6 +102,7 @@ namespace fae
                 resources.use_resource<fae::webgpu>(
                     [&](webgpu& webgpu)
                     {
+                        webgpu.device.GetQueue().WriteBuffer(webgpu.uniform_buffer.buffer, 0, webgpu.current_render.uniform_data.data(), sizeof_data(webgpu.current_render.uniform_data));
                         const auto vertex_buffer = create_buffer_with_data(
                             webgpu.device, "vertex_buffer", webgpu.current_render.vertex_data.data(), sizeof_data(webgpu.current_render.vertex_data),
                             wgpu::BufferUsage::Vertex);
@@ -148,7 +111,10 @@ namespace fae
                             webgpu.device, "index_buffer", webgpu.current_render.index_data.data(), sizeof_data(webgpu.current_render.index_data),
                             wgpu::BufferUsage::Index);
                         webgpu.current_render.render_pass.SetIndexBuffer(index_buffer, wgpu::IndexFormat::Uint32);
-                        webgpu.current_render.render_pass.DrawIndexed(webgpu.current_render.index_data.size());
+                        if (!webgpu.current_render.index_data.empty())
+                        {
+                            webgpu.current_render.render_pass.DrawIndexed(webgpu.current_render.index_data.size());
+                        }
                         webgpu.current_render.render_pass.End();
                         auto command_buffer = webgpu.current_render.command_encoder.Finish();
                         auto queue = webgpu.device.GetQueue();
@@ -157,6 +123,60 @@ namespace fae
                         webgpu.surface.Present();
                         webgpu.instance.ProcessEvents();
 #endif
+                    });
+            },
+            .draw_cube =
+                [&](renderer::draw_cube_args args)
+            {
+                resources.use_resource<fae::webgpu>(
+                    [&](webgpu& webgpu)
+                    {
+                        webgpu.current_render.vertex_data = std::vector<float>{
+                            // clang-format off
+				            -.5f, .5f, -.5f, 1.f, 		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 1.f, // 0 left up back
+				            -.5f, -.5f, -.5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 0.f, // 1 left down back
+				            .5f, -.5f, -.5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 0.f, // 2 right down back
+				            .5f, .5f, -.5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 1.f, // 3 right up back
+				            -.5f, .5f, .5f, 1.f, 		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 1.f, // 4 left up front
+				            -.5f, -.5f, .5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			0.f, 0.f, // 5 left down front
+				            .5f, -.5f, .5f, 1.f,		1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 0.f, // 6 right down front
+				            .5f, .5f, .5f, 1.f,			1.f, 1.f, 1.f, 1.f,		1.f, 0.f, 0.f, 1.f,			1.f, 1.f, // 7 right up front
+                            // clang-format on
+                        };
+                        webgpu.current_render.index_data = std::vector<std::uint32_t>{
+                            // clang-format off
+				            0, 1, 2,
+				            0, 2, 3,
+				            3, 2, 6,
+				            3, 6, 7,
+				            7, 6, 5,
+				            7, 5, 4,
+				            4, 5, 1,
+				            4, 1, 0,
+				            0, 3, 7,
+				            0, 7, 4,
+				            1, 5, 6,
+				            1, 6, 2,
+                            // clang-format on
+                        };
+
+                        t_uniforms uniforms;
+                        auto transform = fae::transform{};
+                        transform.position = args.position;
+                        transform.rotation = args.rotation;
+                        transform.scale = args.scale;
+                        uniforms.model = transform.to_mat4();
+                        auto fov = 45.f;
+                        auto aspect = 1920.f / 1080.f;
+                        auto near_plane = 0.1f;
+                        auto far_plane = 1000.f;
+                        uniforms.projection = math::perspective(math::radians(fov), aspect, near_plane, far_plane);
+                        uniforms.tint = args.tint.to_vec4();
+                        auto time = resources.get_or_emplace<fae::time>(fae::time{});
+                        auto t = time.elapsed().seconds_f32();
+                        uniforms.time = t;
+                        webgpu.current_render.uniform_data.resize(sizeof(uniforms));
+                        std::memcpy(webgpu.current_render.uniform_data.data(), &uniforms, sizeof(uniforms));
                     });
             },
         };
