@@ -5,6 +5,8 @@
 #include <cmath>
 #include <cstdint>
 
+#include "fae/math.hpp"
+
 namespace fae
 {
     struct color_hsva;
@@ -20,6 +22,11 @@ namespace fae
         [[nodiscard]] auto to_hsva() const noexcept -> color_hsva;
 
         [[nodiscard]] inline constexpr auto to_array() const noexcept -> std::array<float, 4>
+        {
+            return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
+        }
+
+        [[nodiscard]] inline constexpr auto to_vec4() const noexcept -> fae::vec4
         {
             return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
         }

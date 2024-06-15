@@ -63,7 +63,7 @@ namespace fae
                         webgpu.current_render.vertex_data.clear();
                         webgpu.current_render.index_data.clear();
                         webgpu.current_render.uniform_data.clear();
-                        webgpu.current_render.uniform_data.resize((3 * 4 * 16) + (1 * 4 * 4));
+                        // webgpu.current_render.uniform_data.resize((3 * 4 * 16) + (1 * 4 * 4) + (4 * 4));
 
                         wgpu::SurfaceTexture surface_texture;
                         webgpu.surface.GetCurrentTexture(&surface_texture);
@@ -82,18 +82,31 @@ namespace fae
 
                         transform.position = { 1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f };
                         transform.rotation *= math::angleAxis(math::radians(60.f) * dt, vec3(0.0f, 1.0f, 0.0f));
-                        auto model = transform.to_mat4();
-                        auto view = mat4(1.f);
-                        auto projection = math::perspective(math::radians(fov), aspect, near_plane, far_plane);
+
+                        struct t_uniforms
+                        {
+                            mat4 model = mat4(1.f);
+                            mat4 view = mat4(1.f);
+                            mat4 projection = mat4(1.f);
+                            vec4 tint = { 1.f, 1.f, 1.f, 1.f };
+                            float time = 0;
+                            float padding0;
+                            float padding1;
+                            float padding2;
+                        };
+                        static_assert(sizeof(t_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
+                        t_uniforms uniforms;
+                        uniforms.model = transform.to_mat4();
+                        uniforms.projection = math::perspective(math::radians(fov), aspect, near_plane, far_plane);
                         static auto hsva = color_hsva::from_rgba(colors::red);
                         hsva.h = static_cast<float>(static_cast<int>(hsva.h + dt * 120) % 360);
                         auto tint = hsva.to_rgba().to_array();
-                        std::memcpy(webgpu.current_render.uniform_data.data(), &model, sizeof(model));
-                        std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model), &view, sizeof(view));
-                        std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model) + sizeof(view), &projection, sizeof(projection));
-                        std::memcpy(webgpu.current_render.uniform_data.data() + sizeof(model) + sizeof(view) + sizeof(projection), &tint, sizeof(tint));
+                        uniforms.tint = hsva.to_rgba().to_vec4();
+                        uniforms.time = t;
+                        webgpu.current_render.uniform_data.resize(sizeof(uniforms));
+                        std::memcpy(webgpu.current_render.uniform_data.data(), &uniforms, sizeof(uniforms));
 
-                        webgpu.device.GetQueue().WriteBuffer(webgpu.uniform_buffer.buffer, 0, webgpu.current_render.uniform_data.data(), webgpu.uniform_buffer.size);
+                        webgpu.device.GetQueue().WriteBuffer(webgpu.uniform_buffer.buffer, 0, &uniforms, sizeof(uniforms));
                         auto command_encoder = webgpu.device.CreateCommandEncoder();
                         auto color_attachment = wgpu::RenderPassColorAttachment{
                             .view = surface_texture_view,

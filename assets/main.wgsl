@@ -4,6 +4,10 @@ struct t_uniforms
 	view : mat4x4f,
 	projection : mat4x4f,
 	tint: vec4f,
+	time: f32,
+	padding0: f32,
+	padding1: f32,
+	padding2: f32,
 };
 @group(0) @binding(0) var<uniform> uniforms : t_uniforms;
 

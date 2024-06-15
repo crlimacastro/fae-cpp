@@ -146,6 +146,7 @@ namespace fae
             .depthWriteEnabled = true,
             .depthCompare = wgpu::CompareFunction::Less,
         };
+
         wgpu::RenderPipelineDescriptor pipeline_descriptor{
             .label = "fae_render_pipeline",
             .vertex = wgpu::VertexState{
@@ -180,7 +181,7 @@ namespace fae
             },
             wgpu::TextureFormat::Depth24Plus, wgpu::TextureUsage::RenderAttachment);
 
-        constexpr std::uint64_t uniform_buffer_size = (3 * 4 * 16) + (1 * 4 * 4); // (3 * mat4x4<f32>) + (1 * vec4f)
+        constexpr std::uint64_t uniform_buffer_size = (3 * 4 * 16) + (1 * 4 * 4) + (4 * 4); // (3 * mat4x4<f32>) + (1 * vec4f) + (1 * f32)
         auto uniform_buffer = create_buffer(webgpu.device, "uniform_buffer", uniform_buffer_size, wgpu::BufferUsage::Uniform);
         auto bind_entries = std::array<wgpu::BindGroupEntry, 1>{
             wgpu::BindGroupEntry{
