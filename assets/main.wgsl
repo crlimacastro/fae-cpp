@@ -23,7 +23,9 @@ struct vertex_input {
 struct vertex_output {
 	@builtin(position) position: vec4f,
 	@location(0) color: vec4f,
-	@location(1) uv: vec2f,
+	@location(1) normal: vec4f,
+	@location(2) uv: vec2f,
+
 };
 
 @vertex
@@ -32,6 +34,7 @@ fn vs_main(in: vertex_input) -> vertex_output {
 	var out: vertex_output;
 	out.position = model_view_projection_matrix * in.position;
 	out.color = uniforms.tint * in.color;
+	out.normal = in.normal;
 	out.uv = in.uv;
     return out;
 }

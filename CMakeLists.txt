@@ -24,43 +24,30 @@ CPMUsePackageLock(package-lock.cmake)
 CPMAddPackage("gh:Neargye/magic_enum#v0.9.5")
 CPMAddPackage("gh:g-truc/glm#1.0.1")
 CPMAddPackage("gh:skypjack/entt#v3.13.2")
-set(CPM_SDL_OPTIONS
-	"EXCLUDE_FROM_ALL ON"
-	"SYSTEM ON"
-	# "SDL_DISABLE_INSTALL OFF"
-)
-
-if(${BUILD_SHARED_LIBS})
-	set(CPM_SDL_OPTIONS
-		${CPM_SDL_OPTIONS}
-		"SDL_SHARED ON"
-		"SDL_STATIC OFF"
-	)
-else()
-	set(CPM_SDL_OPTIONS
-		${CPM_SDL_OPTIONS}
-		"SDL_SHARED OFF"
-		"SDL_STATIC ON"
-	)
-endif()
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
 	GIT_TAG b6d7adfec11c355cdbb5ebde26ed5a5c958ce489
 	OPTIONS
-		${CPM_SDL_OPTIONS}
-)
+		"EXCLUDE_FROM_ALL ON"
+		"SYSTEM ON"
+		# "SDL_DISABLE_INSTALL OFF"
+		"SDL_SHARED OFF"
+		"SDL_STATIC ON"
+	)
 if(NOT DEFINED EMSCRIPTEN)
 	CPMAddPackage(
 		NAME dawn
 		GITHUB_REPOSITORY google/dawn
-	 	GIT_TAG main
-	 	OPTIONS
-		  	"EXCLUDE_FROM_ALL ON"
-		  	"SYSTEM ON"
+		GIT_TAG main
+		OPTIONS
+			"EXCLUDE_FROM_ALL ON"
+			"SYSTEM ON"
 			"DAWN_FETCH_DEPENDENCIES ON"
+			"BUILD_SHARED_LIBS OFF"
 	)
 endif()
+CPMAddPackage("gh:assimp/assimp#v5.4.1")
 
 configure_file(config.hpp.in "include/${PROJECT_NAME}/config.hpp")
 
@@ -95,6 +82,13 @@ elseif(UNIX)
 	target_compile_definitions(${PROJECT_NAME}
 		PUBLIC
 			FAE_PLATFORM_LINUX
+	)
+endif()
+
+if(BUILD_SHARED_LIBS)
+	target_compile_definitions(${PROJECT_NAME}
+		PRIVATE
+			FAE_DLL_EXPORT
 	)
 endif()
 
@@ -155,6 +149,7 @@ target_link_libraries(${PROJECT_NAME}
 		glm::glm
 		EnTT::EnTT
 		SDL3::SDL3
+		assimp::assimp
 )
 if(NOT DEFINED EMSCRIPTEN)
 	target_link_libraries(${PROJECT_NAME}

@@ -1,10 +1,11 @@
 #include "fae/sdl.hpp"
 
 #include "fae/input.hpp"
+#include "fae/windowing.hpp"
 
 namespace fae
 {
-    auto sdl::ref_count = std::atomic<std::size_t>{0};
+    auto sdl::ref_count = std::atomic<std::size_t>{ 0 };
 
     auto sdl::init(const options& options) noexcept -> std::optional<sdl>
     {
@@ -111,6 +112,19 @@ namespace fae
                 step.resources.use_resource<sdl_input>([&](sdl_input& input)
                     { input.release_key(event.key.keysym.sym); });
                 break;
+            }
+            case SDL_EVENT_WINDOW_RESIZED:
+            {
+                auto width = static_cast<std::size_t>(event.window.data1);
+                auto height = static_cast<std::size_t>(event.window.data2);
+                step.scheduler.invoke(window_resized{
+                    .width = width,
+                    .height = height,
+                    .resources = step.resources,
+                    .assets = step.assets,
+                    .scheduler = step.scheduler,
+                    .ecs_world = step.ecs_world,
+                });
             }
             }
         }

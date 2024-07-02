@@ -57,6 +57,17 @@ namespace fae
 		ecs_world &ecs_world;
 	};
 
+	struct window_resized
+	{
+		std::size_t width;
+		std::size_t height;
+
+		resource_manager &resources;
+		asset_manager& assets;
+		scheduler &scheduler;
+		ecs_world &ecs_world;
+	};
+
 	auto show_primary_window_after_first_render(const fae::first_render_end &e) noexcept -> void;
 	auto update_windows(const update_step &step) noexcept -> void;
 	[[nodiscard]] auto make_sdl_window(fae::sdl_window &window) noexcept -> fae::window;

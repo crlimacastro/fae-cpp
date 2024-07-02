@@ -12,10 +12,38 @@
 
 namespace fae
 {
+    auto reconfigure_on_window_resized(const fae::window_resized& e) noexcept -> void
+    {
+        e.resources.use_resource<fae::webgpu>([&](webgpu& webgpu)
+            {
+            auto window_width = e.width;
+            auto window_height = e.height;
+            auto surface_config = wgpu::SurfaceConfiguration{
+                .device = webgpu.device,
+                .format = webgpu.surface.GetPreferredFormat(webgpu.adapter),
+                .usage = wgpu::TextureUsage::RenderAttachment,
+                .width = static_cast<std::uint32_t>(window_width),
+                .height = static_cast<std::uint32_t>(window_height),
+                .presentMode = wgpu::PresentMode::Fifo,
+            };
+            webgpu.surface.Configure(&surface_config);
+
+            webgpu.depth_texture = create_texture(
+            webgpu.device, "Depth texture",
+            {
+                .width = static_cast<std::uint32_t>(window_width),
+                .height = static_cast<std::uint32_t>(window_height),
+            },
+            wgpu::TextureFormat::Depth24Plus, wgpu::TextureUsage::RenderAttachment); });
+    }
+
     auto webgpu_plugin::init(application& app) const noexcept -> void
     {
         static_assert(sizeof(t_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
-        app.add_plugin(windowing_plugin{});
+        app
+            .add_plugin(windowing_plugin{})
+            .add_system<window_resized>(reconfigure_on_window_resized);
+
         auto& webgpu = app.resources.emplace_and_get<fae::webgpu>(fae::webgpu{
             .instance = wgpu::CreateInstance(),
         });

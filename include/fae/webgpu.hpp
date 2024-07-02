@@ -4,6 +4,7 @@
 
 #include "fae/logging.hpp"
 #include "fae/math.hpp"
+#include "fae/windowing.hpp"
 
 #include "fae/webgpu/sdl_impl.hpp"
 #include "fae/webgpu/string_utils.hpp"
@@ -47,6 +48,8 @@ namespace fae
         };
         current_render current_render{};
     };
+
+    auto reconfigure_on_window_resized(const fae::window_resized &e) noexcept -> void;
 
     struct webgpu_plugin
     {

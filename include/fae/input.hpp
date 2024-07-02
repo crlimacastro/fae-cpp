@@ -11,7 +11,7 @@ namespace fae
 	struct application;
 	struct update_step;
 
-	enum class key
+	enum struct key
 	{
 		unknown,
 		enter,

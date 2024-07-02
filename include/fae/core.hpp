@@ -5,8 +5,20 @@
 #include <optional>
 #include <variant>
 #include <vector>
+#include <type_traits>
+#include <concepts>
 
 #include <magic_enum.hpp>
+
+#ifdef FAE_PLATFORM_WINDOWS
+#ifdef FAE_EXPORTS
+#define FAE_API __declspec(dllexport)
+#else
+#define FAE_API __declspec(dllimport)
+#endif
+#else
+#define FAE_API
+#endif
 
 namespace fae
 {
@@ -90,7 +102,7 @@ namespace fae
     template <typename... ts, typename... tarms>
     auto match(std::variant<ts...> variant, tarms&&... arms)
     {
-        return std::visit(match_arms{std::forward<tarms>(arms)...}, variant);
+        return std::visit(match_arms{ std::forward<tarms>(arms)... }, variant);
     }
 
     template <typename t, typename t_alloc>
@@ -100,6 +112,7 @@ namespace fae
     }
 
     template <typename t>
+        requires std::is_enum_v<t>
     [[nodiscard]] inline constexpr auto to_string(const t& value) -> std::string
     {
         return std::string(magic_enum::enum_name(value));

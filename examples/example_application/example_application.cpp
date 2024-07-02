@@ -8,6 +8,7 @@ auto start(const fae::start_step& step) noexcept -> void
 {
     step.resources.use_resource<fae::renderer>([&](fae::renderer& renderer)
         { renderer.set_clear_color(fae::colors::cornflower_blue); });
+        auto test = *step.assets.load<fae::mesh>("Stanford_Bunny.stl");
 }
 
 auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void

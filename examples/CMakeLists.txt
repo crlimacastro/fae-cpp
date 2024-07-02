@@ -35,7 +35,7 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
         		LINKER_LANGUAGE CXX
 		)
 
-		target_compile_features(${PROJECT_NAME}
+		target_compile_features(${SUBDIRECTORY_NAME}
 			PUBLIC
 				cxx_std_23
 		)
@@ -68,10 +68,15 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 		if (NOT DEFINED EMSCRIPTEN)
 			if(${BUILD_SHARED_LIBS})
 				add_custom_command(
-					TARGET ${PROJECT_NAME} POST_BUILD
-					COMMAND ${CMAKE_COMMAND} -E copy
-						$<TARGET_FILE:SDL3::SDL3-shared>
+					TARGET ${SUBDIRECTORY_NAME}
+					POST_BUILD
+						COMMAND ${CMAKE_COMMAND} -E copy_if_different
+						$<TARGET_FILE:${PROJECT_NAME}::${PROJECT_NAME}>
 						$<TARGET_FILE_DIR:${SUBDIRECTORY_NAME}>
+				)
+				
+				add_custom_target(example_copy_dll ALL
+    				DEPENDS $<TARGET_FILE:${PROJECT_NAME}::${PROJECT_NAME}>
 				)
 			endif()
 		endif()
