@@ -46,7 +46,7 @@ auto render(const fae::render_step& step) noexcept -> void
             static auto rotation = fae::quat(0.f, 0.f, 0.f, 1.f);
             rotation *= fae::math::angleAxis(fae::math::radians(60.f) * dt, fae::vec3(0.0f, 1.0f, 0.0f));
 
-            renderer.draw_cube(fae::renderer::draw_cube_args{
+            renderer.render_cube(fae::renderer::draw_cube_args{
                 .position = { 1.2f * std::cos(t), 1.2f * std::sinf(t * 2), -5.f },
                 .rotation = rotation,
                 .tint = tint,

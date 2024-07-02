@@ -47,6 +47,24 @@ namespace fae
             });
     }
 
+    auto render_models(const render_step& step) noexcept -> void
+    {
+        for (auto& [entity, model] : step.ecs_world.query<model>())
+        {
+            bool should_render = true;
+            entity.use_component<const visibility>([&](const fae::visibility& visibility) {
+                should_render = visibility.visible;
+            });
+            if (!should_render) continue;
+            
+            step.resources.use_resource<fae::renderer>(
+                [&](fae::renderer& renderer)
+                {
+                    renderer.render_model(model);
+                });
+        }
+    }
+
     auto rendering_plugin::init(application& app) const noexcept -> void
     {
         if (!app.resources.get<renderer>())
@@ -64,6 +82,8 @@ namespace fae
                 make_webgpu_renderer(app.resources));
         }
 
-        app.add_system<update_step>(update_rendering);
+        app.add_system<update_step>(update_rendering)
+        .add_system<render_step>(render_models)
+        ;
     }
 }

@@ -9,7 +9,6 @@
 
 namespace fae
 {
-
     struct render_step
     {
         resource_manager& resources;
@@ -18,7 +17,13 @@ namespace fae
         ecs_world& ecs_world;
     };
 
+    struct visibility
+    {
+        bool visible = true;
+    };
+
     auto update_rendering(const update_step& step) noexcept -> void;
+    auto render_models(const render_step& step) noexcept -> void;
 
     struct rendering_plugin
     {

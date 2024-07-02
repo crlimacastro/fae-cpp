@@ -4,6 +4,7 @@
 
 #include "fae/math.hpp"
 #include "fae/color.hpp"
+#include "fae/rendering/model.hpp"
 
 namespace fae
 {
@@ -26,6 +27,7 @@ namespace fae
             color tint = colors::white;
         };
 
-        std::function<void(draw_cube_args args)> draw_cube;
+        std::function<void(const draw_cube_args& args)> render_cube;
+        std::function<void(const fae::model& model)> render_model;
     };
 }

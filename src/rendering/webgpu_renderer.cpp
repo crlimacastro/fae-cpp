@@ -125,8 +125,8 @@ namespace fae
 #endif
                     });
             },
-            .draw_cube =
-                [&](renderer::draw_cube_args args)
+            .render_cube =
+                [&](const renderer::draw_cube_args& args)
             {
                 resources.use_resource<fae::webgpu>(
                     [&](webgpu& webgpu)
@@ -178,6 +178,10 @@ namespace fae
                         webgpu.current_render.uniform_data.resize(sizeof(uniforms));
                         std::memcpy(webgpu.current_render.uniform_data.data(), &uniforms, sizeof(uniforms));
                     });
+            },
+            .render_model = [&](const fae::model& model)
+            {
+                // TODO
             },
         };
     }
