@@ -18,8 +18,14 @@ namespace fae
     struct mesh
     {
         std::vector<vertex> vertices;
+        std::vector<std::size_t> indices;
 
         static auto load(std::filesystem::path path) -> std::optional<mesh>;
+
+        constexpr auto has_indices() const noexcept -> bool
+        {
+            return !indices.empty();
+        }
     };
 
     auto cube(float size) -> mesh;

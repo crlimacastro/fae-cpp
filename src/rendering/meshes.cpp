@@ -57,6 +57,18 @@ namespace fae
             result.vertices.push_back(vertex);
         }
 
+        if (mesh->HasFaces())
+        {
+            for (std::size_t f = 0; f < mesh->mNumFaces; f++)
+            {
+                auto face = mesh->mFaces[f];
+                for (std::size_t i = 0; i < face.mNumIndices; i++)
+                {
+                    result.indices.push_back(face.mIndices[i]);
+                }
+            }
+        }
+
         return result;
     }
 }
