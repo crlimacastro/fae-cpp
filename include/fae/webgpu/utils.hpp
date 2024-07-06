@@ -8,13 +8,6 @@
 
 namespace fae
 {
-    struct uniform_buffer
-    {
-        wgpu::Buffer buffer;
-        std::size_t size;
-        wgpu::BindGroup bind_group;
-    };
-
     [[nodiscard]] auto request_adapter_sync(wgpu::Instance instance, wgpu::RequestAdapterOptions adapter_options = {}) noexcept -> wgpu::Adapter;
     [[nodiscard]] auto request_device_sync(wgpu::Adapter adapter, wgpu::DeviceDescriptor device_descriptor = {}) noexcept -> wgpu::Device;
     [[nodiscard]] auto get_features(const wgpu::Adapter& adapter) noexcept -> std::vector<wgpu::FeatureName>;

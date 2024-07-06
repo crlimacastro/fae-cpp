@@ -25,7 +25,55 @@ namespace fae
         error,
         fatal,
     };
+}
 
+template<>
+struct std::formatter<fae::log_level> {
+    bool short_circuit = false;
+
+    constexpr auto parse(auto& ctx) {
+        auto it = ctx.begin();
+        if (it == ctx.end())
+            return it;
+        if (*it == 's') {
+            short_circuit = true;
+            ++it;
+        }
+        return it;
+    }
+
+    auto format(const fae::log_level& level, auto& ctx) const {
+        if (short_circuit) {
+            return std::format_to(ctx.out(), "bleh");
+        }
+
+        std::string_view name;
+        switch (level) {
+        case fae::log_level::debug:
+            name = "debug";
+            break;
+        case fae::log_level::info:
+            name = "info";
+            break;
+        case fae::log_level::warning:
+            name = "warning";
+            break;
+        case fae::log_level::error:
+            name = "error";
+            break;
+        case fae::log_level::fatal:
+            name = "fatal";
+            break;
+        default:
+            name = "unknown";
+            break;
+        }
+        return std::format_to(ctx.out(), "{}", name);
+    }
+};
+
+namespace fae
+{
     struct log_options
     {
         bool show_level = true;
@@ -61,29 +109,7 @@ namespace fae
         }
         if (options.show_level)
         {
-            std::string log_level_name = "";
-            switch (options.level)
-            {
-            case fae::log_level::debug:
-                log_level_name += "debug";
-                break;
-            case fae::log_level::info:
-                log_level_name += "info";
-                break;
-            case fae::log_level::warning:
-                log_level_name += "warning";
-                break;
-            case fae::log_level::error:
-                log_level_name += "error";
-                break;
-            case fae::log_level::fatal:
-                log_level_name += "fatal";
-                break;
-            default:
-                log_level_name += "unknown";
-                break;
-            }
-            result_msg += "[" + log_level_name + "] ";
+            result_msg += std::format("[{}] ", options.level);
         }
 
         result_msg += std::format("{}", msg);

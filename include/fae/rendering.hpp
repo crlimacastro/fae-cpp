@@ -5,7 +5,7 @@
 #include "rendering/renderer.hpp"
 #include "rendering/sdl_renderer.hpp"
 #include "rendering/webgpu_renderer.hpp"
-#include "rendering/meshes.hpp"
+#include "rendering/mesh.hpp"
 
 namespace fae
 {

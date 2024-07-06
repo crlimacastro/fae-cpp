@@ -51,7 +51,7 @@ namespace fae
                 data->done = true; }, data);
         while (!data->done)
         {
-            emscripten_sleep(10);
+            emscripten_sleep(1);
         }
 #endif
         auto adapter = data->adapter;

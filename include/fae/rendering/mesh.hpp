@@ -10,7 +10,7 @@ namespace fae
     struct vertex
     {
         vec3 position;
-        vec4 color;
+        vec4 color = { 1.f, 1.f, 1.f, 1.f };
         vec3 normal;
         vec2 uv;
     };
@@ -28,5 +28,8 @@ namespace fae
         }
     };
 
-    auto cube(float size) -> mesh;
+    namespace meshes
+    {
+        auto cube(float size = 1.f) -> mesh;
+    }
 }

@@ -28,6 +28,6 @@ namespace fae
         };
 
         std::function<void(const draw_cube_args& args)> render_cube;
-        std::function<void(const fae::model& model)> render_model;
+        std::function<void(const fae::model& model, const fae::transform& transform)> render_model;
     };
 }

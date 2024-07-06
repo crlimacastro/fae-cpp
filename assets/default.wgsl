@@ -14,16 +14,16 @@ struct t_uniforms
 struct vertex_input {
 	@builtin(vertex_index) vertex_index: u32,
 	@builtin(instance_index) instance_index: u32,
-	@location(0) position: vec4f,
+	@location(0) position: vec3f,
 	@location(1) color: vec4f,
-	@location(2) normal: vec4f,
+	@location(2) normal: vec3f,
 	@location(3) uv: vec2f,
 };
 
 struct vertex_output {
 	@builtin(position) position: vec4f,
 	@location(0) color: vec4f,
-	@location(1) normal: vec4f,
+	@location(1) normal: vec3f,
 	@location(2) uv: vec2f,
 
 };
@@ -32,7 +32,7 @@ struct vertex_output {
 fn vs_main(in: vertex_input) -> vertex_output {
 	var model_view_projection_matrix = uniforms.projection * uniforms.view * uniforms.model;
 	var out: vertex_output;
-	out.position = model_view_projection_matrix * in.position;
+	out.position = model_view_projection_matrix * vec4f(in.position, 1.0);
 	out.color = uniforms.tint * in.color;
 	out.normal = in.normal;
 	out.uv = in.uv;

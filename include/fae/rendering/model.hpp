@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fae/rendering/meshes.hpp"
+#include "fae/rendering/mesh.hpp"
 
 namespace fae
 {

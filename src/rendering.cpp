@@ -57,10 +57,15 @@ namespace fae
             });
             if (!should_render) continue;
             
+            auto transform = fae::transform{};
+            entity.use_component<const fae::transform>([&](const fae::transform& t) {
+                transform = t;
+            });
+
             step.resources.use_resource<fae::renderer>(
                 [&](fae::renderer& renderer)
                 {
-                    renderer.render_model(model);
+                    renderer.render_model(model, transform);
                 });
         }
     }
