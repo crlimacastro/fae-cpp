@@ -51,6 +51,12 @@ auto render(const fae::render_step& step) noexcept -> void
                 .rotation = rotation,
                 .tint = tint,
             });
+
+            renderer.render_cube(fae::renderer::draw_cube_args{
+                .position = { 1.2f * std::cos(t * 2), 1.2f * std::sinf(t * 4), -8.f },
+                .rotation = rotation,
+                .scale = fae::vec3{1.f} * (std::sin(t) + 1.5f) * 0.5f,
+            });
         });
 }
 

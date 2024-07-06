@@ -56,19 +56,12 @@ namespace fae
         }
     };
 
-
-    struct webgpu_uniform_buffer
-    {
-        wgpu::Buffer buffer;
-        wgpu::BindGroup bind_group;
-    };
-
     struct webgpu_render_pipeline
     {
         wgpu::ShaderModule shader_module;
         wgpu::RenderPipeline pipeline;
         wgpu::Texture depth_texture;
-        webgpu_uniform_buffer uniform_buffer;
+        std::uint32_t uniform_stride;
     };
 
     auto create_default_render_pipeline(application& app) noexcept -> webgpu_render_pipeline;
@@ -88,41 +81,13 @@ namespace fae
             wgpu::CommandEncoder command_encoder;
             wgpu::RenderPassEncoder render_pass;
 
-            struct indexed_render_data
+            struct render_command
             {
                 std::vector<vertex> vertex_data;
                 std::vector<std::uint32_t> index_data;
-
-                auto clear() noexcept -> void
-                {
-                    vertex_data.clear();
-                    index_data.clear();
-                }
-
-                auto empty() noexcept -> bool
-                {
-                    return vertex_data.empty() && index_data.empty();
-                }
+                t_uniforms uniform_data;
             };
-            indexed_render_data indexed_render_data{};
-
-            struct vertex_render_data
-            {
-                std::vector<vertex> vertex_data;
-
-                auto clear() noexcept -> void
-                {
-                    vertex_data.clear();
-                }
-
-                auto empty() noexcept -> bool
-                {
-                    return vertex_data.empty();
-                }
-            };
-            vertex_render_data vertex_render_data{};
-
-            std::vector<std::uint8_t> uniform_data;
+            std::vector<render_command> render_commands;
         };
         current_render current_render{};
     };

@@ -84,7 +84,7 @@ namespace fae
         auto vertex_buffer_layout = wgpu::VertexBufferLayout{
             .arrayStride = sizeof(vertex),
             .stepMode = wgpu::VertexStepMode::Vertex,
-            .attributeCount = static_cast<std::uint32_t>(vertex_attributes.size()),
+            .attributeCount = static_cast<std::size_t>(vertex_attributes.size()),
             .attributes = vertex_attributes.data(),
         };
 
@@ -121,8 +121,34 @@ namespace fae
             .depthCompare = wgpu::CompareFunction::Less,
         };
 
+        auto bind_group_layout_entries = std::vector<wgpu::BindGroupLayoutEntry>{
+            wgpu::BindGroupLayoutEntry{
+                .binding = 0,
+                .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
+                .buffer = wgpu::BufferBindingLayout{
+                    .type = wgpu::BufferBindingType::Uniform,
+                    .hasDynamicOffset = true,
+                    .minBindingSize = sizeof(t_uniforms),
+                },
+            }
+        };
+
+        auto bind_group_layout_desc = wgpu::BindGroupLayoutDescriptor{
+            .entryCount = static_cast<std::size_t>(bind_group_layout_entries.size()),
+            .entries = bind_group_layout_entries.data(),
+        };
+        auto bind_group_layout = webgpu.device.CreateBindGroupLayout(&bind_group_layout_desc);
+
+        auto pipeline_layout_desc = wgpu::PipelineLayoutDescriptor{
+            .bindGroupLayoutCount = 1,
+            .bindGroupLayouts = &bind_group_layout,
+        };
+
+        auto pipeline_layout = webgpu.device.CreatePipelineLayout(&pipeline_layout_desc);
+
         wgpu::RenderPipelineDescriptor pipeline_descriptor{
             .label = "fae_render_pipeline",
+            .layout = pipeline_layout,
             .vertex = wgpu::VertexState{
                 .module = shader_module,
                 .entryPoint = "vs_main",
@@ -161,30 +187,24 @@ namespace fae
             },
             depth_texture_format, wgpu::TextureUsage::RenderAttachment);
 
-        constexpr std::uint64_t uniform_buffer_size = sizeof(fae::t_uniforms);
-        auto uniform_buffer = create_buffer(webgpu.device, "uniform_buffer", uniform_buffer_size, wgpu::BufferUsage::Uniform);
-        auto bind_entries = std::vector<wgpu::BindGroupEntry>{
-            wgpu::BindGroupEntry{
-                .binding = 0,
-                .buffer = uniform_buffer,
-                .size = uniform_buffer_size,
-            },
+        auto ceil_to_next_multiple = [](std::uint32_t value, std::uint32_t step) noexcept -> std::uint32_t
+        {
+            uint32_t divide_and_ceil = value / step + (value % step == 0 ? 0 : 1);
+            return step * divide_and_ceil;
         };
-        auto bind_group_descriptor = wgpu::BindGroupDescriptor{
-            .layout = render_pipeline.GetBindGroupLayout(0),
-            .entryCount = static_cast<std::uint32_t>(bind_entries.size()),
-            .entries = bind_entries.data(),
-        };
-        auto uniform_bind_group = webgpu.device.CreateBindGroup(&bind_group_descriptor);
+
+        auto supported_limits = wgpu::SupportedLimits{};
+        webgpu.device.GetLimits(&supported_limits);
+        auto device_limits = supported_limits.limits;
+        auto uniform_stride = ceil_to_next_multiple(
+            (std::uint32_t)sizeof(t_uniforms),
+            (std::uint32_t)device_limits.minUniformBufferOffsetAlignment);
 
         return webgpu_render_pipeline{
             .shader_module = shader_module,
             .pipeline = render_pipeline,
             .depth_texture = depth_texture,
-            .uniform_buffer = webgpu_uniform_buffer{
-                .buffer = uniform_buffer,
-                .bind_group = uniform_bind_group,
-            },
+            .uniform_stride = uniform_stride,
         };
     }
 
