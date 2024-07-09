@@ -539,6 +539,8 @@ namespace fae
             { return sdl_input.is_key_just_pressed(to_sdl_keycode(k)); },
             .is_key_just_released = [&](fae::key k)
             { return sdl_input.is_key_just_released(to_sdl_keycode(k)); },
+            .get_mouse_delta = [&]
+            { return sdl_input.get_mouse_delta(); },
         };
     }
 

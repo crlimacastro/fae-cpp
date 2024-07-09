@@ -10,6 +10,7 @@
 #include "fae/color.hpp"
 #include "fae/rendering/renderer.hpp"
 #include "fae/rendering/mesh.hpp"
+#include "fae/camera.hpp"
 
 namespace fae
 {
@@ -101,54 +102,59 @@ namespace fae
                 resources.use_resource<fae::webgpu>(
                     [&](webgpu& webgpu)
                     {
-                        std::vector<t_uniforms> uniforms;
-                        for (auto& render_command : webgpu.current_render.render_commands)
+                        if (!webgpu.current_render.render_commands.empty())
                         {
-                            uniforms.push_back(render_command.uniform_data);
-                        }
-                        auto sizeof_uniforms = uniforms.size() * webgpu.render_pipeline.uniform_stride;
-                        auto uniform_buffer = create_buffer(webgpu.device, "fae_uniform_buffer", sizeof_uniforms, wgpu::BufferUsage::Uniform);
-                        auto bind_entries = std::vector<wgpu::BindGroupEntry>{
-                            wgpu::BindGroupEntry{
-                                .binding = 0,
-                                .buffer = uniform_buffer,
-                                .size = sizeof(t_uniforms),
-                            },
-                        };
-
-                        std::uint32_t uniform_offset = 0;
-                        for (auto & uniform : uniforms)
-                        {
-                            webgpu.device.GetQueue().WriteBuffer(uniform_buffer, uniform_offset, &uniform, sizeof(t_uniforms));
-                            uniform_offset += webgpu.render_pipeline.uniform_stride;
-                        }
-
-                        auto bind_group_descriptor = wgpu::BindGroupDescriptor{
-                            .layout = webgpu.render_pipeline.pipeline.GetBindGroupLayout(0),
-                            .entryCount = static_cast<std::size_t>(bind_entries.size()),
-                            .entries = bind_entries.data(),
-                        };
-                        auto uniform_bind_group = webgpu.device.CreateBindGroup(&bind_group_descriptor);
-
-                        uniform_offset = 0;
-                        for (auto& render_command : webgpu.current_render.render_commands)
-                        {
-                            webgpu.current_render.render_pass.SetBindGroup(0, uniform_bind_group, 1, &uniform_offset);
-                            uniform_offset += webgpu.render_pipeline.uniform_stride;
-
-                            const auto vertex_buffer = create_buffer_with_data(
-                                webgpu.device, "indexed_render_data_vertex_buffer", render_command.vertex_data.data(), sizeof_data(render_command.vertex_data),
-                                wgpu::BufferUsage::Vertex);
-                            webgpu.current_render.render_pass.SetVertexBuffer(0, vertex_buffer);
-                            if (!render_command.index_data.empty())
+                            std::vector<t_uniforms> uniforms;
+                            for (auto& render_command : webgpu.current_render.render_commands)
                             {
-                                const auto index_buffer = create_buffer_with_data(
-                                    webgpu.device, "indexed_render_data_index_buffer", render_command.index_data.data(), sizeof_data(render_command.index_data),
-                                    wgpu::BufferUsage::Index);
-                                webgpu.current_render.render_pass.SetIndexBuffer(index_buffer, wgpu::IndexFormat::Uint32);
-                                webgpu.current_render.render_pass.DrawIndexed(render_command.index_data.size());
-                            } else {
-                                webgpu.current_render.render_pass.Draw(render_command.vertex_data.size());
+                                uniforms.push_back(render_command.uniform_data);
+                            }
+                            auto sizeof_uniforms = uniforms.size() * webgpu.render_pipeline.uniform_stride;
+                            auto uniform_buffer = create_buffer(webgpu.device, "fae_uniform_buffer", sizeof_uniforms, wgpu::BufferUsage::Uniform);
+                            auto bind_entries = std::vector<wgpu::BindGroupEntry>{
+                                wgpu::BindGroupEntry{
+                                    .binding = 0,
+                                    .buffer = uniform_buffer,
+                                    .size = sizeof(t_uniforms),
+                                },
+                            };
+
+                            std::uint32_t uniform_offset = 0;
+                            for (auto& uniform : uniforms)
+                            {
+                                webgpu.device.GetQueue().WriteBuffer(uniform_buffer, uniform_offset, &uniform, sizeof(t_uniforms));
+                                uniform_offset += webgpu.render_pipeline.uniform_stride;
+                            }
+
+                            auto bind_group_descriptor = wgpu::BindGroupDescriptor{
+                                .layout = webgpu.render_pipeline.pipeline.GetBindGroupLayout(0),
+                                .entryCount = static_cast<std::size_t>(bind_entries.size()),
+                                .entries = bind_entries.data(),
+                            };
+                            auto uniform_bind_group = webgpu.device.CreateBindGroup(&bind_group_descriptor);
+
+                            uniform_offset = 0;
+                            for (auto& render_command : webgpu.current_render.render_commands)
+                            {
+                                webgpu.current_render.render_pass.SetBindGroup(0, uniform_bind_group, 1, &uniform_offset);
+                                uniform_offset += webgpu.render_pipeline.uniform_stride;
+
+                                const auto vertex_buffer = create_buffer_with_data(
+                                    webgpu.device, "indexed_render_data_vertex_buffer", render_command.vertex_data.data(), sizeof_data(render_command.vertex_data),
+                                    wgpu::BufferUsage::Vertex);
+                                webgpu.current_render.render_pass.SetVertexBuffer(0, vertex_buffer);
+                                if (!render_command.index_data.empty())
+                                {
+                                    const auto index_buffer = create_buffer_with_data(
+                                        webgpu.device, "indexed_render_data_index_buffer", render_command.index_data.data(), sizeof_data(render_command.index_data),
+                                        wgpu::BufferUsage::Index);
+                                    webgpu.current_render.render_pass.SetIndexBuffer(index_buffer, wgpu::IndexFormat::Uint32);
+                                    webgpu.current_render.render_pass.DrawIndexed(render_command.index_data.size());
+                                }
+                                else
+                                {
+                                    webgpu.current_render.render_pass.Draw(render_command.vertex_data.size());
+                                }
                             }
                         }
 
@@ -170,16 +176,17 @@ namespace fae
                     {
                         auto mesh = meshes::cube();
                         t_uniforms uniforms;
+                        resources.use_resource<fae::active_camera>([&](active_camera active_camera)
+                            {
+                    auto &camera = active_camera.camera();
+                    auto &camera_transform = active_camera.transform();
+                    uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
+                    uniforms.projection = math::perspective(math::radians(camera.fov), camera.aspect, camera.near_plane, camera.far_plane); });
                         auto transform = fae::transform{};
                         transform.position = args.position;
                         transform.rotation = args.rotation;
                         transform.scale = args.scale;
                         uniforms.model = transform.to_mat4();
-                        auto fov = 45.f;
-                        auto aspect = 1920.f / 1080.f;
-                        auto near_plane = 0.1f;
-                        auto far_plane = 1000.f;
-                        uniforms.projection = math::perspective(math::radians(fov), aspect, near_plane, far_plane);
                         uniforms.tint = args.tint.to_vec4();
                         auto time = resources.get_or_emplace<fae::time>(fae::time{});
                         auto t = time.elapsed().seconds_f32();
@@ -191,9 +198,27 @@ namespace fae
                         });
                     });
             },
-            .render_model = [&](const fae::model& model, const fae::transform& transform)
+            .render_model =
+                [&](const fae::model& model, const fae::transform& transform)
             {
-                // TODO
+                resources.use_resource<fae::webgpu>([&](fae::webgpu& webgpu)
+                    {
+                    t_uniforms uniforms;
+                    resources.use_resource<fae::active_camera>([&](active_camera active_camera)
+                    {
+                        auto &camera = active_camera.camera();
+                        auto &camera_transform = active_camera.transform();
+                        uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
+                        uniforms.projection = math::perspective(math::radians(camera.fov), camera.aspect, camera.near_plane, camera.far_plane); });
+                    uniforms.model = transform.to_mat4();
+                    auto time = resources.get_or_emplace<fae::time>(fae::time{});
+                    auto t = time.elapsed().seconds_f32();
+                    uniforms.time = t;
+                    webgpu.current_render.render_commands.push_back(fae::webgpu::current_render::render_command{
+                        .vertex_data = model.mesh.vertices,
+                        .index_data = model.mesh.indices,
+                        .uniform_data = uniforms,
+                  }); });
             },
         };
     }

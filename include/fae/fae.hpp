@@ -25,4 +25,6 @@
 #include "fae/time.hpp"
 #include "fae/input.hpp"
 #include "fae/rendering.hpp"
+#include "fae/camera.hpp"
+#include "fae/lighting.hpp"
 #include "fae/windowing.hpp"

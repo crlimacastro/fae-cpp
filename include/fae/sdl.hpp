@@ -14,6 +14,7 @@
 #include "fae/application.hpp"
 #include "fae/core.hpp"
 #include "fae/logging.hpp"
+#include "fae/math.hpp"
 
 namespace fae
 {
@@ -165,6 +166,13 @@ namespace fae
         [[nodiscard]] auto was_key_pressed(const SDL_Scancode key) const noexcept -> bool
         {
             return was_key_pressed(SDL_SCANCODE_TO_KEYCODE(key));
+        }
+
+        [[nodiscard]] auto get_mouse_delta() const noexcept -> vec2
+        {
+            float x, y;
+            SDL_GetRelativeMouseState(&x, &y);
+            return vec2(x, y);
         }
 
       private:

@@ -9,6 +9,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace fae
 {
@@ -48,6 +49,21 @@ namespace fae
         vec3 position = { 0.f, 0.f, 0.f };
         quat rotation = { 0.f, 0.f, 0.f, 1.f };
         vec3 scale = { 1.f, 1.f, 1.f };
+
+        [[nodiscard]] inline constexpr auto right() const noexcept -> vec3
+        {
+            return rotation * vec3{ 1.f, 0.f, 0.f };
+        }
+
+        [[nodiscard]] inline constexpr auto forward() const noexcept -> vec3
+        {
+            return rotation * vec3{ 0.f, 0.f, 1.f };
+        }
+
+        [[nodiscard]] inline constexpr auto up() const noexcept -> vec3
+        {
+            return rotation * vec3{ 0.f, 1.f, 0.f };
+        }
 
         [[nodiscard]] inline constexpr auto to_mat4() const noexcept -> mat4
         {

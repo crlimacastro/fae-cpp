@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fae/entity.hpp"
+#include "fae/math.hpp"
 
 namespace fae
 {
@@ -12,13 +13,18 @@ namespace fae
         float far_plane = 1000.f;
     };
 
-    struct primary_camera
+    struct active_camera
     {
         fae::entity camera_entity;
 
-        [[nodiscard]] auto camera() noexcept -> fae::camera&
+        [[nodiscard]] auto camera() noexcept -> camera&
         {
             return *camera_entity.get_component<fae::camera>();
+        }
+
+        [[nodiscard]] auto transform() noexcept -> transform&
+        {
+            return *camera_entity.get_component<fae::transform>();
         }
     };
 }

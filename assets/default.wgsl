@@ -41,5 +41,18 @@ fn vs_main(in: vertex_input) -> vertex_output {
 
 @fragment
 fn fs_main(in: vertex_output) -> @location(0) vec4f {
-	return in.color;
+	let lightColor1 = vec3f(1.0, 0.9, 0.6);
+	let lightColor2 = vec3f(0.6, 0.9, 1.0);
+	let lightDirection1 = vec3f(0.5, -0.9, 0.1);
+	let lightDirection2 = vec3f(0.2, 0.4, 0.3);
+	let normal = in.normal;
+	let shading1 = max(0.0, dot(lightDirection1, normal));
+	let shading2 = max(0.0, dot(lightDirection2, normal));
+	let shading = shading1 * lightColor1 + shading2 * lightColor2;
+	let color = in.color.xyz * shading;
+
+	let gamma_corrected_color = pow(color, vec3(2.2));
+
+	return vec4f(gamma_corrected_color, uniforms.tint.a);
+
 }

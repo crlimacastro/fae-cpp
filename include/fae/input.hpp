@@ -5,6 +5,7 @@
 #include "fae/application.hpp"
 #include "fae/sdl.hpp"
 #include "fae/windowing.hpp"
+#include "fae/math.hpp"
 
 namespace fae
 {
@@ -287,6 +288,8 @@ namespace fae
 		std::function<bool(key)> is_key_released;
 		std::function<bool(key)> is_key_just_pressed;
 		std::function<bool(key)> is_key_just_released;
+
+		std::function<vec2()> get_mouse_delta;
 	};
 
 	[[nodiscard]] auto to_sdl_keycode(const fae::key key) noexcept -> SDL_Keycode;
