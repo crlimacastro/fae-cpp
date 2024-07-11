@@ -19,16 +19,23 @@ namespace fae
 
 	struct window
 	{
+
+		std::function<std::string_view()> get_title;
+		std::function<void(std::string_view)> set_title;
 		struct size
 		{
 			std::size_t width;
 			std::size_t height;
 		};
-
-		std::function<std::string_view()> get_title;
-		std::function<void(std::string_view)> set_title;
 		std::function<size()> get_size;
 		std::function<void(std::size_t width, std::size_t height)> set_size;
+		struct position
+		{
+			int x;
+			int y;
+		};
+		std::function<position()> get_position;
+		std::function<void(int x, int y)> set_position;
 		std::function<void()> show;
 		std::function<void()> hide;
 		std::function<void()> update;
@@ -36,7 +43,12 @@ namespace fae
 		std::function<void()> close;
 		std::function<bool()> is_fullscreen;
 		std::function<void(bool)> set_fullscreen;
-		std::function<void()> toggle_fullscreen;
+		std::function<bool()> is_focused;
+
+		auto toggle_fullscreen() noexcept -> void
+		{
+			set_fullscreen(!is_fullscreen());
+		}
 	};
 
 	struct primary_window

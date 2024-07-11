@@ -169,7 +169,7 @@ namespace fae
                     });
             },
             .render_cube =
-                [&](const renderer::draw_cube_args& args)
+                [&](const renderer::render_cube_args& args)
             {
                 resources.use_resource<fae::webgpu>(
                     [&](webgpu& webgpu)

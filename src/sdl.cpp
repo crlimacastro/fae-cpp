@@ -126,6 +126,32 @@ namespace fae
                     .ecs_world = step.ecs_world,
                 });
             }
+            case SDL_EVENT_WINDOW_FOCUS_GAINED:
+            {
+                auto* window = SDL_GetWindowFromID(event.window.windowID);
+                for (auto [entity, sdl_window] : step.ecs_world.query<sdl_window>())
+                {
+                    if (sdl_window.raw.get() == window)
+                    {
+                        sdl_window.is_focused = true;
+                        break;
+                    }
+                }
+                break;
+            }
+            case SDL_EVENT_WINDOW_FOCUS_LOST:
+            {
+                auto* window = SDL_GetWindowFromID(event.window.windowID);
+                for (auto [entity, sdl_window] : step.ecs_world.query<sdl_window>())
+                {
+                    if (sdl_window.raw.get() == window)
+                    {
+                        sdl_window.is_focused = false;
+                        break;
+                    }
+                }
+                break;
+            }
             }
         }
     }

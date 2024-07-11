@@ -539,18 +539,42 @@ namespace fae
             { return sdl_input.is_key_just_pressed(to_sdl_keycode(k)); },
             .is_key_just_released = [&](fae::key k)
             { return sdl_input.is_key_just_released(to_sdl_keycode(k)); },
-            .get_mouse_delta = [&]
-            { return sdl_input.get_mouse_delta(); },
+            .get_mouse_delta = [&]()
+            {
+                auto mouse_delta = sdl_input.get_mouse_delta();
+                return fae::input::mouse_delta{ mouse_delta.x, mouse_delta.y }; },
+            .get_global_mouse_position = [&]()
+            {
+                    float x, y;
+                    SDL_GetGlobalMouseState(&x, &y);
+                    return fae::input::mouse_position{ x, y }; },
+            .get_local_mouse_position = [&]()
+            {
+                    float x, y;
+                    SDL_GetMouseState(&x, &y);
+                    return fae::input::mouse_position{ x, y }; },
+            .set_global_mouse_position = [&](float x, float y)
+            { SDL_WarpMouseGlobal(x, y); },
+            .set_local_mouse_position = [&](entity window_entity, float x, float y)
+            {
+                    auto maybe_window = window_entity.get_component<sdl_window>();
+                    if (!maybe_window)
+                    {
+                        log_error("entity does not have a sdl_window component", log_options{.show_stacktrace = true});
+                        return;
+                    }
+                    auto &window = *maybe_window;
+                    SDL_WarpMouseInWindow(window.raw.get(), x, y); },
         };
     }
 
-    auto input_plugin::init(application &app) const noexcept -> void
-		{
-			app.add_plugin(sdl_plugin{});
+    auto input_plugin::init(application& app) const noexcept -> void
+    {
+        app.add_plugin(sdl_plugin{});
 
-			auto &input = app.resources.get_or_emplace<sdl_input>(sdl_input{});
-			app
-				.emplace_resource<fae::input>(input_from(input))
-				.add_system<update_step>(toggle_fullscreen_on_alt_enter);
-		}
+        auto& input = app.resources.get_or_emplace<sdl_input>(sdl_input{});
+        app
+            .emplace_resource<fae::input>(input_from(input))
+            .add_system<update_step>(toggle_fullscreen_on_alt_enter);
+    }
 }

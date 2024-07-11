@@ -104,11 +104,12 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
             camera_transform.position += camera_transform.rotation * move_input * move_delta;
 
             static auto look_angle_radians = fae::vec2(0.f);
-            auto look_input = input.get_mouse_delta();
+            auto mouse_delta = input.get_mouse_delta();
+            auto look_input = fae::vec2(mouse_delta.x, mouse_delta.y);
             auto look_speed = 0.25f;
             auto look_delta = -look_input * look_speed * time.delta().seconds_f32();
             look_angle_radians += look_delta;
-            look_angle_radians.y = std::clamp(look_angle_radians.y, fae::math::radians(-60.f), fae::math::radians(60.f));
+            look_angle_radians.y = std::clamp(look_angle_radians.y, fae::math::radians(-45.f), fae::math::radians(45.f));
 
             camera_transform.rotation = fae::math::angleAxis(look_angle_radians.y, camera_transform.rotation * fae::vec3(1.f, 0.f, 0.f)) *
                                         fae::math::angleAxis(fae::math::radians(180.f) + look_angle_radians.x, fae::vec3(0.f, 1.f, 0.f)) *
@@ -118,6 +119,46 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
             {
                 camera_transform.position = { 0.f, 0.f, 0.f };
                 look_angle_radians = { 0.f, 0.f };
+            }
+        });
+}
+
+auto lock_mouse(const fae::update_step& step) noexcept -> void
+{
+    step.resources.use_resource<fae::primary_window>(
+        [&](fae::primary_window& primary_window)
+        {
+            auto& window = primary_window.window();
+            if (window.is_focused())
+            {
+                fae::hide_cursor();
+
+                auto window_position = window.get_position();
+                auto window_size = window.get_size();
+
+                auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
+
+                auto global_mouse_position = input.get_global_mouse_position();
+                if (global_mouse_position.x < window_position.x)
+                {
+                    input.set_local_mouse_position(primary_window.window_entity, window_size.width, global_mouse_position.y);
+                }
+                if (global_mouse_position.x > window_position.x + window_size.width)
+                {
+                    input.set_local_mouse_position(primary_window.window_entity, 0, global_mouse_position.y);
+                }
+                if (global_mouse_position.y < window_position.y)
+                {
+                    input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, window_size.height);
+                }
+                if (global_mouse_position.y > window_position.y + window_size.height)
+                {
+                    input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, 0);
+                }
+            }
+            else
+            {
+                fae::show_cursor();
             }
         });
 }
@@ -143,6 +184,7 @@ auto fae_main(int argc, char* argv[]) -> int
         .add_system<fae::update_step>(fae::quit_on_esc)
         // .add_system<fae::update_step>(hue_shift_clear_color)
         .add_system<fae::update_step>(fps_control_active_camera)
+        .add_system<fae::update_step>(lock_mouse)
         .add_system<fae::update_step>(update)
         .add_system<fae::render_step>(render)
         .run();

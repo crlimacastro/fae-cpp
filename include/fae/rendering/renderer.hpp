@@ -19,15 +19,22 @@ namespace fae
         std::function<void()> begin;
         std::function<void()> end;
 
-        struct draw_cube_args
+        struct render_cube_args
         {
-            vec3 position = vec3(0.f);
-            quat rotation = quat(0.f, 0.f, 0.f, 1.f);
-            vec3 scale = vec3(1.f);
-            color tint = colors::white;
+            const vec3 &position = vec3(0.f);
+            const quat &rotation = quat(0.f, 0.f, 0.f, 1.f);
+            const vec3 &scale = vec3(1.f);
+            const color &tint = colors::white;
         };
 
-        std::function<void(const draw_cube_args& args)> render_cube;
+        std::function<void(const render_cube_args& args)> render_cube;
+
+        struct render_model_args
+        {
+            const model& model;
+            const transform& transform;
+        };
+
         std::function<void(const fae::model& model, const fae::transform& transform)> render_model;
     };
 }

@@ -28,3 +28,4 @@
 #include "fae/camera.hpp"
 #include "fae/lighting.hpp"
 #include "fae/windowing.hpp"
+#include "fae/cursor.hpp"

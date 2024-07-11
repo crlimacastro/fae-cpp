@@ -32,4 +32,5 @@ namespace fae
     {
         auto cube(float size = 1.f) -> mesh;
     }
+    using namespace meshes;
 }

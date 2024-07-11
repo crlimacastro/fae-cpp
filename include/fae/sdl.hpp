@@ -14,7 +14,6 @@
 #include "fae/application.hpp"
 #include "fae/core.hpp"
 #include "fae/logging.hpp"
-#include "fae/math.hpp"
 
 namespace fae
 {
@@ -24,6 +23,7 @@ namespace fae
     {
         unique_sdl_window_ptr raw;
         bool should_close = false;
+        bool is_focused = false;
 
         struct options
         {
@@ -168,11 +168,17 @@ namespace fae
             return was_key_pressed(SDL_SCANCODE_TO_KEYCODE(key));
         }
 
-        [[nodiscard]] auto get_mouse_delta() const noexcept -> vec2
+        struct mouse_delta
+        {
+            float x = 0.f;
+            float y = 0.f;
+        };
+
+        [[nodiscard]] auto get_mouse_delta() const noexcept -> mouse_delta
         {
             float x, y;
             SDL_GetRelativeMouseState(&x, &y);
-            return vec2(x, y);
+            return mouse_delta {.x = x, .y = y};
         }
 
       private:
