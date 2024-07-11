@@ -35,6 +35,6 @@ namespace fae
             const transform& transform;
         };
 
-        std::function<void(const fae::model& model, const fae::transform& transform)> render_model;
+        std::function<void(const render_model_args& args)> render_model;
     };
 }

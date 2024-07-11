@@ -65,7 +65,7 @@ namespace fae
             step.resources.use_resource<fae::renderer>(
                 [&](fae::renderer& renderer)
                 {
-                    renderer.render_model(model, transform);
+                    renderer.render_model(renderer::render_model_args {.model = model, .transform = transform});
                 });
         }
     }

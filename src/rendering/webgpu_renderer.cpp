@@ -199,7 +199,7 @@ namespace fae
                     });
             },
             .render_model =
-                [&](const fae::model& model, const fae::transform& transform)
+                [&](const renderer::render_model_args& args)
             {
                 resources.use_resource<fae::webgpu>([&](fae::webgpu& webgpu)
                     {
@@ -210,13 +210,13 @@ namespace fae
                         auto &camera_transform = active_camera.transform();
                         uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
                         uniforms.projection = math::perspective(math::radians(camera.fov), camera.aspect, camera.near_plane, camera.far_plane); });
-                    uniforms.model = transform.to_mat4();
+                    uniforms.model = args.transform.to_mat4();
                     auto time = resources.get_or_emplace<fae::time>(fae::time{});
                     auto t = time.elapsed().seconds_f32();
                     uniforms.time = t;
                     webgpu.current_render.render_commands.push_back(fae::webgpu::current_render::render_command{
-                        .vertex_data = model.mesh.vertices,
-                        .index_data = model.mesh.indices,
+                        .vertex_data = args.model.mesh.vertices,
+                        .index_data = args.model.mesh.indices,
                         .uniform_data = uniforms,
                   }); });
             },
