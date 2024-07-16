@@ -61,6 +61,8 @@ set_target_properties(${PROJECT_NAME}
 		CXX_EXTENSIONS OFF
         COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
         LINKER_LANGUAGE CXX
+		LINK_FLAGS
+			"--use-preload-plugins"			
 )
 
 if(DEFINED EMSCRIPTEN)
@@ -92,16 +94,26 @@ if(BUILD_SHARED_LIBS)
 	)
 endif()
 
-if(FAE_USE_BUILD_ASSET_DIR)
-	target_compile_definitions(${PROJECT_NAME}
-	PUBLIC
-	FAE_ASSET_DIR="./assets/"
-	)
-else()
+if(DEFINED EMSCRIPTEN)
 	target_compile_definitions(${PROJECT_NAME}
 		PUBLIC
-	    	FAE_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
-	)
+			FAE_ASSET_DIR="/assets/"
+)
+else()
+	if(FAE_USE_BUILD_ASSET_DIR)
+		target_compile_definitions(${PROJECT_NAME}
+			PUBLIC
+				FAE_ASSET_DIR="/assets/"
+		)
+
+		add_custom_target(fae_copy_assets COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets)
+		add_dependencies(${PROJECT_NAME} fae_copy_assets)
+	else()
+		target_compile_definitions(${PROJECT_NAME}
+			PUBLIC
+				FAE_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
+		)
+	endif()
 endif()
 
 target_compile_features(${PROJECT_NAME}
@@ -124,6 +136,25 @@ if(FAE_ENABLE_WARNINGS)
 		)
 	endif()
 endif()
+
+if(DEFINED EMSCRIPTEN)
+	target_link_options(${PROJECT_NAME}
+	PUBLIC
+		"-sUSE_WEBGPU=1"
+		"--use-port=sdl2"
+		"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
+		"--use-port=sdl2_ttf"
+		"--use-port=sdl2_mixer"
+		"--use-port=sdl2_net"
+		"--use-port=bullet"
+		"-sEXIT_RUNTIME=1"
+		"-sALLOW_MEMORY_GROWTH=1"
+		"-sMAXIMUM_MEMORY=1gb"
+		"-sASYNCIFY=1"
+	)
+endif()
+
+
 
 target_include_directories(${PROJECT_NAME}
 	PUBLIC

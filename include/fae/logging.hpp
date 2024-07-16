@@ -10,6 +10,8 @@
 
 #ifndef FAE_PLATFORM_WEB
 #include <stacktrace>
+#else
+#include <emscripten/emscripten.h>
 #endif
 
 #include "fae/config.hpp"
@@ -27,28 +29,34 @@ namespace fae
     };
 }
 
-template<>
-struct std::formatter<fae::log_level> {
+template <>
+struct std::formatter<fae::log_level>
+{
     bool short_circuit = false;
 
-    constexpr auto parse(auto& ctx) {
+    constexpr auto parse(auto& ctx)
+    {
         auto it = ctx.begin();
         if (it == ctx.end())
             return it;
-        if (*it == 's') {
+        if (*it == 's')
+        {
             short_circuit = true;
             ++it;
         }
         return it;
     }
 
-    auto format(const fae::log_level& level, auto& ctx) const {
-        if (short_circuit) {
+    auto format(const fae::log_level& level, auto& ctx) const
+    {
+        if (short_circuit)
+        {
             return std::format_to(ctx.out(), "bleh");
         }
 
         std::string_view name;
-        switch (level) {
+        switch (level)
+        {
         case fae::log_level::debug:
             name = "debug";
             break;
@@ -94,6 +102,9 @@ namespace fae
         {
             if (options.level == log_level::fatal)
             {
+#ifdef FAE_PLATFORM_WEB
+                emscripten_force_exit(exit_failure);
+#endif
                 std::exit(exit_failure);
             }
             return;
@@ -125,6 +136,9 @@ namespace fae
 
         if (options.level == log_level::fatal)
         {
+#ifdef FAE_PLATFORM_WEB
+            emscripten_force_exit(exit_failure);
+#endif
             std::exit(exit_failure);
         }
     }

@@ -96,7 +96,6 @@ namespace fae
 
     struct webgpu_plugin
     {
-        wgpu::InstanceDescriptor instance_descriptor{};
         wgpu::RequestAdapterOptions adapter_options{};
         wgpu::DeviceDescriptor device_descriptor{
 #ifndef FAE_PLATFORM_WEB

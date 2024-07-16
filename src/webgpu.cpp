@@ -215,7 +215,7 @@ namespace fae
             .add_system<window_resized>(reconfigure_on_window_resized);
 
         auto& webgpu = app.resources.emplace_and_get<fae::webgpu>(fae::webgpu{
-            .instance = wgpu::CreateInstance(&instance_descriptor),
+            .instance = wgpu::CreateInstance(),
         });
         webgpu.adapter = request_adapter_sync(webgpu.instance, adapter_options);
         webgpu.device = request_device_sync(webgpu.adapter, device_descriptor);

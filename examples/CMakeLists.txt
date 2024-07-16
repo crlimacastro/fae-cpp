@@ -45,18 +45,11 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 				OUTPUT_NAME "index"
 				SUFFIX ".html"
 			)
-			target_link_options(${SUBDIRECTORY_NAME}
-				PRIVATE
-				"-sUSE_WEBGPU=1"
-				"--use-port=sdl2"
-				"--use-port=sdl2_image:formats=bmp,png,xpm,jpg"
-				"--use-port=sdl2_ttf"
-				"--use-port=sdl2_mixer"
-				"--use-port=sdl2_net"
-				"--use-port=bullet"
-				"-sALLOW_MEMORY_GROWTH=1"
-				"-sMAXIMUM_MEMORY=1gb"
-				"-sASYNCIFY=1"
+
+			set_target_properties(${SUBDIRECTORY_NAME}
+				PROPERTIES
+					LINK_FLAGS
+						"--use-preload-plugins --preload-file ${CMAKE_SOURCE_DIR}/assets@assets"
 			)
 	  	endif()
 

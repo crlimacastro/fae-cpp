@@ -61,6 +61,29 @@ auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void
 
 auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
 {
+    static auto had_focus = true;
+    auto has_focus = false;
+    step.resources.use_resource<fae::primary_window>(
+        [&](fae::primary_window& primary_window)
+        {
+            auto& window = primary_window.window();
+            has_focus = window.is_focused();
+        });
+
+    if (has_focus && !had_focus)
+    {
+        auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
+        input.get_mouse_delta();
+        had_focus = has_focus;
+        return;
+    }
+    had_focus = has_focus;
+
+    if (!has_focus)
+    {
+        return;
+    }
+
     auto& time = step.resources.get_or_emplace<fae::time>(fae::time{});
     step.resources.use_resource<fae::active_camera>(
         [&](fae::active_camera& active_camera)
