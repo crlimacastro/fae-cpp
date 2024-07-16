@@ -38,13 +38,8 @@ jobs:
       with:
         version: 3.1.61
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y zlib1g-dev
-
     - name: Configure CMake with Emscripten
-      run: emcmake cmake -B build
+      run: emcmake cmake -B build -D DASSIMP_BUILD_ZLIB=ON
 
     - name: Build
       run: cmake --build build
