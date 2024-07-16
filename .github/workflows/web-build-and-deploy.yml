@@ -39,7 +39,7 @@ jobs:
         version: 3.1.61
 
     - name: Configure CMake with Emscripten
-      run: emcmake cmake -B build -D ASSIMP_BUILD_ZLIB=ON -D FAE_BUILD_EXAMPLES
+      run: emcmake cmake -B build -D ASSIMP_BUILD_ZLIB=ON -D FAE_BUILD_EXAMPLES=ON
 
     - name: Build
       run: cmake --build build
