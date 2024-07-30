@@ -24,7 +24,7 @@ namespace fae
         [[nodiscard]] auto load(const std::filesystem::path& path) noexcept
             -> optional_reference<t_asset>
         {
-            auto resolved_path = FAE_ASSET_DIR / path;
+            auto resolved_path = resolve_path(path);
             if (m_assets.find(resolved_path) != m_assets.end())
             {
                 return optional_reference<t_asset>(std::any_cast<t_asset&>(m_assets.at(resolved_path)));
@@ -39,6 +39,12 @@ namespace fae
             }
 
             return std::nullopt;
+        }
+
+        [[nodiscard]] auto resolve_path(const std::filesystem::path& path) const noexcept
+            -> std::filesystem::path
+        {
+            return FAE_ASSET_DIR / path;
         }
 
       private:

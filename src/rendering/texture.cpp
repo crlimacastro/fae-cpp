@@ -26,6 +26,8 @@ namespace fae
             };
         }
 
+        stbi_image_free(img_data);
+
         return texture{
             .width = static_cast<std::size_t>(width),
             .height = static_cast<std::size_t>(height),

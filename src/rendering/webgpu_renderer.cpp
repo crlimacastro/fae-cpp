@@ -223,19 +223,13 @@ namespace fae
                         auto t = time.elapsed().seconds_f32();
                         uniforms.time = t;
 
-                        auto texture_descriptor = wgpu::TextureDescriptor
+                        static auto cache = std::unordered_map<const texture*, texture_and_view>();
+                        auto maybe_texture_and_view = cache.find(&args.model.material.diffuse);
+                        if (maybe_texture_and_view == cache.end())
                         {
-                            .usage = wgpu::TextureUsage::CopyDst | wgpu::TextureUsage::TextureBinding,
-                            .dimension = wgpu::TextureDimension::e2D,
-                            .size = { static_cast<std::uint32_t>(args.model.material.diffuse.width), static_cast<std::uint32_t>(args.model.material.diffuse.height), 1 },
-                            .format = wgpu::TextureFormat::RGBA8Unorm,
-                            .mipLevelCount = 1,
-                            .sampleCount = 1,
-                            .viewFormatCount = 0,
-                            .viewFormats = nullptr,
-                        };
-
-                        auto texture = webgpu.device.CreateTexture(&texture_descriptor);
+                            maybe_texture_and_view = cache.insert({ &args.model.material.diffuse, create_texture_with_mips_and_view(webgpu.device, args.model.material.diffuse) }).first;
+                        }
+                        auto texture_and_view = maybe_texture_and_view->second;
 
                         auto sample_descriptor = wgpu::SamplerDescriptor
                         {
@@ -253,41 +247,11 @@ namespace fae
 
                         auto sampler = webgpu.device.CreateSampler(&sample_descriptor);
 
-                        auto source = wgpu::TextureDataLayout
-                        {
-                            .offset = 0,
-                            .bytesPerRow = static_cast<std::uint32_t>(4 * args.model.material.diffuse.width),
-                            .rowsPerImage = static_cast<std::uint32_t>(args.model.material.diffuse.height),
-                        };
-
-                        auto destination = wgpu::ImageCopyTexture
-                        {
-                            .texture = texture,
-                            .mipLevel = 0,
-                            .origin = { 0, 0, 0 },
-                            .aspect = wgpu::TextureAspect::All,
-                        };
-
-                        webgpu.device.GetQueue().WriteTexture(&destination, args.model.material.diffuse.data.data(), sizeof_data(args.model.material.diffuse.data), &source, &texture_descriptor.size);
-                        // texture.Destroy();
-
-                        auto textureViewDesc = wgpu::TextureViewDescriptor{
-                                .format = wgpu::TextureFormat::RGBA8Unorm,
-                                .dimension = wgpu::TextureViewDimension::e2D,
-                                .baseMipLevel = 0,
-                                .mipLevelCount = 1,
-                                .baseArrayLayer = 0,
-                                .arrayLayerCount = 1,
-                                .aspect = wgpu::TextureAspect::All,
-                        };
-                        auto texture_view = texture.CreateView(&textureViewDesc);
-
-
                     webgpu.current_render.render_commands.push_back(fae::webgpu::current_render::render_command{
                         .vertex_data = args.model.mesh.vertices,
                         .index_data = args.model.mesh.indices,
                         .uniform_data = uniforms,
-                        .texture_view = texture_view,
+                        .texture_view = texture_and_view.view,
                         .sampler = sampler,
                   }); });
             },

@@ -30,33 +30,6 @@ namespace fae
     };
     static_assert(sizeof(t_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
 
-    struct shader_module
-    {
-        std::string shader_src;
-        std::string label = "";
-
-        static auto load(std::filesystem::path path) -> std::optional<shader_module>
-        {
-            auto shader_module = fae::shader_module{};
-            auto file = std::ifstream(path);
-            if (!file.is_open())
-            {
-                return std::nullopt;
-            }
-            file.seekg(0, std::ios::end);
-            std::size_t size = file.tellg();
-            shader_module.shader_src = std::string(size, ' ');
-            file.seekg(0);
-            file.read(shader_module.shader_src.data(), size);
-            return shader_module;
-        }
-
-        auto create(wgpu::Device device) -> wgpu::ShaderModule
-        {
-            return create_shader_module_from_str(device, "shader_module", shader_src);
-        }
-    };
-
     struct webgpu_render_pipeline
     {
         wgpu::ShaderModule shader_module;

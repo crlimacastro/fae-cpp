@@ -6,6 +6,8 @@
 
 #include <webgpu/webgpu_cpp.h>
 
+#include "fae/rendering/texture.hpp"
+
 namespace fae
 {
     [[nodiscard]] auto request_adapter_sync(wgpu::Instance instance, wgpu::RequestAdapterOptions adapter_options = {}) noexcept -> wgpu::Adapter;
@@ -32,4 +34,12 @@ namespace fae
         wgpu::Extent3D extent,
         wgpu::TextureFormat format,
         wgpu::TextureUsage usage);
+
+    struct texture_and_view
+    {
+        wgpu::Texture texture;
+        wgpu::TextureView view;
+    };
+    [[nodiscard]] texture_and_view create_texture_with_mips_and_view(const wgpu::Device& device,
+        texture texture);
 }

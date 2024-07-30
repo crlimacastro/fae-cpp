@@ -42,21 +42,19 @@ namespace fae
 
     auto create_default_render_pipeline(application& app) noexcept -> webgpu_render_pipeline
     {
-        auto maybe_default_shader_module = app.assets.load<shader_module>("default.wgsl");
-        if (!maybe_default_shader_module)
-        {
-            fae::log_fatal("failed to load shader module");
-        }
-        auto default_shader_module = *maybe_default_shader_module;
-
         auto maybe_webgpu = app.resources.get<fae::webgpu>();
         if (!maybe_webgpu)
         {
             fae::log_fatal("webgpu resource not found");
         }
         auto& webgpu = *maybe_webgpu;
+        auto maybe_default_shader_module = create_shader_module_from_path(webgpu.device, "default_shader_module", app.assets.resolve_path("default.wgsl"));
+        if (!maybe_default_shader_module)
+        {
+            fae::log_fatal("failed to load shader module");
+        }
+        auto shader_module = *maybe_default_shader_module;
 
-        auto shader_module = default_shader_module.create(webgpu.device);
 
         auto vertex_attributes = std::vector<wgpu::VertexAttribute>{
             wgpu::VertexAttribute{

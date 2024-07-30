@@ -167,6 +167,8 @@ target_include_directories(${PROJECT_NAME}
 )
 
 file(GLOB_RECURSE FAE_SOURCES CONFIGURE_DEPENDS
+	${CMAKE_CURRENT_SOURCE_DIR}/include/fae/*.hpp	
+	${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
 
