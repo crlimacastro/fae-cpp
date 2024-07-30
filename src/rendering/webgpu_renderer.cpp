@@ -111,31 +111,40 @@ namespace fae
                             }
                             auto sizeof_uniforms = uniforms.size() * webgpu.render_pipeline.uniform_stride;
                             auto uniform_buffer = create_buffer(webgpu.device, "fae_uniform_buffer", sizeof_uniforms, wgpu::BufferUsage::Uniform);
-                            auto bind_entries = std::vector<wgpu::BindGroupEntry>{
-                                wgpu::BindGroupEntry{
-                                    .binding = 0,
-                                    .buffer = uniform_buffer,
-                                    .size = sizeof(t_uniforms),
-                                },
-                            };
 
                             std::uint32_t uniform_offset = 0;
+                            auto queue = webgpu.device.GetQueue();
                             for (auto& uniform : uniforms)
                             {
-                                webgpu.device.GetQueue().WriteBuffer(uniform_buffer, uniform_offset, &uniform, sizeof(t_uniforms));
+                                queue.WriteBuffer(uniform_buffer, uniform_offset, &uniform, sizeof(t_uniforms));
                                 uniform_offset += webgpu.render_pipeline.uniform_stride;
                             }
-
-                            auto bind_group_descriptor = wgpu::BindGroupDescriptor{
-                                .layout = webgpu.render_pipeline.pipeline.GetBindGroupLayout(0),
-                                .entryCount = static_cast<std::size_t>(bind_entries.size()),
-                                .entries = bind_entries.data(),
-                            };
-                            auto uniform_bind_group = webgpu.device.CreateBindGroup(&bind_group_descriptor);
 
                             uniform_offset = 0;
                             for (auto& render_command : webgpu.current_render.render_commands)
                             {
+                                auto bind_entries = std::vector<wgpu::BindGroupEntry>{
+                                    wgpu::BindGroupEntry{
+                                        .binding = 0,
+                                        .buffer = uniform_buffer,
+                                        .size = sizeof(t_uniforms),
+                                    },
+                                    wgpu::BindGroupEntry{
+                                        .binding = 1,
+                                        .textureView = render_command.texture_view,
+                                    },
+                                    wgpu::BindGroupEntry{
+                                        .binding = 2,
+                                        .sampler = render_command.sampler,
+                                    },
+                                };
+                                auto bind_group_descriptor = wgpu::BindGroupDescriptor{
+                                    .layout = webgpu.render_pipeline.pipeline.GetBindGroupLayout(0),
+                                    .entryCount = static_cast<std::size_t>(bind_entries.size()),
+                                    .entries = bind_entries.data(),
+                                };
+
+                                auto uniform_bind_group = webgpu.device.CreateBindGroup(&bind_group_descriptor);
                                 webgpu.current_render.render_pass.SetBindGroup(0, uniform_bind_group, 1, &uniform_offset);
                                 uniform_offset += webgpu.render_pipeline.uniform_stride;
 
@@ -160,8 +169,7 @@ namespace fae
 
                         webgpu.current_render.render_pass.End();
                         auto command_buffer = webgpu.current_render.command_encoder.Finish();
-                        auto queue = webgpu.device.GetQueue();
-                        queue.Submit(1, &command_buffer);
+                        webgpu.device.GetQueue().Submit(1, &command_buffer);
 #ifndef FAE_PLATFORM_WEB
                         webgpu.surface.Present();
                         webgpu.instance.ProcessEvents();
@@ -210,14 +218,77 @@ namespace fae
                         auto &camera_transform = active_camera.transform();
                         uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
                         uniforms.projection = math::perspective(math::radians(camera.fov), camera.aspect, camera.near_plane, camera.far_plane); });
-                    uniforms.model = args.transform.to_mat4();
-                    auto time = resources.get_or_emplace<fae::time>(fae::time{});
-                    auto t = time.elapsed().seconds_f32();
-                    uniforms.time = t;
+                        uniforms.model = args.transform.to_mat4();
+                        auto time = resources.get_or_emplace<fae::time>(fae::time{});
+                        auto t = time.elapsed().seconds_f32();
+                        uniforms.time = t;
+
+                        auto texture_descriptor = wgpu::TextureDescriptor
+                        {
+                            .usage = wgpu::TextureUsage::CopyDst | wgpu::TextureUsage::TextureBinding,
+                            .dimension = wgpu::TextureDimension::e2D,
+                            .size = { static_cast<std::uint32_t>(args.model.material.diffuse.width), static_cast<std::uint32_t>(args.model.material.diffuse.height), 1 },
+                            .format = wgpu::TextureFormat::RGBA8Unorm,
+                            .mipLevelCount = 1,
+                            .sampleCount = 1,
+                            .viewFormatCount = 0,
+                            .viewFormats = nullptr,
+                        };
+
+                        auto texture = webgpu.device.CreateTexture(&texture_descriptor);
+
+                        auto sample_descriptor = wgpu::SamplerDescriptor
+                        {
+                            .addressModeU = wgpu::AddressMode::Repeat,
+                            .addressModeV = wgpu::AddressMode::Repeat,
+                            .addressModeW = wgpu::AddressMode::Repeat,
+                            .magFilter = wgpu::FilterMode::Nearest,
+                            .minFilter = wgpu::FilterMode::Nearest,
+                            .mipmapFilter = wgpu::MipmapFilterMode::Nearest,
+                            .lodMinClamp = 0.f,
+                            .lodMaxClamp = 32.f,
+                            .compare = wgpu::CompareFunction::Undefined,
+                            .maxAnisotropy = 1,
+                        };
+
+                        auto sampler = webgpu.device.CreateSampler(&sample_descriptor);
+
+                        auto source = wgpu::TextureDataLayout
+                        {
+                            .offset = 0,
+                            .bytesPerRow = static_cast<std::uint32_t>(4 * args.model.material.diffuse.width),
+                            .rowsPerImage = static_cast<std::uint32_t>(args.model.material.diffuse.height),
+                        };
+
+                        auto destination = wgpu::ImageCopyTexture
+                        {
+                            .texture = texture,
+                            .mipLevel = 0,
+                            .origin = { 0, 0, 0 },
+                            .aspect = wgpu::TextureAspect::All,
+                        };
+
+                        webgpu.device.GetQueue().WriteTexture(&destination, args.model.material.diffuse.data.data(), sizeof_data(args.model.material.diffuse.data), &source, &texture_descriptor.size);
+                        // texture.Destroy();
+
+                        auto textureViewDesc = wgpu::TextureViewDescriptor{
+                                .format = wgpu::TextureFormat::RGBA8Unorm,
+                                .dimension = wgpu::TextureViewDimension::e2D,
+                                .baseMipLevel = 0,
+                                .mipLevelCount = 1,
+                                .baseArrayLayer = 0,
+                                .arrayLayerCount = 1,
+                                .aspect = wgpu::TextureAspect::All,
+                        };
+                        auto texture_view = texture.CreateView(&textureViewDesc);
+
+
                     webgpu.current_render.render_commands.push_back(fae::webgpu::current_render::render_command{
                         .vertex_data = args.model.mesh.vertices,
                         .index_data = args.model.mesh.indices,
                         .uniform_data = uniforms,
+                        .texture_view = texture_view,
+                        .sampler = sampler,
                   }); });
             },
         };

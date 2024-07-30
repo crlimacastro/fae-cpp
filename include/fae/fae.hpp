@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fae/config.hpp"
-
 #include "fae/core.hpp"
 
 #include "fae/color.hpp"

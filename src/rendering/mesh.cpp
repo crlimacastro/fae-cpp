@@ -28,13 +28,14 @@ namespace fae
         auto result = mesh{};
 
         // TODO support multi mesh loading from one file
-        auto mesh = scene->mMeshes[0];
+        std::size_t mesh_idx = 0;
+        auto mesh = scene->mMeshes[mesh_idx];
 
         for (std::size_t v = 0; v < mesh->mNumVertices; v++)
         {
             auto vertex = fae::vertex{};
             vertex.position = { mesh->mVertices[v].x, mesh->mVertices[v].y, mesh->mVertices[v].z };
-            if (mesh->HasVertexColors(v))
+            if (mesh->HasVertexColors(mesh_idx))
             {
                 auto color = mesh->mColors[v];
                 vertex.color = { color->r, color->g, color->b, color->a };
@@ -44,9 +45,9 @@ namespace fae
                 auto normal = mesh->mNormals[v];
                 vertex.normal = { normal.x, normal.y, normal.z };
             }
-            if (mesh->HasTextureCoords(v))
+            if (mesh->HasTextureCoords(mesh_idx))
             {
-                auto uv = mesh->mTextureCoords[v][0];
+                auto uv = mesh->mTextureCoords[mesh_idx][v];
                 vertex.uv = { uv.x, uv.y };
             }
             result.vertices.push_back(vertex);

@@ -11,6 +11,7 @@
 #include "fae/webgpu/utils.hpp"
 
 #include "fae/rendering/mesh.hpp"
+#include "fae/rendering/texture.hpp"
 
 namespace fae
 {
@@ -86,6 +87,8 @@ namespace fae
                 std::vector<vertex> vertex_data;
                 std::vector<std::uint32_t> index_data;
                 t_uniforms uniform_data;
+                wgpu::TextureView texture_view;
+                wgpu::Sampler sampler;
             };
             std::vector<render_command> render_commands;
         };

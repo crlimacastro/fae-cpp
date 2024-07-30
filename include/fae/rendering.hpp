@@ -6,6 +6,9 @@
 #include "rendering/sdl_renderer.hpp"
 #include "rendering/webgpu_renderer.hpp"
 #include "rendering/mesh.hpp"
+#include "rendering/model.hpp"
+#include "rendering/texture.hpp"
+#include "rendering/material.hpp"
 
 namespace fae
 {

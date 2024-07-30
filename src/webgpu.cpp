@@ -130,7 +130,22 @@ namespace fae
                     .hasDynamicOffset = true,
                     .minBindingSize = sizeof(t_uniforms),
                 },
-            }
+            },
+            wgpu::BindGroupLayoutEntry{
+                .binding = 1,
+                .visibility = wgpu::ShaderStage::Fragment,
+                .texture = wgpu::TextureBindingLayout{
+                    .sampleType = wgpu::TextureSampleType::Float,
+                    .viewDimension = wgpu::TextureViewDimension::e2D,
+                },
+            },
+            wgpu::BindGroupLayoutEntry{
+                .binding = 2,
+                .visibility = wgpu::ShaderStage::Fragment,
+                .sampler = wgpu::SamplerBindingLayout{
+                    .type = wgpu::SamplerBindingType::Filtering,
+                },
+            },
         };
 
         auto bind_group_layout_desc = wgpu::BindGroupLayoutDescriptor{

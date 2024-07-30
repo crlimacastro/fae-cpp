@@ -1,17 +1,20 @@
-#include <format>
-#include <type_traits>
-
 #include "fae/fae.hpp"
 #include "fae/main.hpp"
 #include "fae/math.hpp"
 
 struct rotate
 {
-    float speed = 60.f;
+    float speed = 1.f;
 };
 
 auto start(const fae::start_step& step) noexcept -> void
 {
+    auto maybe_rock_texture = step.assets.load<fae::texture>("rock.png");
+    auto rock_texture = *maybe_rock_texture;
+
+    auto maybe_wood_texture = step.assets.load<fae::texture>("wood.png");
+    auto wood_texture = *maybe_wood_texture;
+
     auto camera_entity = step.ecs_world.create_entity();
     camera_entity
         .set_component<fae::transform>(fae::transform{
@@ -30,18 +33,24 @@ auto start(const fae::start_step& step) noexcept -> void
         })
         .set_component<fae::model>(fae::model{
             .mesh = fae::meshes::cube(),
+            .material = fae::material{
+                .diffuse = rock_texture,
+            },
         });
 
     step.ecs_world.create_entity()
         .set_component<fae::transform>(fae::transform{
-            .position = { 0.f, -2.f, -10.f },
-            .rotation = fae::quat{ 0.f, 0.f, 0.f, 1.f } * fae::math::angleAxis(fae::math::radians(90.f), fae::vec3(1.0f, 0.0f, 0.0f)),
-            .scale = fae::vec3{ 1.f, 1.f, 1.f } * .03f,
+            .position = { 0.f, 0.f, -10.f },
+            .rotation = fae::math::angleAxis(fae::math::radians(0.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
+            .scale = fae::vec3{ 1.f, 1.f, 1.f },
         })
         .set_component<fae::model>(fae::model{
-            .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
+            .mesh = *step.assets.load<fae::mesh>("cube.obj"),
+            .material = fae::material{
+                .diffuse = wood_texture,
+            },
         })
-        .set_component<rotate>(rotate{});
+        .set_component<rotate>(rotate{ .speed = 60.f });
 }
 
 auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void
@@ -186,13 +195,17 @@ auto lock_mouse(const fae::update_step& step) noexcept -> void
         });
 }
 
-auto update(const fae::update_step& step) noexcept -> void
+auto rotate_system(const fae::update_step& step) noexcept -> void
 {
     auto& time = step.resources.get_or_emplace<fae::time>(fae::time{});
     for (auto& [entity, transform, rotate] : step.ecs_world.query<fae::transform, const rotate>())
     {
-        transform.rotation *= fae::math::angleAxis(fae::math::radians(rotate.speed) * time.delta(), fae::vec3(0.0f, 0.0f, 1.0f));
+        transform.rotation *= fae::math::angleAxis(fae::math::radians(rotate.speed) * time.delta(), fae::vec3(0.0f, 1.0f, 0.0f));
     }
+}
+
+auto update(const fae::update_step& step) noexcept -> void
+{
 }
 
 auto render(const fae::render_step& step) noexcept -> void
@@ -208,6 +221,7 @@ auto fae_main(int argc, char* argv[]) -> int
         // .add_system<fae::update_step>(hue_shift_clear_color)
         .add_system<fae::update_step>(fps_control_active_camera)
         .add_system<fae::update_step>(lock_mouse)
+        .add_system<fae::update_step>(rotate_system)
         .add_system<fae::update_step>(update)
         .add_system<fae::render_step>(render)
         .run();

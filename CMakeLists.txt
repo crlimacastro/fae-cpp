@@ -31,10 +31,9 @@ CPMAddPackage(
 	OPTIONS
 		"EXCLUDE_FROM_ALL ON"
 		"SYSTEM ON"
-		# "SDL_DISABLE_INSTALL OFF"
 		"SDL_SHARED OFF"
 		"SDL_STATIC ON"
-	)
+)
 if(NOT DEFINED EMSCRIPTEN)
 	CPMAddPackage(
 		NAME dawn
@@ -48,6 +47,7 @@ if(NOT DEFINED EMSCRIPTEN)
 	)
 endif()
 CPMAddPackage("gh:assimp/assimp#v5.4.1")
+CPMAddPackage("gh:gracicot/stb-cmake#d42aa7a48ff0479fa9cab999d035a901cc4c4134")
 
 configure_file(config.hpp.in "include/${PROJECT_NAME}/config.hpp")
 
@@ -133,6 +133,7 @@ if(FAE_ENABLE_WARNINGS)
 				"-Wall"
 				"-Wextra"
 				"-Wpedantic"
+				"-Wno-reorder-init-list"
 		)
 	endif()
 endif()
@@ -181,6 +182,7 @@ target_link_libraries(${PROJECT_NAME}
 		EnTT::EnTT
 		SDL3::SDL3
 		assimp::assimp
+		stb::image
 )
 if(NOT DEFINED EMSCRIPTEN)
 	target_link_libraries(${PROJECT_NAME}
