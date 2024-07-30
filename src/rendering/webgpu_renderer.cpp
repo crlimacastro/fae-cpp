@@ -188,8 +188,15 @@ namespace fae
                             {
                     auto &camera = active_camera.camera();
                     auto &camera_transform = active_camera.transform();
-                    uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
-                    uniforms.projection = math::perspective(math::radians(camera.fov), camera.aspect, camera.near_plane, camera.far_plane); });
+
+                    resources.use_resource<fae::primary_window>([&](fae::primary_window primary_window)
+                    {
+                        auto &window = primary_window.window();
+                        auto window_size = window.get_size();
+                        auto aspect_ratio = static_cast<float>(window_size.width) / static_cast<float>(window_size.height);
+
+                        uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
+                        uniforms.projection = math::perspective(math::radians(camera.fov), aspect_ratio, camera.near_plane, camera.far_plane); });
                         auto transform = fae::transform{};
                         transform.position = args.position;
                         transform.rotation = args.rotation;
@@ -203,7 +210,7 @@ namespace fae
                             .vertex_data = mesh.vertices,
                             .index_data = mesh.indices,
                             .uniform_data = uniforms,
-                        });
+                        }); });
                     });
             },
             .render_model =
@@ -217,7 +224,14 @@ namespace fae
                         auto &camera = active_camera.camera();
                         auto &camera_transform = active_camera.transform();
                         uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
-                        uniforms.projection = math::perspective(math::radians(camera.fov), camera.aspect, camera.near_plane, camera.far_plane); });
+
+                        resources.use_resource<fae::primary_window>([&](fae::primary_window primary_window)
+                    {
+                        auto &window = primary_window.window();
+                        auto window_size = window.get_size();
+                        auto aspect_ratio = static_cast<float>(window_size.width) / static_cast<float>(window_size.height);
+
+                        uniforms.projection = math::perspective(math::radians(camera.fov), aspect_ratio, camera.near_plane, camera.far_plane); });
                         uniforms.model = args.transform.to_mat4();
                         auto time = resources.get_or_emplace<fae::time>(fae::time{});
                         auto t = time.elapsed().seconds_f32();
@@ -253,7 +267,7 @@ namespace fae
                         .uniform_data = uniforms,
                         .texture_view = texture_and_view.view,
                         .sampler = sampler,
-                  }); });
+                  }); }); });
             },
         };
     }

@@ -18,6 +18,9 @@ namespace fae
     {
         e.resources.use_resource<fae::webgpu>([&](webgpu& webgpu)
             {
+            webgpu.render_pipeline.depth_texture.Destroy();
+            webgpu.surface.Unconfigure();
+
             auto window_width = e.width;
             auto window_height = e.height;
             auto surface_config = wgpu::SurfaceConfiguration{
@@ -30,7 +33,6 @@ namespace fae
             };
             webgpu.surface.Configure(&surface_config);
 
-            webgpu.render_pipeline.depth_texture.Destroy();
             webgpu.render_pipeline.depth_texture = create_texture(
             webgpu.device, "Fae Depth texture",
             {
@@ -54,7 +56,6 @@ namespace fae
             fae::log_fatal("failed to load shader module");
         }
         auto shader_module = *maybe_default_shader_module;
-
 
         auto vertex_attributes = std::vector<wgpu::VertexAttribute>{
             wgpu::VertexAttribute{
