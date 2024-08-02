@@ -1,1 +1,1 @@
- ../libfae.a "../_deps/glm-build/glm/libglm.a" "../_deps/sdl-build/libSDL3.a" -lm "../_deps/assimp-build/lib/libassimp.a" "../_deps/assimp-build/contrib/zlib/libzlibstatic.a" 
+ ../libfae.a "../_deps/glm-build/glm/libglm.a" "../_deps/sdl-build/libSDL3.a" -lm "../_deps/assimp-build/lib/libassimp.a" "../_deps/assimp-build/contrib/zlib/libzlibstatic.a" "../_deps/stb-cmake-build/libstb-image.a" 

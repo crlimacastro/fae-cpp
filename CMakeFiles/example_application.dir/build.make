@@ -74,15 +74,15 @@ examples/CMakeFiles/example_application.dir/example_application/example_applicat
 examples/CMakeFiles/example_application.dir/example_application/example_application.cpp.o: /home/runner/work/fae/fae/examples/example_application/example_application.cpp
 examples/CMakeFiles/example_application.dir/example_application/example_application.cpp.o: examples/CMakeFiles/example_application.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/runner/work/fae/fae/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object examples/CMakeFiles/example_application.dir/example_application/example_application.cpp.o"
-	cd /home/runner/work/fae/fae/build/examples && /home/runner/work/_temp/93c4ca62-8ce6-4816-91fc-81518eadbbd9/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT examples/CMakeFiles/example_application.dir/example_application/example_application.cpp.o -MF CMakeFiles/example_application.dir/example_application/example_application.cpp.o.d -o CMakeFiles/example_application.dir/example_application/example_application.cpp.o -c /home/runner/work/fae/fae/examples/example_application/example_application.cpp
+	cd /home/runner/work/fae/fae/build/examples && /home/runner/work/_temp/53ed8099-0465-4382-8d5c-9dda6acce85b/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT examples/CMakeFiles/example_application.dir/example_application/example_application.cpp.o -MF CMakeFiles/example_application.dir/example_application/example_application.cpp.o.d -o CMakeFiles/example_application.dir/example_application/example_application.cpp.o -c /home/runner/work/fae/fae/examples/example_application/example_application.cpp
 
 examples/CMakeFiles/example_application.dir/example_application/example_application.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/example_application.dir/example_application/example_application.cpp.i"
-	cd /home/runner/work/fae/fae/build/examples && /home/runner/work/_temp/93c4ca62-8ce6-4816-91fc-81518eadbbd9/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/fae/fae/examples/example_application/example_application.cpp > CMakeFiles/example_application.dir/example_application/example_application.cpp.i
+	cd /home/runner/work/fae/fae/build/examples && /home/runner/work/_temp/53ed8099-0465-4382-8d5c-9dda6acce85b/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/runner/work/fae/fae/examples/example_application/example_application.cpp > CMakeFiles/example_application.dir/example_application/example_application.cpp.i
 
 examples/CMakeFiles/example_application.dir/example_application/example_application.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/example_application.dir/example_application/example_application.cpp.s"
-	cd /home/runner/work/fae/fae/build/examples && /home/runner/work/_temp/93c4ca62-8ce6-4816-91fc-81518eadbbd9/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/fae/fae/examples/example_application/example_application.cpp -o CMakeFiles/example_application.dir/example_application/example_application.cpp.s
+	cd /home/runner/work/fae/fae/build/examples && /home/runner/work/_temp/53ed8099-0465-4382-8d5c-9dda6acce85b/emsdk-main/upstream/emscripten/em++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/runner/work/fae/fae/examples/example_application/example_application.cpp -o CMakeFiles/example_application.dir/example_application/example_application.cpp.s
 
 # Object files for target example_application
 example_application_OBJECTS = \
@@ -98,6 +98,7 @@ examples/index.html: _deps/glm-build/glm/libglm.a
 examples/index.html: _deps/sdl-build/libSDL3.a
 examples/index.html: _deps/assimp-build/lib/libassimp.a
 examples/index.html: _deps/assimp-build/contrib/zlib/libzlibstatic.a
+examples/index.html: _deps/stb-cmake-build/libstb-image.a
 examples/index.html: examples/CMakeFiles/example_application.dir/linkLibs.rsp
 examples/index.html: examples/CMakeFiles/example_application.dir/objects1.rsp
 examples/index.html: examples/CMakeFiles/example_application.dir/link.txt
