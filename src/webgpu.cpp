@@ -18,11 +18,16 @@ namespace fae
     {
         e.resources.use_resource<fae::webgpu>([&](webgpu& webgpu)
             {
+            auto window_width = e.width;
+            auto window_height = e.height;
+
+            if (window_width == 0 || window_height == 0)
+            {
+                return;
+            }
             webgpu.render_pipeline.depth_texture.Destroy();
             webgpu.surface.Unconfigure();
 
-            auto window_width = e.width;
-            auto window_height = e.height;
             auto surface_config = wgpu::SurfaceConfiguration{
                 .device = webgpu.device,
                 .format = webgpu.surface.GetPreferredFormat(webgpu.adapter),
