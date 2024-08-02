@@ -51,6 +51,16 @@ auto start(const fae::start_step& step) noexcept -> void
             },
         })
         .set_component<rotate>(rotate{ .speed = 60.f });
+
+    step.ecs_world.create_entity()
+        .set_component<fae::transform>(fae::transform{
+            .position = { 17.f, 0.f, -23.f },
+            .rotation = fae::math::angleAxis(fae::math::radians(-90.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
+            .scale = fae::vec3{ 1.f, 1.f, 1.f } * 0.03f,
+        })
+        .set_component<fae::model>(fae::model{
+            .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
+        });
 }
 
 auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void

@@ -58,9 +58,9 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 	// let texture_color = textureLoad(texture, texel_coords, 0);
 	let texture_color = textureSample(texture, texture_sampler, in.uv);
 
-	let color = ambient + uniforms.tint * texture_color * in.color;
-	// let color = vec4f(shading, 1.0) * uniforms.tint * in.color;
-	// let color = vec4f(shading, 1.0) * uniforms.tint * texture_color * in.color;
+	// let color = ambient + uniforms.tint * texture_color * in.color;
+	// let color = ambient + vec4f(shading, 1.0) * uniforms.tint * in.color;
+	let color = ambient + vec4f(shading, 1.0) * uniforms.tint * texture_color * in.color;
 	let gamma_corrected_color = pow(color, vec4f(2.2));
 
 	return gamma_corrected_color;
