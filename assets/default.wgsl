@@ -52,11 +52,13 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 	let shading2 = max(0.0, dot(lightDirection2, normal));
 	let shading = shading1 * lightColor1 + shading2 * lightColor2;
 	
+	let ambient = vec4f(0.1, 0.1, 0.1, 1.0);
+
 	let texel_coords = vec2i(in.uv * vec2f(textureDimensions(texture)));
 	// let texture_color = textureLoad(texture, texel_coords, 0);
 	let texture_color = textureSample(texture, texture_sampler, in.uv);
 
-	let color = uniforms.tint * texture_color * in.color;
+	let color = ambient + uniforms.tint * texture_color * in.color;
 	// let color = vec4f(shading, 1.0) * uniforms.tint * in.color;
 	// let color = vec4f(shading, 1.0) * uniforms.tint * texture_color * in.color;
 	let gamma_corrected_color = pow(color, vec4f(2.2));

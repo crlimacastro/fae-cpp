@@ -68,9 +68,13 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 						$<TARGET_FILE_DIR:${SUBDIRECTORY_NAME}>
 				)
 				
-				add_custom_target(example_copy_dll ALL
-    				DEPENDS $<TARGET_FILE:${PROJECT_NAME}::${PROJECT_NAME}>
-				)
+				# custom target version
+				# add_custom_target(example_copy_dll ALL
+				# 	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    			# 	$<TARGET_FILE:${PROJECT_NAME}::${PROJECT_NAME}>
+				# 	$<TARGET_FILE_DIR:${SUBDIRECTORY_NAME}>
+				# )
+				# add_dependencies(${SUBDIRECTORY_NAME} example_copy_dll)
 			endif()
 		endif()
 
