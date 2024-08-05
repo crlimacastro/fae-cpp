@@ -153,14 +153,20 @@ namespace fae
         };
 
         auto bind_group_layout_desc = wgpu::BindGroupLayoutDescriptor{
+            .label = "fae_bind_group_layout",
             .entryCount = static_cast<std::size_t>(bind_group_layout_entries.size()),
             .entries = bind_group_layout_entries.data(),
         };
-        auto bind_group_layout = webgpu.device.CreateBindGroupLayout(&bind_group_layout_desc);
+
+        auto bind_group_layouts = std::vector<wgpu::BindGroupLayout>
+        {
+            webgpu.device.CreateBindGroupLayout(&bind_group_layout_desc),
+        };
 
         auto pipeline_layout_desc = wgpu::PipelineLayoutDescriptor{
-            .bindGroupLayoutCount = 1,
-            .bindGroupLayouts = &bind_group_layout,
+            .label = "fae_pipeline_layout",
+            .bindGroupLayoutCount = static_cast<std::size_t>(bind_group_layouts.size()),
+            .bindGroupLayouts = bind_group_layouts.data(),
         };
 
         auto pipeline_layout = webgpu.device.CreatePipelineLayout(&pipeline_layout_desc);

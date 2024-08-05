@@ -80,6 +80,12 @@ auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void
 
 auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
 {
+    auto& imgui_io = ImGui::GetIO();
+    if (imgui_io.WantCaptureMouse)
+    {
+        return;
+    }
+
     static auto had_focus = true;
     auto has_focus = false;
     step.resources.use_resource<fae::primary_window>(
@@ -103,12 +109,29 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
         return;
     }
 
+    static bool enabled = true;
+    auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
+    if (input.is_key_just_pressed(fae::key::lalt))
+    {
+        enabled = !enabled;
+        if (enabled)
+        {
+            fae::hide_cursor();
+            input.get_mouse_delta();
+        }
+        else
+        {
+            fae::show_cursor();
+        }
+    }
+    if (!enabled)
+        return;
+
     auto& time = step.resources.get_or_emplace<fae::time>(fae::time{});
     step.resources.use_resource<fae::active_camera>(
         [&](fae::active_camera& active_camera)
         {
             auto& camera_transform = active_camera.transform();
-            auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
 
             auto move_input = fae::vec3(0.0f, 0.0f, 0.0f);
 
@@ -222,18 +245,46 @@ auto render(const fae::render_step& step) noexcept -> void
 {
 }
 
+auto ui(const fae::ui_render_step& step) noexcept -> void
+{
+    static float f = 0.0f;
+    static int counter = 0;
+    static bool show_demo_window = true;
+    static bool show_another_window = false;
+    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+
+    ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
+    ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+    ImGui::Checkbox("Another Window", &show_another_window);
+
+    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+    ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+    if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+        counter++;
+    ImGui::SameLine();
+    ImGui::Text("counter = %d", counter);
+
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+    ImGui::End();
+}
+
 auto fae_main(int argc, char* argv[]) -> int
 {
     fae::application{}
         .add_plugin(fae::default_plugins{})
         .add_system<fae::start_step>(start)
         .add_system<fae::update_step>(fae::quit_on_esc)
-        // .add_system<fae::update_step>(hue_shift_clear_color)
+        .add_system<fae::update_step>(hue_shift_clear_color)
         .add_system<fae::update_step>(fps_control_active_camera)
         .add_system<fae::update_step>(lock_mouse)
         .add_system<fae::update_step>(rotate_system)
         .add_system<fae::update_step>(update)
         .add_system<fae::render_step>(render)
+        .add_system<fae::ui_render_step>(ui)
         .run();
     return fae::exit_success;
 }

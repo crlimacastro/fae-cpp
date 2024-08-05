@@ -118,57 +118,57 @@ namespace fae
         case fae::key::grave:
             return SDLK_GRAVE;
         case fae::key::a:
-            return SDLK_a;
+            return SDLK_A;
         case fae::key::b:
-            return SDLK_b;
+            return SDLK_B;
         case fae::key::c:
-            return SDLK_c;
+            return SDLK_C;
         case fae::key::d:
-            return SDLK_d;
+            return SDLK_D;
         case fae::key::e:
-            return SDLK_e;
+            return SDLK_E;
         case fae::key::f:
-            return SDLK_f;
+            return SDLK_F;
         case fae::key::g:
-            return SDLK_g;
+            return SDLK_G;
         case fae::key::h:
-            return SDLK_h;
+            return SDLK_H;
         case fae::key::i:
-            return SDLK_i;
+            return SDLK_I;
         case fae::key::j:
-            return SDLK_j;
+            return SDLK_J;
         case fae::key::k:
-            return SDLK_k;
+            return SDLK_K;
         case fae::key::l:
-            return SDLK_l;
+            return SDLK_L;
         case fae::key::m:
-            return SDLK_m;
+            return SDLK_M;
         case fae::key::n:
-            return SDLK_n;
+            return SDLK_N;
         case fae::key::o:
-            return SDLK_o;
+            return SDLK_O;
         case fae::key::p:
-            return SDLK_p;
+            return SDLK_P;
         case fae::key::q:
-            return SDLK_q;
+            return SDLK_Q;
         case fae::key::r:
-            return SDLK_r;
+            return SDLK_R;
         case fae::key::s:
-            return SDLK_s;
+            return SDLK_S;
         case fae::key::t:
-            return SDLK_t;
+            return SDLK_T;
         case fae::key::u:
-            return SDLK_u;
+            return SDLK_U;
         case fae::key::v:
-            return SDLK_v;
+            return SDLK_V;
         case fae::key::w:
-            return SDLK_w;
+            return SDLK_W;
         case fae::key::x:
-            return SDLK_x;
+            return SDLK_X;
         case fae::key::y:
-            return SDLK_y;
+            return SDLK_Y;
         case fae::key::z:
-            return SDLK_z;
+            return SDLK_Z;
         case fae::key::capslock:
             return SDLK_CAPSLOCK;
         case fae::key::f1:
@@ -452,25 +452,17 @@ namespace fae
         case fae::key::mode:
             return SDLK_MODE;
         case fae::key::audionext:
-            return SDLK_AUDIONEXT;
+            return SDLK_MEDIA_NEXT_TRACK;
         case fae::key::audioprev:
-            return SDLK_AUDIOPREV;
+            return SDLK_MEDIA_PREVIOUS_TRACK;
         case fae::key::audiostop:
-            return SDLK_AUDIOSTOP;
+            return SDLK_MEDIA_STOP;
         case fae::key::audioplay:
-            return SDLK_AUDIOPLAY;
+            return SDLK_MEDIA_PLAY;
         case fae::key::audiomute:
-            return SDLK_AUDIOMUTE;
+            return SDLK_MUTE;
         case fae::key::mediaselect:
-            return SDLK_MEDIASELECT;
-        case fae::key::www:
-            return SDLK_WWW;
-        case fae::key::mail:
-            return SDLK_MAIL;
-        case fae::key::calculator:
-            return SDLK_CALCULATOR;
-        case fae::key::computer:
-            return SDLK_COMPUTER;
+            return SDLK_MEDIA_SELECT;
         case fae::key::ac_search:
             return SDLK_AC_SEARCH;
         case fae::key::ac_home:
@@ -485,30 +477,14 @@ namespace fae
             return SDLK_AC_REFRESH;
         case fae::key::ac_bookmarks:
             return SDLK_AC_BOOKMARKS;
-        case fae::key::brightnessdown:
-            return SDLK_BRIGHTNESSDOWN;
-        case fae::key::brightnessup:
-            return SDLK_BRIGHTNESSUP;
-        case fae::key::displayswitch:
-            return SDLK_DISPLAYSWITCH;
-        case fae::key::kbdillumtoggle:
-            return SDLK_KBDILLUMTOGGLE;
-        case fae::key::kbdillumdown:
-            return SDLK_KBDILLUMDOWN;
-        case fae::key::kbdillumup:
-            return SDLK_KBDILLUMUP;
         case fae::key::eject:
-            return SDLK_EJECT;
+            return SDLK_MEDIA_EJECT;
         case fae::key::sleep:
             return SDLK_SLEEP;
-        case fae::key::app1:
-            return SDLK_APP1;
-        case fae::key::app2:
-            return SDLK_APP2;
         case fae::key::audiorewind:
-            return SDLK_AUDIOREWIND;
+            return SDLK_MEDIA_REWIND;
         case fae::key::audiofastforward:
-            return SDLK_AUDIOFASTFORWARD;
+            return SDLK_MEDIA_FAST_FORWARD;
         case fae::key::softleft:
             return SDLK_SOFTLEFT;
         case fae::key::softright:

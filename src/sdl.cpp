@@ -1,5 +1,8 @@
 #include "fae/sdl.hpp"
 
+#include <imgui.h>
+#include <backends/imgui_impl_sdl3.h>
+
 #include "fae/input.hpp"
 #include "fae/windowing.hpp"
 
@@ -104,13 +107,13 @@ namespace fae
             case SDL_EVENT_KEY_DOWN:
             {
                 step.resources.use_resource<sdl_input>([&](sdl_input& input)
-                    { input.press_key(event.key.keysym.sym); });
+                    { input.press_key(event.key.key); });
                 break;
             }
             case SDL_EVENT_KEY_UP:
             {
                 step.resources.use_resource<sdl_input>([&](sdl_input& input)
-                    { input.release_key(event.key.keysym.sym); });
+                    { input.release_key(event.key.key); });
                 break;
             }
             case SDL_EVENT_WINDOW_RESIZED:
@@ -153,6 +156,7 @@ namespace fae
                 break;
             }
             }
+            ImGui_ImplSDL3_ProcessEvent(&event);
         }
     }
 

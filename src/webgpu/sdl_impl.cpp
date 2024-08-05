@@ -18,7 +18,8 @@ namespace fae
         canvas_desc.selector = "#canvas";
         surface_descriptor.nextInChain = (const wgpu::ChainedStruct*)&canvas_desc;
 #elif defined(FAE_PLATFORM_WINDOWS)
-        auto hwnd = (HWND)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+
+        auto hwnd = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
         auto hinstance = (HINSTANCE)GetModuleHandle(nullptr);
 
         auto windows_surface_descriptor = wgpu::SurfaceDescriptorFromWindowsHWND{};
@@ -27,7 +28,7 @@ namespace fae
         surface_descriptor.nextInChain = (const wgpu::ChainedStruct*)&windows_surface_descriptor;
         surface_descriptor.label = "windows_sdl_webgpu_surface";
 #elif defined(FAE_PLATFORM_MACOS)
-        NSWindow* nswindow = (__bridge NSWindow*)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
+        NSWindow* nswindow = (__bridge NSWindow*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_COCOA_WINDOW_POINTER, NULL);
         auto macos_surface_descriptor = wgpu::SurfaceDescriptorFromMetalLayer{};
         if (nswindow)
         {
@@ -38,7 +39,7 @@ namespace fae
 #elif defined(FAE_PLATFORM_LINUX)
         if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0)
         {
-            Display* xdisplay = (Display*)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
+            Display* xdisplay = (Display*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
             Window xwindow = (Window)SDL_GetNumberProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
             auto linux_x11_surface_descriptor = wgpu::SurfaceDescriptorFromXlib{};
             if (xdisplay && xwindow)
@@ -51,8 +52,8 @@ namespace fae
         }
         else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0)
         {
-            struct wl_display* display = (struct wl_display*)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
-            struct wl_surface* surface = (struct wl_surface*)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
+            struct wl_display* display = (struct wl_display*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
+            struct wl_surface* surface = (struct wl_surface*)SDL_GetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_SURFACE_POINTER, NULL);
             auto linux_wayland_surface_descriptor = wgpu::SurfaceDescriptorFromWayland {}
             if (display && surface)
             {

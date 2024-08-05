@@ -27,7 +27,7 @@ CPMAddPackage("gh:skypjack/entt#v3.13.2")
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
-	GIT_TAG b6d7adfec11c355cdbb5ebde26ed5a5c958ce489
+	GIT_TAG 490f7af92b958c52a920fbc313c5568d3c7550d7
 	OPTIONS
 		"EXCLUDE_FROM_ALL ON"
 		"SYSTEM ON"
@@ -48,6 +48,15 @@ if(NOT DEFINED EMSCRIPTEN)
 endif()
 CPMAddPackage("gh:assimp/assimp#v5.4.1")
 CPMAddPackage("gh:gracicot/stb-cmake#d42aa7a48ff0479fa9cab999d035a901cc4c4134")
+CPMAddPackage(
+	NAME imgui
+	GITHUB_REPOSITORY ocornut/imgui
+	GIT_TAG v1.91.0-docking
+	OPTIONS
+		"EXCLUDE_FROM_ALL ON"
+		"SYSTEM ON"
+)
+include(cmake/imgui.cmake)
 
 configure_file(config.hpp.in "include/${PROJECT_NAME}/config.hpp")
 
@@ -185,6 +194,7 @@ target_link_libraries(${PROJECT_NAME}
 		SDL3::SDL3
 		assimp::assimp
 		stb::image
+		imgui::imgui
 )
 if(NOT DEFINED EMSCRIPTEN)
 	target_link_libraries(${PROJECT_NAME}

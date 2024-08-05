@@ -8,6 +8,7 @@ namespace fae
             .add_plugin(time_plugin)
             .add_plugin(windowing_plugin)
             .add_plugin(input_plugin)
-            .add_plugin(rendering_plugin);
+            .add_plugin(rendering_plugin)
+            .add_plugin(ui_plugin);
     }
 }

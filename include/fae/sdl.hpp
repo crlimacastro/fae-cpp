@@ -9,7 +9,7 @@
 #include <memory>
 #include <optional>
 
-#include "SDL3/SDL.h"
+#include <SDL3/SDL.h>
 
 #include "fae/application.hpp"
 #include "fae/core.hpp"

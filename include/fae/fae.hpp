@@ -28,3 +28,5 @@
 #include "fae/lighting.hpp"
 #include "fae/windowing.hpp"
 #include "fae/cursor.hpp"
+#include "fae/imgui.hpp"
+#include "fae/ui.hpp"

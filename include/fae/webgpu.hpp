@@ -54,6 +54,8 @@ namespace fae
         {
             wgpu::CommandEncoder command_encoder;
             wgpu::RenderPassEncoder render_pass;
+            wgpu::CommandEncoder ui_command_encoder;
+            wgpu::RenderPassEncoder ui_render_pass;
 
             struct render_command
             {
@@ -99,13 +101,13 @@ namespace fae
         wgpu::LoggingCallback logging_callback = [](WGPULoggingType cType, char const* message, void* userdata)
         {
             auto type = static_cast<wgpu::LoggingType>(cType);
-            fae::log_info(std::format("[wgpu] [type] {} [message] {}", to_string(type), message));
+            fae::log_info(std::format("[wgpu] Info [type] {} [message] {}", to_string(type), message));
         };
 #endif
         wgpu::ErrorCallback error_callback = [](WGPUErrorType cType, const char* message, void* userdata)
         {
             auto type = static_cast<wgpu::ErrorType>(cType);
-            fae::log_error(std::format("[wgpu] [type] {} [message] {}", to_string(type), message));
+            fae::log_error(std::format("[wgpu] Error [type] {} [message] {}", to_string(type), message));
         };
 
         auto init(application& app) const noexcept -> void;

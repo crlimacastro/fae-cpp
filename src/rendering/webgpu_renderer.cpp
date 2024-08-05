@@ -86,6 +86,7 @@ namespace fae
                             .stencilReadOnly = true,
                         };
                         auto render_pass_desc = wgpu::RenderPassDescriptor{
+                            .label = "fae_render_pass",
                             .colorAttachmentCount = 1,
                             .colorAttachments = &color_attachment,
                             .depthStencilAttachment = &depth_attachment,
@@ -94,6 +95,31 @@ namespace fae
                         render_pass.SetPipeline(webgpu.render_pipeline.pipeline);
                         webgpu.current_render.command_encoder = command_encoder;
                         webgpu.current_render.render_pass = render_pass;
+
+                        auto ui_command_encoder = webgpu.device.CreateCommandEncoder();
+                        auto ui_color_attachment = wgpu::RenderPassColorAttachment{
+                            .view = surface_texture_view,
+                            .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+                            .resolveTarget = nullptr,
+                            .loadOp = wgpu::LoadOp::Load,
+                            .storeOp = wgpu::StoreOp::Store,
+                        };
+                        auto ui_depth_attachment = wgpu::RenderPassDepthStencilAttachment{
+                            .view = webgpu.render_pipeline.depth_texture.CreateView(),
+                            .depthLoadOp = wgpu::LoadOp::Clear,
+                            .depthStoreOp = wgpu::StoreOp::Store,
+                            .depthClearValue = 1.0,
+                            .stencilReadOnly = true,
+                        };
+                        auto ui_render_pass_desc = wgpu::RenderPassDescriptor{
+                            .label = "fae_ui_render_pass",
+                            .colorAttachmentCount = 1,
+                            .colorAttachments = &ui_color_attachment,
+                            .depthStencilAttachment = &ui_depth_attachment,
+                        };
+                        auto ui_render_pass = ui_command_encoder.BeginRenderPass(&ui_render_pass_desc);
+                        webgpu.current_render.ui_command_encoder = ui_command_encoder;
+                        webgpu.current_render.ui_render_pass = ui_render_pass;
                     });
             },
             .end =
@@ -139,6 +165,7 @@ namespace fae
                                     },
                                 };
                                 auto bind_group_descriptor = wgpu::BindGroupDescriptor{
+                                    .label = "fae_bind_group",
                                     .layout = webgpu.render_pipeline.pipeline.GetBindGroupLayout(0),
                                     .entryCount = static_cast<std::size_t>(bind_entries.size()),
                                     .entries = bind_entries.data(),
@@ -169,7 +196,11 @@ namespace fae
 
                         webgpu.current_render.render_pass.End();
                         auto command_buffer = webgpu.current_render.command_encoder.Finish();
-                        webgpu.device.GetQueue().Submit(1, &command_buffer);
+                        webgpu.current_render.ui_render_pass.End();
+                        auto ui_command_buffer = webgpu.current_render.ui_command_encoder.Finish();
+
+                        auto commands = std::vector<wgpu::CommandBuffer>{ command_buffer, ui_command_buffer };
+                        webgpu.device.GetQueue().Submit(commands.size(), commands.data());
 #ifndef FAE_PLATFORM_WEB
                         webgpu.surface.Present();
                         webgpu.instance.ProcessEvents();

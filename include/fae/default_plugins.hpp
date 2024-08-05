@@ -5,6 +5,7 @@
 #include "fae/time.hpp"
 #include "fae/windowing.hpp"
 #include "fae/rendering.hpp"
+#include "fae/ui.hpp"
 
 namespace fae
 {
@@ -16,6 +17,7 @@ namespace fae
         windowing_plugin windowing_plugin{};
         input_plugin input_plugin{};
         rendering_plugin rendering_plugin{};
+        ui_plugin ui_plugin{};
 
         auto init(application& app) const noexcept -> void;
     };
