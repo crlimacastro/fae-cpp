@@ -8,8 +8,6 @@ struct rotate
     float speed = 1.f;
 };
 
-fae::entity_id_t bunny_id;
-
 auto start(const fae::start_step& step) noexcept -> void
 {
     step.resources.use_resource<fae::ui_settings>([&](fae::ui_settings& ui_settings)
@@ -24,6 +22,7 @@ auto start(const fae::start_step& step) noexcept -> void
 
     auto camera_entity = step.ecs_world.create_entity();
     camera_entity
+        .set_component<fae::name>(fae::name{ "camera" })
         .set_component<fae::transform>(fae::transform{
             .rotation = fae::math::angleAxis(fae::math::radians(180.f), fae::vec3(0.0f, 1.0f, 0.0f)) * fae::math::quat{ 0.f, 0.f, 0.f, 1.f },
         })
@@ -33,6 +32,20 @@ auto start(const fae::start_step& step) noexcept -> void
     });
 
     step.ecs_world.create_entity()
+        .set_component<fae::name>(fae::name{ "ambient light" })
+        .set_component<fae::ambient_light>(fae::ambient_light{
+            .color = fae::color { 150, 150, 150 },
+        });
+
+    step.ecs_world.create_entity()
+        .set_component<fae::name>(fae::name{ "directional light" })
+        .set_component<fae::directional_light>(fae::directional_light{
+            .direction = fae::math::normalize(fae::vec3{ 1.f, -1.f, 1.f }),
+            .color = fae::colors::white,
+        });
+
+    step.ecs_world.create_entity()
+        .set_component<fae::name>(fae::name{ "floor" })
         .set_component<fae::transform>(fae::transform{
             .position = { 0.f, -2.f, 0.f },
             .rotation = fae::math::angleAxis(fae::math::radians(180.f), fae::vec3(0.0f, 0.0f, 1.0f)),
@@ -46,6 +59,7 @@ auto start(const fae::start_step& step) noexcept -> void
         });
 
     step.ecs_world.create_entity()
+        .set_component<fae::name>(fae::name{ "cube" })
         .set_component<fae::transform>(fae::transform{
             .position = { 0.f, 0.f, -10.f },
             .rotation = fae::math::angleAxis(fae::math::radians(0.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
@@ -59,18 +73,15 @@ auto start(const fae::start_step& step) noexcept -> void
         })
         .set_component<rotate>(rotate{ .speed = 60.f });
 
-    auto bunny_entity = step.ecs_world.create_entity();
-    bunny_id = bunny_entity.id;
-    bunny_entity.set_component<fae::transform>(fae::transform{
-                                                   .position = { 17.f, 0.f, -23.f },
-                                                   .rotation = fae::math::angleAxis(fae::math::radians(-90.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
-                                                   .scale = fae::vec3{ 1.f, 1.f, 1.f } * 0.03f,
-                                               })
+    step.ecs_world.create_entity()
+        .set_component<fae::name>(fae::name{ "model" })
+        .set_component<fae::transform>(fae::transform{
+            .position = { 17.f, 0.f, -23.f },
+            .rotation = fae::math::angleAxis(fae::math::radians(-90.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
+            .scale = fae::vec3{ 1.f, 1.f, 1.f } * 0.03f,
+        })
         .set_component<fae::model>(fae::model{
             .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
-        })
-        .set_component<fae::name>(fae::name{
-            .value = "Bunny",
         });
 }
 
@@ -302,20 +313,6 @@ auto ui(const fae::ui_render_step& step) noexcept -> void
             show_another_window = false;
         fae::ui::End();
     }
-
-    fae::ui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
-
-    auto bunny_entity = fae::entity{ bunny_id, &step.ecs_world.registry };
-    bunny_entity.use_component<fae::transform>([&](fae::transform& transform)
-        { transform.position.y = f; });
-
-    step.resources.use_resource<fae::renderer>(
-        [&](fae::renderer& renderer)
-        {
-            auto clear_color = renderer.get_clear_color().to_array();
-            fae::ui::ColorEdit3("clear color", clear_color.data());
-            renderer.set_clear_color(fae::color::from_array(clear_color));
-        });
 
     if (fae::ui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
         counter++;

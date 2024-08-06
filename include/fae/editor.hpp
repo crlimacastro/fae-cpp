@@ -33,4 +33,5 @@ namespace fae
     auto ui_render_editor(const ui_render_step& step) noexcept -> void;
     auto ui_render_entity_scene(const editor_render_step& step) noexcept -> void;
     auto ui_render_entity_inspector(const editor_render_step& step) noexcept -> void;
+    auto ui_render_resources(const editor_render_step& step) noexcept -> void;
 }

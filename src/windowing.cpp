@@ -97,7 +97,9 @@ namespace fae
         auto window_entity = app.ecs_world.create_entity();
         auto& sdl_window_component = window_entity.set_and_get_component<fae::sdl_window>(std::move(sdl_window));
         auto window = make_sdl_window(sdl_window_component);
-        window_entity.set_component<fae::window>(std::move(window));
+        window_entity
+        .set_component<name>(name{ .value = "primary window" })
+        .set_component<fae::window>(std::move(window));
         app.emplace_resource<primary_window>(primary_window{
             .window_entity = window_entity });
         if (should_hide_window_until_first_render)

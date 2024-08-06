@@ -5,6 +5,8 @@
 #include "fae/application.hpp"
 #include "fae/ui.hpp"
 #include "fae/logging.hpp"
+#include "fae/rendering.hpp"
+#include "fae/lighting.hpp"
 
 namespace fae
 {
@@ -16,7 +18,8 @@ namespace fae
             })
             .add_system<ui_render_step>(ui_render_editor)
             .add_system<editor_render_step>(ui_render_entity_scene)
-            .add_system<editor_render_step>(ui_render_entity_inspector);
+            .add_system<editor_render_step>(ui_render_entity_inspector)
+            .add_system<editor_render_step>(ui_render_resources);
     }
 
     auto ui_render_editor(const ui_render_step& step) noexcept -> void
@@ -79,8 +82,55 @@ namespace fae
                         }
                     }
                     prev_selected_entity = editor.selected_entity;
+
+                    entity.use_component<transform>([&](transform& transform)
+                        {
+                            if (fae::ui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+                            {
+                                fae::ui::DragFloat3("Position", fae::math::value_ptr(transform.position));
+                                fae::ui::DragFloat3("Rotation", fae::math::value_ptr(transform.rotation));
+                                fae::ui::DragFloat3("Scale", fae::math::value_ptr(transform.scale));
+                            }
+                        });
+
+                        entity.use_component<ambient_light>([&](ambient_light& light)
+                        {
+                            if (fae::ui::CollapsingHeader("Ambient Light"), ImGuiTreeNodeFlags_DefaultOpen)
+                            {
+                            auto color = light.color.to_array();
+                            fae::ui::ColorEdit4("Color", color.data());
+                            light.color = fae::color::from_array(color);
+                            }
+                        });
                     
+                    entity.use_component<directional_light>([&](directional_light& light)
+                        {
+                            if (fae::ui::CollapsingHeader("Directional Light"), ImGuiTreeNodeFlags_DefaultOpen)
+                            {
+                            fae::ui::DragFloat3("Direction", fae::math::value_ptr(light.direction), 1.f, -1.f, 1.f);
+                            light.direction = fae::math::normalize(light.direction);
+                            auto color = light.color.to_array();
+                            fae::ui::ColorEdit4("Color", color.data());
+                            light.color = fae::color::from_array(color);
+                            }
+                        });
                 }
                 fae::ui::End(); });
+    }
+
+    auto ui_render_resources(const editor_render_step& step) noexcept -> void
+    {
+        fae::ui::Begin("Resources");
+        step.resources.use_resource<fae::renderer>(
+            [&](fae::renderer& renderer)
+            {
+                if (fae::ui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    auto clear_color = renderer.get_clear_color().to_array();
+                    fae::ui::ColorEdit3("Clear Color", clear_color.data());
+                    renderer.set_clear_color(fae::color::from_array(clear_color));
+                }
+            });
+        fae::ui::End();
     }
 }

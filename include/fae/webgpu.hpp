@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <webgpu/webgpu_cpp.h>
 
 #include "fae/logging.hpp"

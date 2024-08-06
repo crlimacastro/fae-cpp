@@ -11,6 +11,7 @@
 #include "fae/rendering/renderer.hpp"
 #include "fae/rendering/mesh.hpp"
 #include "fae/camera.hpp"
+#include "fae/lighting.hpp"
 
 namespace fae
 {
@@ -146,6 +147,14 @@ namespace fae
                                 uniform_offset += webgpu.render_pipeline.uniform_stride;
                             }
 
+                            auto ambient_light_info_buffer = create_buffer(webgpu.device, "ambient_light_info_buffer", sizeof(fae::directional_light_info), wgpu::BufferUsage::Uniform);
+                            resources.use_resource<fae::ambient_light_info>([&](fae::ambient_light_info info)
+                                { queue.WriteBuffer(ambient_light_info_buffer, 0, &info, sizeof(fae::ambient_light_info)); });
+
+                            auto directional_light_info_buffer = create_buffer(webgpu.device, "fae_directional_light_info_buffer", sizeof(fae::directional_light_info), wgpu::BufferUsage::Uniform);
+                            resources.use_resource<fae::directional_light_info>([&](fae::directional_light_info info)
+                                { queue.WriteBuffer(directional_light_info_buffer, 0, &info, sizeof(fae::directional_light_info)); });
+
                             uniform_offset = 0;
                             for (auto& render_command : webgpu.current_render.render_commands)
                             {
@@ -162,6 +171,16 @@ namespace fae
                                     wgpu::BindGroupEntry{
                                         .binding = 2,
                                         .sampler = render_command.sampler,
+                                    },
+                                    wgpu::BindGroupEntry{
+                                        .binding = 3,
+                                        .buffer = ambient_light_info_buffer,
+                                        .size = sizeof(fae::ambient_light_info),
+                                    },
+                                    wgpu::BindGroupEntry{
+                                        .binding = 4,
+                                        .buffer = directional_light_info_buffer,
+                                        .size = sizeof(fae::directional_light_info),
                                     },
                                 };
                                 auto bind_group_descriptor = wgpu::BindGroupDescriptor{

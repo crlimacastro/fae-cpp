@@ -11,6 +11,7 @@
 #include "fae/sdl.hpp"
 #include "fae/windowing.hpp"
 #include "fae/rendering/mesh.hpp"
+#include "fae/lighting.hpp"
 
 namespace fae
 {
@@ -148,6 +149,22 @@ namespace fae
                 .visibility = wgpu::ShaderStage::Fragment,
                 .sampler = wgpu::SamplerBindingLayout{
                     .type = wgpu::SamplerBindingType::Filtering,
+                },
+            },
+            wgpu::BindGroupLayoutEntry{
+                .binding = 3,
+                .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
+                .buffer = wgpu::BufferBindingLayout{
+                    .type = wgpu::BufferBindingType::Uniform,
+                    .minBindingSize = sizeof(ambient_light_info),
+                },
+            },
+            wgpu::BindGroupLayoutEntry{
+                .binding = 4,
+                .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
+                .buffer = wgpu::BufferBindingLayout{
+                    .type = wgpu::BufferBindingType::Uniform,
+                    .minBindingSize = sizeof(directional_light_info),
                 },
             },
         };
