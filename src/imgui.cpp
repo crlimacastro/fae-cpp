@@ -24,7 +24,9 @@ namespace fae
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
+        ImGui::StyleColorsDark();
         auto& io = ImGui::GetIO();
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         auto maybe_primary_window = step.resources.get<primary_window>();
         if (!maybe_primary_window)

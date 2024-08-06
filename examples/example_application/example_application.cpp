@@ -1,4 +1,5 @@
 #include "fae/fae.hpp"
+#include "fae/editor.hpp"
 #include "fae/main.hpp"
 #include "fae/math.hpp"
 
@@ -67,6 +68,9 @@ auto start(const fae::start_step& step) noexcept -> void
                                                })
         .set_component<fae::model>(fae::model{
             .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
+        })
+        .set_component<fae::name>(fae::name{
+            .value = "Bunny",
         });
 }
 
@@ -118,7 +122,7 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
 
     static bool enabled = true;
     auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
-    if (input.is_key_just_pressed(fae::key::lalt))
+    if (input.is_key_just_pressed(fae::key::lalt) || input.is_key_just_pressed(fae::key::grave))
     {
         enabled = !enabled;
         if (enabled)
@@ -301,7 +305,7 @@ auto ui(const fae::ui_render_step& step) noexcept -> void
 
     fae::ui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
 
-    auto bunny_entity = fae::entity{ bunny_id, step.ecs_world.registry };
+    auto bunny_entity = fae::entity{ bunny_id, &step.ecs_world.registry };
     bunny_entity.use_component<fae::transform>([&](fae::transform& transform)
         { transform.position.y = f; });
 
@@ -327,6 +331,7 @@ auto fae_main(int argc, char* argv[]) -> int
 {
     fae::application{}
         .add_plugin(fae::default_plugins{})
+        .add_plugin(fae::editor_plugin{})
         .add_system<fae::start_step>(start)
         .add_system<fae::update_step>(fae::quit_on_esc)
         // .add_system<fae::update_step>(hue_shift_clear_color)
