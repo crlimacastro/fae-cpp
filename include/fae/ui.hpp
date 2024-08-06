@@ -1,7 +1,13 @@
 #pragma once
+#include <imgui.h>
 
 namespace fae
 {
+    namespace ui
+    {
+        using namespace ImGui;
+    }
+
     struct application;
     struct resource_manager;
     struct asset_manager;
@@ -9,6 +15,11 @@ namespace fae
     struct ecs_world;
 
     struct render_step;
+
+    struct ui_settings
+    {
+        bool hide_ui = false;
+    };
 
     struct ui_begin_step
     {

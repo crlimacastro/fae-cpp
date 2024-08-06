@@ -9,10 +9,13 @@
 
 namespace fae
 {
+	using entity_id_t = entt::entity;
+	using untity_registry_t = entt::registry;
+
 	struct entity
 	{
-		entt::entity id;
-		entt::registry &registry;
+		entity_id_t id;
+		untity_registry_t &registry;
 
 		template <typename t_component>
 		[[nodiscard]] inline constexpr auto get_component() const noexcept -> optional_reference<const t_component>

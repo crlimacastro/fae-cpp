@@ -1,5 +1,6 @@
 #include "fae/imgui.hpp"
 
+#include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_wgpu.h>
 
@@ -23,7 +24,7 @@ namespace fae
     {
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
-        ImGui::GetIO();
+        auto& io = ImGui::GetIO();
 
         auto maybe_primary_window = step.resources.get<primary_window>();
         if (!maybe_primary_window)
@@ -65,9 +66,8 @@ namespace fae
     {
         ImGui::EndFrame();
         ImGui::Render();
-        step.resources.use_resource<fae::webgpu>([&](fae::webgpu& webgpu) {
-            ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), webgpu.current_render.ui_render_pass.Get());
-        });
+        step.resources.use_resource<fae::webgpu>([&](fae::webgpu& webgpu)
+            { ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), webgpu.current_render.ui_render_pass.Get()); });
     }
 
     auto deinit_imgui(const deinit_step& step) noexcept -> void

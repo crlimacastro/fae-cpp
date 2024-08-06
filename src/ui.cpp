@@ -10,11 +10,22 @@ namespace fae
     {
         app
             .add_plugin(imgui_plugin{})
+            .insert_resource(ui_settings{})
             .add_system<render_step>(render_ui);
     }
 
     auto render_ui(const render_step& step) noexcept -> void
     {
+        bool hide_ui = false;
+        step.resources.use_resource<ui_settings>([&](ui_settings& ui)
+        {
+            hide_ui = ui.hide_ui;
+        });
+        if (hide_ui)
+        {
+            return;
+        }
+        
         step.scheduler.invoke<ui_begin_step>(ui_begin_step{
             .resources = step.resources,
             .assets = step.assets,

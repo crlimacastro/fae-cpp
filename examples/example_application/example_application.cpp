@@ -7,8 +7,14 @@ struct rotate
     float speed = 1.f;
 };
 
+fae::entity_id_t bunny_id;
+
 auto start(const fae::start_step& step) noexcept -> void
 {
+    step.resources.use_resource<fae::ui_settings>([&](fae::ui_settings& ui_settings)
+        { ui_settings.hide_ui = true; });
+    fae::hide_cursor();
+
     auto maybe_rock_texture = step.assets.load<fae::texture>("rock.png");
     auto rock_texture = *maybe_rock_texture;
 
@@ -52,12 +58,13 @@ auto start(const fae::start_step& step) noexcept -> void
         })
         .set_component<rotate>(rotate{ .speed = 60.f });
 
-    step.ecs_world.create_entity()
-        .set_component<fae::transform>(fae::transform{
-            .position = { 17.f, 0.f, -23.f },
-            .rotation = fae::math::angleAxis(fae::math::radians(-90.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
-            .scale = fae::vec3{ 1.f, 1.f, 1.f } * 0.03f,
-        })
+    auto bunny_entity = step.ecs_world.create_entity();
+    bunny_id = bunny_entity.id;
+    bunny_entity.set_component<fae::transform>(fae::transform{
+                                                   .position = { 17.f, 0.f, -23.f },
+                                                   .rotation = fae::math::angleAxis(fae::math::radians(-90.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
+                                                   .scale = fae::vec3{ 1.f, 1.f, 1.f } * 0.03f,
+                                               })
         .set_component<fae::model>(fae::model{
             .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
         });
@@ -80,7 +87,7 @@ auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void
 
 auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
 {
-    auto& imgui_io = ImGui::GetIO();
+    auto& imgui_io = fae::ui::GetIO();
     if (imgui_io.WantCaptureMouse)
     {
         return;
@@ -118,10 +125,14 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
         {
             fae::hide_cursor();
             input.get_mouse_delta();
+            step.resources.use_resource<fae::ui_settings>([&](fae::ui_settings& ui_settings)
+                { ui_settings.hide_ui = true; });
         }
         else
         {
             fae::show_cursor();
+            step.resources.use_resource<fae::ui_settings>([&](fae::ui_settings& ui_settings)
+                { ui_settings.hide_ui = false; });
         }
     }
     if (!enabled)
@@ -190,40 +201,58 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
 
 auto lock_mouse(const fae::update_step& step) noexcept -> void
 {
+    bool is_ui_hidden = false;
+    step.resources.use_resource<fae::ui_settings>(
+        [&](fae::ui_settings& ui_settings)
+        {
+            is_ui_hidden = ui_settings.hide_ui;
+        });
+    if (!is_ui_hidden)
+    {
+        return;
+    }
+
     step.resources.use_resource<fae::primary_window>(
         [&](fae::primary_window& primary_window)
         {
             auto& window = primary_window.window();
-            if (window.is_focused())
+
+            static auto was_focused = false;
+            auto is_focused = window.is_focused();
+            if (is_focused && !was_focused)
             {
                 fae::hide_cursor();
-
-                auto window_position = window.get_position();
-                auto window_size = window.get_size();
-
-                auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
-
-                auto global_mouse_position = input.get_global_mouse_position();
-                if (global_mouse_position.x < window_position.x)
-                {
-                    input.set_local_mouse_position(primary_window.window_entity, window_size.width, global_mouse_position.y);
-                }
-                if (global_mouse_position.x > window_position.x + window_size.width)
-                {
-                    input.set_local_mouse_position(primary_window.window_entity, 0, global_mouse_position.y);
-                }
-                if (global_mouse_position.y < window_position.y)
-                {
-                    input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, window_size.height);
-                }
-                if (global_mouse_position.y > window_position.y + window_size.height)
-                {
-                    input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, 0);
-                }
             }
-            else
+            else if (!is_focused && was_focused)
             {
                 fae::show_cursor();
+            }
+
+            was_focused = is_focused;
+
+            if (!is_focused)
+                return;
+            auto window_position = window.get_position();
+            auto window_size = window.get_size();
+
+            auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
+
+            auto global_mouse_position = input.get_global_mouse_position();
+            if (global_mouse_position.x < window_position.x)
+            {
+                input.set_local_mouse_position(primary_window.window_entity, window_size.width, global_mouse_position.y);
+            }
+            if (global_mouse_position.x > window_position.x + window_size.width)
+            {
+                input.set_local_mouse_position(primary_window.window_entity, 0, global_mouse_position.y);
+            }
+            if (global_mouse_position.y < window_position.y)
+            {
+                input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, window_size.height);
+            }
+            if (global_mouse_position.y > window_position.y + window_size.height)
+            {
+                input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, 0);
             }
         });
 }
@@ -251,38 +280,47 @@ auto ui(const fae::ui_render_step& step) noexcept -> void
     static int counter = 0;
     static bool show_demo_window = false;
     static bool show_another_window = false;
-    static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+    fae::ui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
 
-    ImGui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
-    ImGui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
+    fae::ui::Text("This is some useful text.");          // Display some text (you can use a format strings too)
+    fae::ui::Checkbox("Demo Window", &show_demo_window); // Edit bools storing our window open/close state
     if (show_demo_window)
     {
-        static bool open = false;
-        ImGui::ShowDemoWindow(&open);
+        fae::ui::ShowDemoWindow(&show_demo_window);
     }
-    ImGui::Checkbox("Another Window", &show_another_window);
+    fae::ui::Checkbox("Another Window", &show_another_window);
     if (show_another_window)
     {
-        ImGui::Begin("Another Window", &show_another_window);
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
+        fae::ui::Begin("Another Window", &show_another_window);
+        fae::ui::Text("Hello from another window!");
+        if (fae::ui::Button("Close Me"))
             show_another_window = false;
-        ImGui::End();
+        fae::ui::End();
     }
 
-    ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+    fae::ui::SliderFloat("float", &f, 0.0f, 1.0f); // Edit 1 float using a slider from 0.0f to 1.0f
 
-    if (ImGui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
+    auto bunny_entity = fae::entity{ bunny_id, step.ecs_world.registry };
+    bunny_entity.use_component<fae::transform>([&](fae::transform& transform)
+        { transform.position.y = f; });
+
+    step.resources.use_resource<fae::renderer>(
+        [&](fae::renderer& renderer)
+        {
+            auto clear_color = renderer.get_clear_color().to_array();
+            fae::ui::ColorEdit3("clear color", clear_color.data());
+            renderer.set_clear_color(fae::color::from_array(clear_color));
+        });
+
+    if (fae::ui::Button("Button")) // Buttons return true when clicked (most widgets return true when edited/activated)
         counter++;
-    ImGui::SameLine();
-    ImGui::Text("counter = %d", counter);
+    fae::ui::SameLine();
+    fae::ui::Text("counter = %d", counter);
 
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    ImGui::End();
+    ImGuiIO& io = fae::ui::GetIO();
+    fae::ui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+    fae::ui::End();
 }
 
 auto fae_main(int argc, char* argv[]) -> int
@@ -291,7 +329,7 @@ auto fae_main(int argc, char* argv[]) -> int
         .add_plugin(fae::default_plugins{})
         .add_system<fae::start_step>(start)
         .add_system<fae::update_step>(fae::quit_on_esc)
-        .add_system<fae::update_step>(hue_shift_clear_color)
+        // .add_system<fae::update_step>(hue_shift_clear_color)
         .add_system<fae::update_step>(fps_control_active_camera)
         .add_system<fae::update_step>(lock_mouse)
         .add_system<fae::update_step>(rotate_system)

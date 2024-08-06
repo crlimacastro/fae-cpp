@@ -26,6 +26,16 @@ namespace fae
             return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
         }
 
+        [[nodiscard]] static inline constexpr auto from_array(std::array<float, 4> value) noexcept -> color_rgba
+        {
+            return {
+                static_cast<std::uint8_t>(value[0] * 255.f),
+                static_cast<std::uint8_t>(value[1] * 255.f),
+                static_cast<std::uint8_t>(value[2] * 255.f),
+                static_cast<std::uint8_t>(value[3] * 255.f),
+            };
+        }
+
         [[nodiscard]] inline constexpr auto to_vec4() const noexcept -> fae::vec4
         {
             return { r / 255.f, g / 255.f, b / 255.f, a / 255.f };
