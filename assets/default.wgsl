@@ -1,12 +1,16 @@
-struct t_uniforms {
+struct t_global_uniforms {
+	camera_world_position: vec3f,
+	time: f32,
+};
+
+struct t_local_uniforms {
 	model: mat4x4f,
 	view: mat4x4f,
 	projection: mat4x4f,
 	tint: vec4f,
-	camera_world_position: vec3f,
-	time: f32,
 };
-@group(0) @binding(0) var<uniform> uniforms : t_uniforms;
+@group(0) @binding(0) var<uniform> global_uniforms : t_global_uniforms;
+@group(0) @binding(1) var<uniform> local_uniforms : t_local_uniforms;
 
 struct vertex_input {
 	@builtin(vertex_index) vertex_index: u32,
@@ -28,19 +32,19 @@ struct vertex_output {
 
 @vertex
 fn vs_main(in: vertex_input) -> vertex_output {
-    let mvp = uniforms.projection * uniforms.view * uniforms.model;
+    let mvp = local_uniforms.projection * local_uniforms.view * local_uniforms.model;
     var out: vertex_output;
     out.projected_position = mvp * vec4f(in.local_position, 1.0);
-    out.world_position = (uniforms.model * vec4f(in.local_position, 1.0)).xyz;
+    out.world_position = (local_uniforms.model * vec4f(in.local_position, 1.0)).xyz;
     out.color = in.color;
-    out.world_normal = normalize(uniforms.model * vec4(in.local_normal, 0.0)).xyz;
+    out.world_normal = normalize(local_uniforms.model * vec4(in.local_normal, 0.0)).xyz;
     out.uv = in.uv;
-	out.camera_view_direction = normalize(out.world_position - uniforms.camera_world_position);
+    out.camera_view_direction = normalize(out.world_position - global_uniforms.camera_world_position);
     return out;
 }
 
-@group(0) @binding(1) var texture : texture_2d<f32>;
-@group(0) @binding(2) var texture_sampler: sampler;
+@group(0) @binding(2) var texture : texture_2d<f32>;
+@group(0) @binding(3) var texture_sampler: sampler;
 
 
 const max_lights: u32 = 512;
@@ -56,13 +60,13 @@ struct t_light_info {
 struct t_ambient_light_info {
 	lights: t_light_info,
 }
-@group(0) @binding(3) var<uniform> ambient_light_info : t_ambient_light_info;
+@group(0) @binding(4) var<uniform> ambient_light_info : t_ambient_light_info;
 
 struct t_directional_light_info {
 	directions: array<vec4f, max_lights>,
 	lights: t_light_info,
 }
-@group(0) @binding(4) var<uniform> directional_light_info : t_directional_light_info;
+@group(0) @binding(5) var<uniform> directional_light_info : t_directional_light_info;
 
 @fragment
 fn fs_main(in: vertex_output) -> @location(0) vec4f {
@@ -75,7 +79,7 @@ fn fs_main(in: vertex_output) -> @location(0) vec4f {
 
     var color = vec4f(0.0, 0.0, 0.0, 1.0);
 
-    let base_color = uniforms.tint * texture_color * in.color;
+    let base_color = local_uniforms.tint * texture_color * in.color;
 
     for (var i: u32 = 0; i < max_lights; i++) {
         if i >= ambient_light_info.lights.count {

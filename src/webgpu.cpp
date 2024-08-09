@@ -132,12 +132,20 @@ namespace fae
                 .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
                 .buffer = wgpu::BufferBindingLayout{
                     .type = wgpu::BufferBindingType::Uniform,
-                    .hasDynamicOffset = true,
-                    .minBindingSize = sizeof(t_uniforms),
+                    .minBindingSize = sizeof(t_global_uniforms),
                 },
             },
             wgpu::BindGroupLayoutEntry{
                 .binding = 1,
+                .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
+                .buffer = wgpu::BufferBindingLayout{
+                    .type = wgpu::BufferBindingType::Uniform,
+                    .hasDynamicOffset = true,
+                    .minBindingSize = sizeof(t_local_uniforms),
+                },
+            },
+            wgpu::BindGroupLayoutEntry{
+                .binding = 2,
                 .visibility = wgpu::ShaderStage::Fragment,
                 .texture = wgpu::TextureBindingLayout{
                     .sampleType = wgpu::TextureSampleType::Float,
@@ -145,14 +153,14 @@ namespace fae
                 },
             },
             wgpu::BindGroupLayoutEntry{
-                .binding = 2,
+                .binding = 3,
                 .visibility = wgpu::ShaderStage::Fragment,
                 .sampler = wgpu::SamplerBindingLayout{
                     .type = wgpu::SamplerBindingType::Filtering,
                 },
             },
             wgpu::BindGroupLayoutEntry{
-                .binding = 3,
+                .binding = 4,
                 .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
                 .buffer = wgpu::BufferBindingLayout{
                     .type = wgpu::BufferBindingType::Uniform,
@@ -160,7 +168,7 @@ namespace fae
                 },
             },
             wgpu::BindGroupLayoutEntry{
-                .binding = 4,
+                .binding = 5,
                 .visibility = wgpu::ShaderStage::Vertex | wgpu::ShaderStage::Fragment,
                 .buffer = wgpu::BufferBindingLayout{
                     .type = wgpu::BufferBindingType::Uniform,
@@ -239,7 +247,7 @@ namespace fae
         webgpu.device.GetLimits(&supported_limits);
         auto device_limits = supported_limits.limits;
         auto uniform_stride = ceil_to_next_multiple(
-            (std::uint32_t)sizeof(t_uniforms),
+            (std::uint32_t)sizeof(t_local_uniforms),
             (std::uint32_t)device_limits.minUniformBufferOffsetAlignment);
 
         return webgpu_render_pipeline{

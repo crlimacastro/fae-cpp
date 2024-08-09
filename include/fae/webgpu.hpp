@@ -19,16 +19,21 @@ namespace fae
 {
     struct application;
 
-    struct t_uniforms
+    struct t_global_uniforms
+    {
+        vec3 camera_world_position = { 0.f, 0.f, 0.f };
+        float time = 0;
+    };
+    static_assert(sizeof(t_global_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
+
+    struct t_local_uniforms
     {
         mat4 model = mat4(1.f);
         mat4 view = mat4(1.f);
         mat4 projection = mat4(1.f);
         vec4 tint = { 1.f, 1.f, 1.f, 1.f };
-        vec3 camera_world_position = { 0.f, 0.f, 0.f };
-        float time = 0;
     };
-    static_assert(sizeof(t_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
+    static_assert(sizeof(t_local_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
 
     struct webgpu_render_pipeline
     {
@@ -61,7 +66,7 @@ namespace fae
             {
                 std::vector<vertex> vertex_data;
                 std::vector<std::uint32_t> index_data;
-                t_uniforms uniform_data;
+                t_local_uniforms uniform_data;
                 wgpu::TextureView texture_view;
                 wgpu::Sampler sampler;
             };
