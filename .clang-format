@@ -6,6 +6,8 @@ AlignAfterOpenBracket: false
 DerivePointerAlignment: false
 PointerAlignment: Left
 BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterControlStatement: true
 LambdaBodyIndentation: Signature
 SortIncludes: false
 FixNamespaceComments: false

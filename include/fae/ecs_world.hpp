@@ -6,6 +6,7 @@
 #include <tuple>
 #include <vector>
 #include <utility>
+#include <stack>
 
 #include <entt/entt.hpp>
 
@@ -21,7 +22,7 @@ namespace fae
         {
             return fae::entity{
                 .id = registry.create(),
-                .registry = &registry,
+                .registry = registry,
             };
         }
 
@@ -30,16 +31,22 @@ namespace fae
         {
             std::vector<std::tuple<fae::entity, t_args&...>> query_results;
             registry.view<t_args...>().each([&](auto entity, auto&... args)
-                { query_results.emplace_back(fae::entity{ .id = entity, .registry = &registry }, args...); });
+                { query_results.emplace_back(fae::entity{ .id = entity, .registry = registry }, args...); });
             return query_results;
         }
 
         [[nodiscard]] auto entities() noexcept -> std::vector<fae::entity>
         {
             std::vector<fae::entity> entities;
-            for (auto [entity] : registry.view<entt::entity>().each())
+
+            std::stack<fae::entity> entity_stack;
+            for (auto entity : registry.view<entt::entity>())
             {
-                entities.emplace(entities.begin(), fae::entity{ .id = entity, .registry = &registry });
+                entity_stack.push(fae::entity{ .id = entity, .registry = registry });
+            }
+            while (!entity_stack.empty()) {
+                entities.push_back(entity_stack.top());
+                entity_stack.pop();
             }
             return entities;
         }

@@ -36,15 +36,27 @@ namespace fae
     auto ui_render_entity_scene(const editor_render_step& step) noexcept -> void
     {
         fae::ui::Begin("Scene");
+
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+        {
+            step.resources.use_resource<editor>([&](editor& editor)
+                { 
+                    auto entity = fae::entity
+                    {
+                        .id = editor.selected_entity,
+                        .registry = step.ecs_world.registry,
+                    };
+                    if (!entity.valid())
+                        return;
+                        entity.destroy(); });
+        }
+
         for (auto& entity : step.ecs_world.entities())
         {
             auto name = std::to_string(static_cast<std::uint32_t>(entity.id));
             entity.use_component<fae::name>([&](fae::name& name_component)
                 { name = name_component.value; });
-            if (name == "")
-            {
-                name = "##";
-            }
+            name += " (" + std::to_string(static_cast<std::uint32_t>(entity.id)) + ")";
             if (fae::ui::TreeNodeEx(name.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen))
             {
                 if (fae::ui::IsItemClicked())
@@ -67,7 +79,7 @@ namespace fae
                 {
                     auto entity = fae::entity{
                         .id = editor.selected_entity,
-                        .registry = &step.ecs_world.registry,
+                        .registry = step.ecs_world.registry,
                     };
                     auto final_name = std::to_string(static_cast<std::uint32_t>(entity.id));
                     entity.use_component<fae::name>([&](fae::name& name)
@@ -87,9 +99,11 @@ namespace fae
                         {
                             if (fae::ui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
                             {
-                                fae::ui::DragFloat3("Position", fae::math::value_ptr(transform.position));
-                                fae::ui::DragFloat3("Rotation", fae::math::value_ptr(transform.rotation));
-                                fae::ui::DragFloat3("Scale", fae::math::value_ptr(transform.scale));
+                                fae::ui::DragFloat3("Position", fae::math::value_ptr(transform.position), 0.01f);
+                                auto euler = fae::math::eulerAngles(transform.rotation);
+                                fae::ui::DragFloat3("Rotation", fae::math::value_ptr(euler), 0.01f);
+                                transform.rotation = fae::math::quat(euler);
+                                fae::ui::DragFloat3("Scale", fae::math::value_ptr(transform.scale), 0.01f);
                             }
                         });
 

@@ -236,16 +236,21 @@ namespace fae
                         t_uniforms uniforms;
                         resources.use_resource<fae::active_camera>([&](active_camera active_camera)
                             {
+                                if (!active_camera.camera_entity.valid())
+                            return;
                     auto &camera = active_camera.camera();
                     auto &camera_transform = active_camera.transform();
 
                     resources.use_resource<fae::primary_window>([&](fae::primary_window primary_window)
                     {
+                        if (!primary_window.window_entity.valid())
+                            return;
                         auto &window = primary_window.window();
                         auto window_size = window.get_size();
                         auto aspect_ratio = static_cast<float>(window_size.width) / static_cast<float>(window_size.height);
 
                         uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
+                        uniforms.camera_world_position = camera_transform.position;
                         uniforms.projection = math::perspective(math::radians(camera.fov), aspect_ratio, camera.near_plane, camera.far_plane); });
                         auto transform = fae::transform{};
                         transform.position = args.position;
@@ -271,12 +276,17 @@ namespace fae
                     t_uniforms uniforms;
                     resources.use_resource<fae::active_camera>([&](active_camera active_camera)
                     {
+                        if (!active_camera.camera_entity.valid())
+                            return;
                         auto &camera = active_camera.camera();
                         auto &camera_transform = active_camera.transform();
                         uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
+                        uniforms.camera_world_position = camera_transform.position;
 
                         resources.use_resource<fae::primary_window>([&](fae::primary_window primary_window)
                     {
+                        if (!primary_window.window_entity.valid())
+                            return;
                         auto &window = primary_window.window();
                         auto window_size = window.get_size();
                         auto aspect_ratio = static_cast<float>(window_size.width) / static_cast<float>(window_size.height);

@@ -3,6 +3,7 @@
 #include "fae/application.hpp"
 #include "fae/imgui.hpp"
 #include "fae/rendering.hpp"
+#include "fae/windowing.hpp"
 
 namespace fae
 {
@@ -18,14 +19,18 @@ namespace fae
     {
         bool hide_ui = false;
         step.resources.use_resource<ui_settings>([&](ui_settings& ui)
-        {
-            hide_ui = ui.hide_ui;
-        });
+            { hide_ui = ui.hide_ui; });
+        step.resources.use_resource<primary_window>([&](primary_window& window)
+            {
+            if (!window.window_entity.valid())
+            {
+                hide_ui = true;
+            } });
         if (hide_ui)
         {
             return;
         }
-        
+
         step.scheduler.invoke<ui_begin_step>(ui_begin_step{
             .resources = step.resources,
             .assets = step.assets,

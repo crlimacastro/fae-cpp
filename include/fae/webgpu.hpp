@@ -25,10 +25,8 @@ namespace fae
         mat4 view = mat4(1.f);
         mat4 projection = mat4(1.f);
         vec4 tint = { 1.f, 1.f, 1.f, 1.f };
+        vec3 camera_world_position = { 0.f, 0.f, 0.f };
         float time = 0;
-        float padding0;
-        float padding1;
-        float padding2;
     };
     static_assert(sizeof(t_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
 

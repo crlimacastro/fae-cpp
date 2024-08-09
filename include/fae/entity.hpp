@@ -3,6 +3,7 @@
 #include <any>
 #include <vector>
 #include <string>
+#include <functional>
 
 #include <entt/entt.hpp>
 
@@ -11,7 +12,7 @@
 namespace fae
 {
 	using entity_id_t = entt::entity;
-	using untity_registry_t = entt::registry;
+	using entity_registry_t = entt::registry;
 
 	struct name
 	{
@@ -32,13 +33,13 @@ namespace fae
 	struct entity
 	{
 		entity_id_t id;
-		untity_registry_t *registry;
+		entity_registry_t& registry;
 
 		template <typename t_component>
 		[[nodiscard]] inline constexpr auto get_component() const noexcept -> optional_reference<const t_component>
 		{
 
-			auto maybe_component = registry->try_get<const t_component>(id);
+			auto maybe_component = registry.try_get<const t_component>(id);
 			if (!maybe_component)
 			{
 				return std::nullopt;
@@ -50,7 +51,7 @@ namespace fae
 		[[nodiscard]] inline constexpr auto get_component() noexcept -> optional_reference<t_component>
 		{
 
-			auto maybe_component = registry->try_get<t_component>(id);
+			auto maybe_component = registry.try_get<t_component>(id);
 			if (!maybe_component)
 			{
 				return std::nullopt;
@@ -61,8 +62,8 @@ namespace fae
 		template <typename t_component>
 		[[nodiscard]] inline constexpr auto set_and_get_component(t_component &&value) noexcept -> t_component &
 		{
-			registry->emplace_or_replace<t_component>(id, std::forward<t_component &&>(value));
-			return registry->get<t_component>(id);
+			registry.emplace_or_replace<t_component>(id, std::forward<t_component &&>(value));
+			return registry.get<t_component>(id);
 		}
 
 		template <typename t_component>
@@ -96,7 +97,12 @@ namespace fae
 
 		inline auto destroy() noexcept -> void
 		{
-			registry->destroy(id);
+			registry.destroy(id);
+		}
+
+		[[nodiscard]] inline auto valid() noexcept -> bool
+		{
+			return registry.valid(id);
 		}
 	};
 }

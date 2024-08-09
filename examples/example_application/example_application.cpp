@@ -6,6 +6,7 @@
 struct rotate
 {
     float speed = 1.f;
+    fae::vec3 axis = { 0.0f, 1.0f, 0.0f };
 };
 
 auto start(const fae::start_step& step) noexcept -> void
@@ -34,7 +35,7 @@ auto start(const fae::start_step& step) noexcept -> void
     step.ecs_world.create_entity()
         .set_component<fae::name>(fae::name{ "ambient light" })
         .set_component<fae::ambient_light>(fae::ambient_light{
-            .color = fae::color { 150, 150, 150 },
+            .color = fae::color{ 200, 200, 200 },
         });
 
     step.ecs_world.create_entity()
@@ -83,6 +84,20 @@ auto start(const fae::start_step& step) noexcept -> void
         .set_component<fae::model>(fae::model{
             .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
         });
+
+        step.ecs_world.create_entity()
+        .set_component<fae::name>(fae::name{ "boat" })
+        .set_component<fae::transform>(fae::transform{
+            .position = { -17.f, 0.f, 23.f },
+            .rotation = fae::math::angleAxis(fae::math::radians(180.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
+            .scale = fae::vec3{ 1.f, 1.f, 1.f },
+        })
+        .set_component<fae::model>(fae::model{
+            .mesh = *step.assets.load<fae::mesh>("fourareen/fourareen.obj"),
+            .material = fae::material {
+                .diffuse = *step.assets.load<fae::texture>("fourareen/fourareen2K_albedo.jpg"),
+            },
+        });
 }
 
 auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void
@@ -113,6 +128,8 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
     step.resources.use_resource<fae::primary_window>(
         [&](fae::primary_window& primary_window)
         {
+            if (!primary_window.window_entity.valid())
+                return;
             auto& window = primary_window.window();
             has_focus = window.is_focused();
         });
@@ -157,6 +174,8 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
     step.resources.use_resource<fae::active_camera>(
         [&](fae::active_camera& active_camera)
         {
+            if (!active_camera.camera_entity.valid())
+                return;
             auto& camera_transform = active_camera.transform();
 
             auto move_input = fae::vec3(0.0f, 0.0f, 0.0f);
@@ -277,7 +296,7 @@ auto rotate_system(const fae::update_step& step) noexcept -> void
     auto& time = step.resources.get_or_emplace<fae::time>(fae::time{});
     for (auto& [entity, transform, rotate] : step.ecs_world.query<fae::transform, const rotate>())
     {
-        transform.rotation *= fae::math::angleAxis(fae::math::radians(rotate.speed) * time.delta(), fae::vec3(0.0f, 1.0f, 0.0f));
+        transform.rotation *= fae::math::angleAxis(fae::math::radians(rotate.speed) * time.delta(), rotate.axis);
     }
 }
 
