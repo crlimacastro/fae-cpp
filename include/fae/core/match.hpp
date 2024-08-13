@@ -28,7 +28,7 @@ namespace fae
     });
     */
     template <typename... ts, typename... tarms>
-    auto match(std::variant<ts...> variant, tarms&&... arms)
+    constexpr auto match(std::variant<ts...> variant, tarms&&... arms)
     {
         return std::visit(match_arms{ std::forward<tarms>(arms)... }, variant);
     }

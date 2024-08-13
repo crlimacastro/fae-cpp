@@ -7,7 +7,7 @@ namespace fae
     */
     struct inocopy
     {
-        inocopy(const inocopy&) = delete;
-        auto operator=(const inocopy&) -> inocopy& = delete;
+        inocopy(const inocopy&) noexcept = delete;
+        auto operator=(const inocopy&) noexcept -> inocopy& = delete;
     };
 }

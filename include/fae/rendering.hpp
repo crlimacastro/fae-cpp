@@ -1,5 +1,8 @@
 #pragma once
 
+#include <concepts>
+#include <type_traits>
+
 #include "fae/application.hpp"
 
 #include "rendering/renderer.hpp"
@@ -12,6 +15,13 @@
 
 namespace fae
 {
+    // template <typename pipeline_t>
+    // concept rendering_pipeline = requires(pipeline_t pipeline) {
+    //     { pipeline.create_shader_program() } -> std::same_as<void>;
+    //     { pipeline.update_uniforms() } -> std::same_as<void>;
+    //     { pipeline.create_buffers() } -> std::same_as<void>;
+    // };
+
     struct render_step
     {
         resource_manager& resources;

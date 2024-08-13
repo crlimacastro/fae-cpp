@@ -19,8 +19,8 @@ namespace fae
     (adding systems, adding resources, creating entities, even adding other plugins)
     and can only be added once
     */
-    template <typename tplugin>
-    concept plugin = requires(tplugin plugin, application& app) {
+    template <typename plugin_t>
+    concept plugin = requires(plugin_t plugin, application& app) {
         {
             plugin.init(app)
         } -> std::same_as<void>;

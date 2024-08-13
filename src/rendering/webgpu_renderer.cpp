@@ -12,6 +12,7 @@
 #include "fae/rendering/mesh.hpp"
 #include "fae/camera.hpp"
 #include "fae/lighting.hpp"
+#include "fae/rendering/material.hpp"
 
 namespace fae
 {
