@@ -4,7 +4,7 @@
 
 #include "fae/application/application_step.hpp"
 #include "fae/math.hpp"
-#include "fae/webgpu.hpp"
+#include "fae/webgpu/webgpu.hpp"
 
 namespace fae
 {

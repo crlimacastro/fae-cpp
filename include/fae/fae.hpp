@@ -20,10 +20,10 @@
 
 #include "fae/default_plugins.hpp"
 #include "fae/sdl.hpp"
-#include "fae/webgpu.hpp"
+#include "fae/webgpu/webgpu.hpp"
 #include "fae/time.hpp"
 #include "fae/input.hpp"
-#include "fae/rendering.hpp"
+#include "fae/rendering/rendering.hpp"
 #include "fae/camera.hpp"
 #include "fae/lighting.hpp"
 #include "fae/windowing.hpp"

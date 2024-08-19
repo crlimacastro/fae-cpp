@@ -2,7 +2,7 @@
 
 #include "fae/application/application.hpp"
 #include "fae/imgui.hpp"
-#include "fae/rendering.hpp"
+#include "fae/rendering/rendering.hpp"
 #include "fae/windowing.hpp"
 
 namespace fae

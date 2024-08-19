@@ -3,13 +3,14 @@
 #include <concepts>
 #include <type_traits>
 
-#include "rendering/render_pipeline.hpp"
-#include "rendering/renderer.hpp"
-#include "rendering/webgpu_renderer.hpp"
-#include "rendering/mesh.hpp"
-#include "rendering/model.hpp"
-#include "rendering/texture.hpp"
-#include "rendering/material.hpp"
+#include "material.hpp"
+#include "mesh.hpp"
+#include "model.hpp"
+#include "render_pass.hpp"
+#include "render_pipeline.hpp"
+#include "renderer.hpp"
+#include "texture.hpp"
+#include "webgpu_renderer.hpp"
 
 namespace fae
 {

@@ -7,7 +7,7 @@
 #include "fae/resource_manager.hpp"
 #include "fae/math.hpp"
 #include "fae/time.hpp"
-#include "fae/webgpu.hpp"
+#include "fae/webgpu/webgpu.hpp"
 #include "fae/color.hpp"
 #include "fae/rendering/renderer.hpp"
 #include "fae/rendering/mesh.hpp"

@@ -5,7 +5,7 @@
 #include "fae/application/application.hpp"
 #include "fae/ui.hpp"
 #include "fae/logging.hpp"
-#include "fae/rendering.hpp"
+#include "fae/rendering/rendering.hpp"
 #include "fae/lighting.hpp"
 
 namespace fae

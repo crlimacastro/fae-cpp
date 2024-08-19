@@ -9,6 +9,7 @@
 namespace fae
 {
     struct model;
+    struct render_pipeline;
 
     struct render_pass
     {

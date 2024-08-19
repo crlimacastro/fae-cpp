@@ -12,13 +12,14 @@
 #include "fae/math.hpp"
 #include "fae/windowing.hpp"
 
-#include "fae/webgpu/sdl_impl.hpp"
-#include "fae/webgpu/string_utils.hpp"
-#include "fae/webgpu/utils.hpp"
-
 #include "fae/rendering/mesh.hpp"
 #include "fae/rendering/texture.hpp"
 #include "fae/rendering/render_pipeline.hpp"
+
+#include "sdl_impl.hpp"
+#include "string_utils.hpp"
+#include "utils.hpp"
+
 
 namespace fae
 {

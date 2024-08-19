@@ -3,7 +3,7 @@
 #include "fae/input.hpp"
 #include "fae/time.hpp"
 #include "fae/windowing.hpp"
-#include "fae/rendering.hpp"
+#include "fae/rendering/rendering.hpp"
 #include "fae/lighting.hpp"
 #include "fae/ui.hpp"
 

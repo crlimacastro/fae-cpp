@@ -1,4 +1,4 @@
-#include "fae/rendering.hpp"
+#include "fae/rendering/rendering.hpp"
 
 #include <cstdint>
 #include <format>
@@ -13,7 +13,7 @@
 #include "fae/logging.hpp"
 #include "fae/math.hpp"
 #include "fae/time.hpp"
-#include "fae/webgpu.hpp"
+#include "fae/webgpu/webgpu.hpp"
 #include "fae/windowing.hpp"
 #include "fae/rendering/renderer.hpp"
 #include "fae/rendering/render_pipeline.hpp"

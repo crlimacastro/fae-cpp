@@ -1,4 +1,4 @@
-#include "fae/webgpu.hpp"
+#include "fae/webgpu/webgpu.hpp"
 
 #include <optional>
 #include <format>

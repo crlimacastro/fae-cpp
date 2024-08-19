@@ -6,7 +6,7 @@
 
 #include "fae/application/application.hpp"
 #include "fae/windowing.hpp"
-#include "fae/webgpu.hpp"
+#include "fae/webgpu/webgpu.hpp"
 #include "fae/ui.hpp"
 
 namespace fae

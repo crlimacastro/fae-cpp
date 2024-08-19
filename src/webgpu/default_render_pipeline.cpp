@@ -5,7 +5,7 @@
 #include "fae/resource_manager.hpp"
 #include "fae/core/offset_of.hpp"
 #include "fae/windowing.hpp"
-#include "fae/webgpu.hpp"
+#include "fae/webgpu/webgpu.hpp"
 #include "fae/lighting.hpp"
 #include "fae/rendering/render_pipeline.hpp"
 #include "fae/rendering/render_pass.hpp"
