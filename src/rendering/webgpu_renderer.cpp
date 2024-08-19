@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "fae/core/vector.hpp"
 #include "fae/rendering/renderer.hpp"
 #include "fae/resource_manager.hpp"
 #include "fae/math.hpp"
@@ -13,6 +14,10 @@
 #include "fae/camera.hpp"
 #include "fae/lighting.hpp"
 #include "fae/rendering/material.hpp"
+#include "fae/rendering/render_pass.hpp"
+#include "fae/rendering/model.hpp"
+
+#include "fae/webgpu/default_render_pipeline.hpp"
 
 namespace fae
 {
@@ -41,7 +46,7 @@ namespace fae
                 return clear_color;
             },
             .set_clear_color =
-                [&](color value)
+                [&](const color& value)
             {
                 resources.use_resource<fae::webgpu>(
                     [&](webgpu& webgpu)
@@ -54,117 +59,94 @@ namespace fae
                         };
                     });
             },
-            .clear =
-                [&]()
-            {
-                // TODO
-            },
             .begin =
-                [&]()
+                [&](const fae::render_pipeline& render_pipeline)
             {
+                std::size_t id = 0;
                 resources.use_resource<fae::webgpu>(
                     [&](webgpu& webgpu)
                     {
-                        webgpu.current_render.render_commands.clear();
+                        auto webgpu_render_pass = webgpu::render_pass{
+                            .render_pipeline_id = render_pipeline.get_id(),
+                            .render_commands = std::vector<webgpu::render_pass::render_command>(),
+                        };
+                        id = webgpu.render_passes.size();
+                        webgpu.render_passes.push_back(webgpu_render_pass);
+                        render_pipeline.prepare_render_pass(id);
 
-                        wgpu::SurfaceTexture surface_texture;
-                        webgpu.surface.GetCurrentTexture(&surface_texture);
-                        auto surface_texture_view = surface_texture.texture.CreateView();
-
-                        auto command_encoder = webgpu.device.CreateCommandEncoder();
-                        auto color_attachment = wgpu::RenderPassColorAttachment{
-                            .view = surface_texture_view,
-                            .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
-                            .resolveTarget = nullptr,
-                            .loadOp = wgpu::LoadOp::Clear,
-                            .storeOp = wgpu::StoreOp::Store,
-                            .clearValue = webgpu.clear_color,
-                        };
-                        auto depth_attachment = wgpu::RenderPassDepthStencilAttachment{
-                            .view = webgpu.render_pipeline.depth_texture.CreateView(),
-                            .depthLoadOp = wgpu::LoadOp::Clear,
-                            .depthStoreOp = wgpu::StoreOp::Store,
-                            .depthClearValue = 1.0,
-                            .stencilReadOnly = true,
-                        };
-                        auto render_pass_desc = wgpu::RenderPassDescriptor{
-                            .label = "fae_render_pass",
-                            .colorAttachmentCount = 1,
-                            .colorAttachments = &color_attachment,
-                            .depthStencilAttachment = &depth_attachment,
-                        };
-                        auto render_pass = command_encoder.BeginRenderPass(&render_pass_desc);
-                        render_pass.SetPipeline(webgpu.render_pipeline.pipeline);
-                        webgpu.current_render.command_encoder = command_encoder;
-                        webgpu.current_render.render_pass = render_pass;
-
-                        auto ui_command_encoder = webgpu.device.CreateCommandEncoder();
-                        auto ui_color_attachment = wgpu::RenderPassColorAttachment{
-                            .view = surface_texture_view,
-                            .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
-                            .resolveTarget = nullptr,
-                            .loadOp = wgpu::LoadOp::Load,
-                            .storeOp = wgpu::StoreOp::Store,
-                        };
-                        auto ui_depth_attachment = wgpu::RenderPassDepthStencilAttachment{
-                            .view = webgpu.render_pipeline.depth_texture.CreateView(),
-                            .depthLoadOp = wgpu::LoadOp::Clear,
-                            .depthStoreOp = wgpu::StoreOp::Store,
-                            .depthClearValue = 1.0,
-                            .stencilReadOnly = true,
-                        };
-                        auto ui_render_pass_desc = wgpu::RenderPassDescriptor{
-                            .label = "fae_ui_render_pass",
-                            .colorAttachmentCount = 1,
-                            .colorAttachments = &ui_color_attachment,
-                            .depthStencilAttachment = &ui_depth_attachment,
-                        };
-                        auto ui_render_pass = ui_command_encoder.BeginRenderPass(&ui_render_pass_desc);
-                        webgpu.current_render.ui_command_encoder = ui_command_encoder;
-                        webgpu.current_render.ui_render_pass = ui_render_pass;
+                        // auto ui_command_encoder = webgpu.device.CreateCommandEncoder();
+                        // auto ui_color_attachment = wgpu::RenderPassColorAttachment{
+                        //     .view = surface_texture_view,
+                        //     .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
+                        //     .resolveTarget = nullptr,
+                        //     .loadOp = wgpu::LoadOp::Load,
+                        //     .storeOp = wgpu::StoreOp::Store,
+                        // };
+                        // auto ui_depth_attachment = wgpu::RenderPassDepthStencilAttachment{
+                        //     .view = webgpu.render_pipeline.depth_texture.CreateView(),
+                        //     .depthLoadOp = wgpu::LoadOp::Clear,
+                        //     .depthStoreOp = wgpu::StoreOp::Store,
+                        //     .depthClearValue = 1.0,
+                        //     .stencilReadOnly = true,
+                        // };
+                        // auto ui_render_pass_desc = wgpu::RenderPassDescriptor{
+                        //     .label = "fae_ui_render_pass",
+                        //     .colorAttachmentCount = 1,
+                        //     .colorAttachments = &ui_color_attachment,
+                        //     .depthStencilAttachment = &ui_depth_attachment,
+                        // };
+                        // auto ui_render_pass = ui_command_encoder.BeginRenderPass(&ui_render_pass_desc);
+                        // webgpu.render_pass.ui_command_encoder = ui_command_encoder;
+                        // webgpu.render_pass.ui_render_pass = ui_render_pass;
                     });
-            },
-            .end =
-                [&]()
-            {
-                resources.use_resource<fae::webgpu>(
-                    [&](webgpu& webgpu)
+
+                return fae::render_pass{
+                    .get_id = [&, id]()
+                    { return id; },
+                    .get_render_pipeline = [&]()
+                    { return render_pipeline; },
+                    .clear = [&](const color& value)
                     {
-                        if (!webgpu.current_render.render_commands.empty())
-                        {
-                            resources.use_resource<fae::active_camera>([&](active_camera active_camera)
-                                {
+                        // TODO
+                    },
+                    .end = [&, id]()
+                    { resources.use_resource<fae::webgpu>(
+                          [&](webgpu& webgpu)
+                          {
+                              auto& render_pass = webgpu.render_passes[id];
+                              auto& render_pipeline = webgpu.render_pipelines[render_pass.render_pipeline_id];
+
+                              if (!render_pass.render_commands.empty())
+                              {
+                                  resources.use_resource<fae::active_camera>([&](active_camera active_camera)
+                                      {
                                 if (!active_camera.camera_entity.valid())
                                     return;
                             auto &camera = active_camera.camera();
                             auto &camera_transform = active_camera.transform();
 
-                            t_global_uniforms global_uniforms;
+                            global_uniforms_t global_uniforms;
                             global_uniforms.camera_world_position = camera_transform.position;
                             auto time = resources.get_or_emplace<fae::time>(fae::time{});
                             auto t = time.elapsed().seconds_f32();
                             global_uniforms.time = t;
 
-                            auto global_uniforms_buffer = create_buffer(webgpu.device, "fae_global_uniforms_buffer", sizeof(t_global_uniforms), wgpu::BufferUsage::Uniform);
+                            auto global_uniforms_buffer = create_buffer(webgpu.device, "fae_global_uniforms_buffer", sizeof(global_uniforms_t), wgpu::BufferUsage::Uniform);
 
-                            std::vector<t_local_uniforms> local_uniforms;
-                            for (auto& render_command : webgpu.current_render.render_commands)
+                            std::vector<std::uint8_t> local_uniform_data;
+                            for (auto& render_command : render_pass.render_commands)
                             {
-                                local_uniforms.push_back(render_command.uniform_data);
+                                auto data = std::vector<std::uint8_t>(render_pipeline.uniform_stride, 0);
+                                std::memcpy(data.data(), render_command.uniform_data.data(), sizeof(local_uniforms_t));
+                                local_uniform_data.insert(local_uniform_data.end(), data.begin(), data.end());
                             }
-                            auto sizeof_uniforms = local_uniforms.size() * webgpu.render_pipeline.uniform_stride;
+                            auto sizeof_uniforms = local_uniform_data.size() * render_pipeline.uniform_stride;
                             auto local_uniforms_buffer = create_buffer(webgpu.device, "fae_local_uniforms_buffer", sizeof_uniforms, wgpu::BufferUsage::Uniform);
 
-                            std::uint32_t uniform_offset = 0;
                             auto queue = webgpu.device.GetQueue();
 
-                            queue.WriteBuffer(global_uniforms_buffer, 0, &global_uniforms, sizeof(t_global_uniforms));
-
-                            for (auto& uniform : local_uniforms)
-                            {
-                                queue.WriteBuffer(local_uniforms_buffer, uniform_offset, &uniform, sizeof(t_local_uniforms));
-                                uniform_offset += webgpu.render_pipeline.uniform_stride;
-                            }
+                            queue.WriteBuffer(global_uniforms_buffer, 0, &global_uniforms, sizeof(global_uniforms_t));
+                            queue.WriteBuffer(local_uniforms_buffer, 0, local_uniform_data.data(), sizeof_data(local_uniform_data));
 
                             auto ambient_light_info_buffer = create_buffer(webgpu.device, "ambient_light_info_buffer", sizeof(fae::directional_light_info), wgpu::BufferUsage::Uniform);
                             resources.use_resource<fae::ambient_light_info>([&](fae::ambient_light_info info)
@@ -174,19 +156,19 @@ namespace fae
                             resources.use_resource<fae::directional_light_info>([&](fae::directional_light_info info)
                                 { queue.WriteBuffer(directional_light_info_buffer, 0, &info, sizeof(fae::directional_light_info)); });
 
-                            uniform_offset = 0;
-                            for (auto& render_command : webgpu.current_render.render_commands)
+                            std::uint32_t uniform_offset = 0;
+                            for (auto& render_command : render_pass.render_commands)
                             {
                                 auto bind_entries = std::vector<wgpu::BindGroupEntry>{
                                     wgpu::BindGroupEntry{
                                         .binding = 0,
                                         .buffer = global_uniforms_buffer,
-                                        .size = sizeof(t_global_uniforms),
+                                        .size = sizeof(global_uniforms_t),
                                     },
                                     wgpu::BindGroupEntry{
                                         .binding = 1,
                                         .buffer = local_uniforms_buffer,
-                                        .size = sizeof(t_local_uniforms),
+                                        .size = sizeof(local_uniforms_t),
                                     },
                                     wgpu::BindGroupEntry{
                                         .binding = 2,
@@ -209,91 +191,53 @@ namespace fae
                                 };
                                 auto bind_group_descriptor = wgpu::BindGroupDescriptor{
                                     .label = "fae_bind_group",
-                                    .layout = webgpu.render_pipeline.pipeline.GetBindGroupLayout(0),
+                                    .layout = render_pipeline.render_pipeline.GetBindGroupLayout(0),
                                     .entryCount = static_cast<std::size_t>(bind_entries.size()),
                                     .entries = bind_entries.data(),
                                 };
 
                                 auto uniform_bind_group = webgpu.device.CreateBindGroup(&bind_group_descriptor);
-                                webgpu.current_render.render_pass.SetBindGroup(0, uniform_bind_group, 1, &uniform_offset);
-                                uniform_offset += webgpu.render_pipeline.uniform_stride;
+                                render_pass.render_pass_encoder.SetBindGroup(0, uniform_bind_group, 1, &uniform_offset);
+                                uniform_offset += render_pipeline.uniform_stride;
 
                                 const auto vertex_buffer = create_buffer_with_data(
                                     webgpu.device, "indexed_render_data_vertex_buffer", render_command.vertex_data.data(), sizeof_data(render_command.vertex_data),
                                     wgpu::BufferUsage::Vertex);
-                                webgpu.current_render.render_pass.SetVertexBuffer(0, vertex_buffer);
+                                render_pass.render_pass_encoder.SetVertexBuffer(0, vertex_buffer);
                                 if (!render_command.index_data.empty())
                                 {
                                     const auto index_buffer = create_buffer_with_data(
                                         webgpu.device, "indexed_render_data_index_buffer", render_command.index_data.data(), sizeof_data(render_command.index_data),
                                         wgpu::BufferUsage::Index);
-                                    webgpu.current_render.render_pass.SetIndexBuffer(index_buffer, wgpu::IndexFormat::Uint32);
-                                    webgpu.current_render.render_pass.DrawIndexed(render_command.index_data.size());
+                                    render_pass.render_pass_encoder.SetIndexBuffer(index_buffer, wgpu::IndexFormat::Uint32);
+                                    render_pass.render_pass_encoder.DrawIndexed(render_command.index_data.size());
                                 }
                                 else
                                 {
-                                    webgpu.current_render.render_pass.Draw(render_command.vertex_data.size());
+                                    render_pass.render_pass_encoder.Draw(render_command.vertex_data.size());
                                 }
                             } });
-                        }
+                              }
 
-                        webgpu.current_render.render_pass.End();
-                        auto command_buffer = webgpu.current_render.command_encoder.Finish();
-                        webgpu.current_render.ui_render_pass.End();
-                        auto ui_command_buffer = webgpu.current_render.ui_command_encoder.Finish();
+                              render_pass.render_pass_encoder.End();
+                              auto command_buffer = render_pass.command_encoder.Finish();
+                              //   render_pass.ui_render_pass.End();
+                              //   auto ui_command_buffer = render_pass.ui_command_encoder.Finish();
 
-                        auto commands = std::vector<wgpu::CommandBuffer>{ command_buffer, ui_command_buffer };
-                        webgpu.device.GetQueue().Submit(commands.size(), commands.data());
+                              auto commands = std::vector<wgpu::CommandBuffer>{ command_buffer };
+                              webgpu.device.GetQueue().Submit(commands.size(), commands.data());
 #ifndef FAE_PLATFORM_WEB
-                        webgpu.surface.Present();
-                        webgpu.instance.ProcessEvents();
+                              webgpu.surface.Present();
+                              webgpu.instance.ProcessEvents();
 #endif
-                    });
-            },
-            .render_cube =
-                [&](const renderer::render_cube_args& args)
-            {
-                resources.use_resource<fae::webgpu>(
-                    [&](webgpu& webgpu)
-                    {
-                        auto mesh = meshes::cube();
-                        t_local_uniforms local_uniforms;
-                        resources.use_resource<fae::active_camera>([&](active_camera active_camera)
-                            {
-                                if (!active_camera.camera_entity.valid())
-                            return;
-                    auto &camera = active_camera.camera();
-                    auto &camera_transform = active_camera.transform();
+                              webgpu.render_passes.erase(webgpu.render_passes.begin() + id);
+                          }); },
+                    .render_model = [&, id](const fae::render_pass::render_model_args& args)
+                    { resources.use_resource<fae::webgpu>([&, id](fae::webgpu& webgpu)
+                          {
+                            auto &render_pass = webgpu.render_passes[id];
 
-                    resources.use_resource<fae::primary_window>([&](fae::primary_window primary_window)
-                    {
-                        if (!primary_window.window_entity.valid())
-                            return;
-                        auto &window = primary_window.window();
-                        auto window_size = window.get_size();
-                        auto aspect_ratio = static_cast<float>(window_size.width) / static_cast<float>(window_size.height);
-
-                        local_uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
-                        local_uniforms.projection = math::perspective(math::radians(camera.fov), aspect_ratio, camera.near_plane, camera.far_plane); });
-                        auto transform = fae::transform{};
-                        transform.position = args.position;
-                        transform.rotation = args.rotation;
-                        transform.scale = args.scale;
-                        local_uniforms.model = transform.to_mat4();
-                        local_uniforms.tint = args.tint.to_vec4();
-                        webgpu.current_render.render_commands.push_back(fae::webgpu::current_render::render_command{
-                            .vertex_data = mesh.vertices,
-                            .index_data = mesh.indices,
-                            .uniform_data = local_uniforms,
-                        }); });
-                    });
-            },
-            .render_model =
-                [&](const renderer::render_model_args& args)
-            {
-                resources.use_resource<fae::webgpu>([&](fae::webgpu& webgpu)
-                    {
-                        t_local_uniforms local_uniforms;
+                        local_uniforms_t local_uniforms;
                         resources.use_resource<fae::active_camera>([&](active_camera active_camera)
                         {
                             if (!active_camera.camera_entity.valid())
@@ -337,13 +281,17 @@ namespace fae
 
                             auto sampler = webgpu.device.CreateSampler(&sample_descriptor);
 
-                        webgpu.current_render.render_commands.push_back(fae::webgpu::current_render::render_command{
+                        auto uniform_data = std::vector<std::uint8_t>(sizeof(local_uniforms_t));
+                        std::memcpy(uniform_data.data(), &local_uniforms, sizeof(local_uniforms_t));
+
+                        render_pass.render_commands.push_back(fae::webgpu::render_pass::render_command{
                             .vertex_data = args.model.mesh.vertices,
                             .index_data = args.model.mesh.indices,
-                            .uniform_data = local_uniforms,
+                            .uniform_data = uniform_data,
                             .texture_view = texture_and_view.view,
                             .sampler = sampler,
-                  }); }); });
+                  }); }); }); },
+                };
             },
         };
     }

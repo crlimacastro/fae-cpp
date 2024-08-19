@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <concepts>
 
-#include "fae/core.hpp"
+#include "fae/core/optional_reference.hpp"
 
 namespace fae
 {

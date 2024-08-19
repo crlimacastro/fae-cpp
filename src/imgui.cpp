@@ -4,7 +4,7 @@
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_wgpu.h>
 
-#include "fae/application.hpp"
+#include "fae/application/application.hpp"
 #include "fae/windowing.hpp"
 #include "fae/webgpu.hpp"
 #include "fae/ui.hpp"
@@ -53,7 +53,7 @@ namespace fae
         auto wgpu_init_info = ImGui_ImplWGPU_InitInfo{};
         wgpu_init_info.Device = webgpu.device.Get();
         wgpu_init_info.RenderTargetFormat = static_cast<WGPUTextureFormat>(webgpu.surface.GetPreferredFormat(webgpu.adapter));
-        wgpu_init_info.DepthStencilFormat = static_cast<WGPUTextureFormat>(webgpu.render_pipeline.depth_texture.GetFormat());
+        wgpu_init_info.DepthStencilFormat = static_cast<WGPUTextureFormat>(webgpu.depth_texture_format);
         ImGui_ImplWGPU_Init(&wgpu_init_info);
     }
 
@@ -69,7 +69,11 @@ namespace fae
         ImGui::EndFrame();
         ImGui::Render();
         step.resources.use_resource<fae::webgpu>([&](fae::webgpu& webgpu)
-            { ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), webgpu.current_render.ui_render_pass.Get()); });
+            {
+                for (auto &render_pass : webgpu.render_passes)
+                {
+                // ImGui_ImplWGPU_RenderDrawData(ImGui::GetDrawData(), render_pass.ui_render_pass_encoder.Get());
+                } });
     }
 
     auto deinit_imgui(const deinit_step& step) noexcept -> void

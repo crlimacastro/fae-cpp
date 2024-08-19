@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include "fae/application.hpp"
 #include "fae/sdl.hpp"
 #include "fae/windowing.hpp"
 

@@ -1,6 +1,6 @@
 #include "fae/lighting.hpp"
 
-#include "fae/application.hpp"
+#include "fae/application/application.hpp"
 
 namespace fae
 {

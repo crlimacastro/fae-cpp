@@ -11,12 +11,13 @@
 
 #include <SDL3/SDL.h>
 
-#include "fae/application.hpp"
-#include "fae/core.hpp"
 #include "fae/logging.hpp"
 
 namespace fae
 {
+struct application;
+struct update_step;
+
     using unique_sdl_window_ptr = std::unique_ptr<SDL_Window, std::function<void(SDL_Window*)>>;
 
     struct sdl_window
@@ -181,8 +182,12 @@ namespace fae
             return mouse_delta {.x = x, .y = y};
         }
 
+        auto update() noexcept -> void
+        {
+            *m_was_key_pressed = *m_is_key_pressed;
+        }
+
       private:
-        friend auto update_sdl(const update_step& step) noexcept -> void;
 
         std::shared_ptr<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>> m_is_key_pressed = std::make_shared<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>>();
         std::shared_ptr<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>> m_was_key_pressed = std::make_shared<std::bitset<static_cast<std::size_t>(SDLK_ENDCALL)>>();
@@ -213,26 +218,13 @@ namespace fae
         sdl() noexcept;
     };
 
-    auto update_sdl(const update_step& step) noexcept -> void;
-    auto destroy_sdl_window_entities_that_should_close(const update_step& step) noexcept -> void;
-
     struct sdl_plugin
     {
         sdl::options options{};
 
-        auto init(application& app) const noexcept -> void
-        {
-            auto maybe_sdl = sdl::init(options);
-            if (!maybe_sdl)
-            {
-                fae::log_error(std::format("could not initialize SDL: {}", SDL_GetError()));
-                return;
-            }
-            auto& sdl = *maybe_sdl;
-            app
-                .insert_resource<fae::sdl>(std::move(sdl))
-                .insert_resource<sdl_input>(std::move(sdl_input{}))
-                .add_system<update_step>(update_sdl);
-        }
+        auto init(application& app) const noexcept -> void;
     };
+
+    auto update_sdl(const update_step& step) noexcept -> void;
+    auto destroy_sdl_window_entities_that_should_close(const update_step& step) noexcept -> void;
 }

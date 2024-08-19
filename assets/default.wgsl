@@ -1,16 +1,16 @@
-struct t_global_uniforms {
+struct global_uniforms_t {
 	camera_world_position: vec3f,
 	time: f32,
 };
 
-struct t_local_uniforms {
+struct local_uniforms_t {
 	model: mat4x4f,
 	view: mat4x4f,
 	projection: mat4x4f,
 	tint: vec4f,
 };
-@group(0) @binding(0) var<uniform> global_uniforms : t_global_uniforms;
-@group(0) @binding(1) var<uniform> local_uniforms : t_local_uniforms;
+@group(0) @binding(0) var<uniform> global_uniforms : global_uniforms_t;
+@group(0) @binding(1) var<uniform> local_uniforms : local_uniforms_t;
 
 struct vertex_input {
 	@builtin(vertex_index) vertex_index: u32,
@@ -49,7 +49,7 @@ fn vs_main(in: vertex_input) -> vertex_output {
 
 const max_lights: u32 = 512;
 
-struct t_light_info {
+struct light_info_t {
 	colors: array<vec4f, max_lights>,
 	count: u32,
 	padding0: u32,
@@ -57,16 +57,16 @@ struct t_light_info {
 	padding2: u32,
 }
 
-struct t_ambient_light_info {
-	lights: t_light_info,
+struct ambient_light_info_t {
+	lights: light_info_t,
 }
-@group(0) @binding(4) var<uniform> ambient_light_info : t_ambient_light_info;
+@group(0) @binding(4) var<uniform> ambient_light_info : ambient_light_info_t;
 
-struct t_directional_light_info {
+struct directional_light_info_t {
 	directions: array<vec4f, max_lights>,
-	lights: t_light_info,
+	lights: light_info_t,
 }
-@group(0) @binding(5) var<uniform> directional_light_info : t_directional_light_info;
+@group(0) @binding(5) var<uniform> directional_light_info : directional_light_info_t;
 
 @fragment
 fn fs_main(in: vertex_output) -> @location(0) vec4f {

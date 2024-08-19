@@ -1,6 +1,6 @@
 #include "fae/ui.hpp"
 
-#include "fae/application.hpp"
+#include "fae/application/application.hpp"
 #include "fae/imgui.hpp"
 #include "fae/rendering.hpp"
 #include "fae/windowing.hpp"

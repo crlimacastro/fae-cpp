@@ -1,5 +1,7 @@
 #include "fae/default_plugins.hpp"
 
+#include "fae/application/application.hpp"
+
 namespace fae
 {
     auto default_plugins::init(application& app) const noexcept -> void

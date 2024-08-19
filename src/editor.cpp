@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include "fae/application.hpp"
+#include "fae/application/application.hpp"
 #include "fae/ui.hpp"
 #include "fae/logging.hpp"
 #include "fae/rendering.hpp"

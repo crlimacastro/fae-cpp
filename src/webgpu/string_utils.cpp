@@ -6,7 +6,7 @@
 
 #include "fae/logging.hpp"
 #include "fae/webgpu/utils.hpp"
-#include "fae/core.hpp"
+#include "fae/core/enum.hpp"
 
 namespace fae
 {

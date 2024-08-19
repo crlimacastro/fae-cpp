@@ -1,6 +1,5 @@
 #pragma once
 
-#include "fae/application.hpp"
 #include "fae/input.hpp"
 #include "fae/time.hpp"
 #include "fae/windowing.hpp"

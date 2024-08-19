@@ -7,7 +7,7 @@
 
 #include <entt/entt.hpp>
 
-#include "fae/core.hpp"
+#include "fae/core/optional_reference.hpp"
 
 namespace fae
 {

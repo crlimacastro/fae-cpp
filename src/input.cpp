@@ -1,5 +1,7 @@
 #include "fae/input.hpp"
 
+#include "fae/application/application.hpp"
+
 namespace fae
 {
     auto quit_on_esc(const update_step& step) noexcept -> void

@@ -1,8 +1,12 @@
 #pragma once
 
 #include <array>
+#include <any>
+#include <memory>
 
 #include <webgpu/webgpu_cpp.h>
+
+#include "fae/core/enum.hpp"
 
 #include "fae/logging.hpp"
 #include "fae/math.hpp"
@@ -14,36 +18,11 @@
 
 #include "fae/rendering/mesh.hpp"
 #include "fae/rendering/texture.hpp"
+#include "fae/rendering/render_pipeline.hpp"
 
 namespace fae
 {
     struct application;
-
-    struct t_global_uniforms
-    {
-        vec3 camera_world_position = { 0.f, 0.f, 0.f };
-        float time = 0;
-    };
-    static_assert(sizeof(t_global_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
-
-    struct t_local_uniforms
-    {
-        mat4 model = mat4(1.f);
-        mat4 view = mat4(1.f);
-        mat4 projection = mat4(1.f);
-        vec4 tint = { 1.f, 1.f, 1.f, 1.f };
-    };
-    static_assert(sizeof(t_local_uniforms) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
-
-    struct webgpu_render_pipeline
-    {
-        wgpu::ShaderModule shader_module;
-        wgpu::RenderPipeline pipeline;
-        wgpu::Texture depth_texture;
-        std::uint32_t uniform_stride;
-    };
-
-    auto create_default_render_pipeline(application& app) noexcept -> webgpu_render_pipeline;
 
     struct webgpu
     {
@@ -51,31 +30,38 @@ namespace fae
         wgpu::Adapter adapter;
         wgpu::Device device;
         wgpu::Surface surface;
-        std::function<webgpu_render_pipeline(application&)> create_render_pipeline = create_default_render_pipeline;
-        webgpu_render_pipeline render_pipeline;
 
         wgpu::Color clear_color = { 0, 0, 0, 1 };
-        struct current_render
+
+        wgpu::TextureFormat depth_texture_format = wgpu::TextureFormat::Depth24Plus;
+
+        struct render_pipeline
         {
+            wgpu::ShaderModule shader_module;
+            wgpu::RenderPipeline render_pipeline;
+            wgpu::Texture depth_texture;
+            std::uint32_t uniform_stride;
+        };
+        std::vector<render_pipeline> render_pipelines;
+
+        struct render_pass
+        {
+            std::size_t render_pipeline_id;
             wgpu::CommandEncoder command_encoder;
-            wgpu::RenderPassEncoder render_pass;
-            wgpu::CommandEncoder ui_command_encoder;
-            wgpu::RenderPassEncoder ui_render_pass;
+            wgpu::RenderPassEncoder render_pass_encoder;
 
             struct render_command
             {
                 std::vector<vertex> vertex_data;
                 std::vector<std::uint32_t> index_data;
-                t_local_uniforms uniform_data;
+                std::vector<std::uint8_t> uniform_data;
                 wgpu::TextureView texture_view;
                 wgpu::Sampler sampler;
             };
             std::vector<render_command> render_commands;
         };
-        current_render current_render{};
+        std::vector<render_pass> render_passes;
     };
-
-    auto reconfigure_on_window_resized(const fae::window_resized& e) noexcept -> void;
 
     struct webgpu_plugin
     {
@@ -117,4 +103,6 @@ namespace fae
 
         auto init(application& app) const noexcept -> void;
     };
+
+    auto reconfigure_on_window_resized(const fae::window_resized& e) noexcept -> void;
 }

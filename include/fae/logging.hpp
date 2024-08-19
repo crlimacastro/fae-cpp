@@ -8,6 +8,8 @@
 #include <string>
 #include <string_view>
 
+#include "fae/core/exit.hpp"
+
 #ifndef FAE_PLATFORM_WEB
 #include <stacktrace>
 #else
@@ -15,7 +17,6 @@
 #endif
 
 #include "fae/config.hpp"
-#include "fae/core.hpp"
 
 namespace fae
 {

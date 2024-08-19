@@ -1,7 +1,7 @@
 #pragma once
 
 #include "fae/config.hpp"
-#include "fae/core.hpp"
+#include "fae/core/core.hpp"
 
 #include "fae/color.hpp"
 #include "fae/angle.hpp"
@@ -16,7 +16,7 @@
 #include "fae/ecs_world.hpp"
 #include "fae/entity.hpp"
 
-#include "fae/application.hpp"
+#include "fae/application/application.hpp"
 
 #include "fae/default_plugins.hpp"
 #include "fae/sdl.hpp"

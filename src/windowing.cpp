@@ -1,5 +1,8 @@
 #include "fae/windowing.hpp"
 
+#include "fae/resource_manager.hpp"
+#include "fae/application/application.hpp"
+
 namespace fae
 {
     auto show_primary_window_after_first_render(const fae::first_render_end& e) noexcept -> void
