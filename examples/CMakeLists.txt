@@ -1,3 +1,4 @@
+# returns true if the directory contains a CMakeLists.txt
 function(contains_cmakelists SUBDIRECTORY RETURN)
 	file(GLOB CMAKELISTS_FILE "${SUBDIRECTORY}/CMakeLists.txt")
 	if(CMAKELISTS_FILE)
@@ -9,11 +10,12 @@ endfunction()
 
 # calls add_subdirectory only if the directory contains a CMakeLists.txt file
 function(maybe_add_subdirectory SUBDIRECTORY)
-	contains_cmakelists(${SUBDIRECTORY} DOES_SUBDIRECTORY_CONTAIN_CMAKELISTS)
-	if (${DOES_SUBDIRECTORY_CONTAIN_CMAKELISTS})
+	contains_cmakelists(${SUBDIRECTORY} SUBDIRECTORY_CONTAINS_CMAKELISTS)
+	if (${SUBDIRECTORY_CONTAINS_CMAKELISTS})
 		add_subdirectory(${SUBDIRECTORY})
 	endif()
 endfunction()
+
 
 # iterate over subdirectories in the current folder
 file(GLOB FAE_EXAMPLE_SUBDIRS LIST_DIRECTORIES true *)
@@ -22,6 +24,7 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 		maybe_add_subdirectory(${SUBDIRECTORY})
 		get_filename_component(SUBDIRECTORY_NAME ${SUBDIRECTORY} NAME)
 		file(GLOB_RECURSE SUBDIRECTORY_SOURCES CONFIGURE_DEPENDS
+			"${SUBDIRECTORY}/*.hpp"	
 			"${SUBDIRECTORY}/*.cpp"
 		)
 		add_executable(${SUBDIRECTORY_NAME})
@@ -58,24 +61,13 @@ foreach(SUBDIRECTORY ${FAE_EXAMPLE_SUBDIRS})
 				${SUBDIRECTORY_SOURCES}
 		)
 
-		if (NOT DEFINED EMSCRIPTEN)
-			if(${BUILD_SHARED_LIBS})
-				add_custom_command(
-					TARGET ${SUBDIRECTORY_NAME}
-					POST_BUILD
-						COMMAND ${CMAKE_COMMAND} -E copy_if_different
-						$<TARGET_FILE:${PROJECT_NAME}::${PROJECT_NAME}>
-						$<TARGET_FILE_DIR:${SUBDIRECTORY_NAME}>
-				)
-				
-				# custom target version
-				# add_custom_target(example_copy_dll ALL
-				# 	COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    			# 	$<TARGET_FILE:${PROJECT_NAME}::${PROJECT_NAME}>
-				# 	$<TARGET_FILE_DIR:${SUBDIRECTORY_NAME}>
-				# )
-				# add_dependencies(${SUBDIRECTORY_NAME} example_copy_dll)
-			endif()
+		if (NOT DEFINED EMSCRIPTEN AND ${BUILD_SHARED_LIBS})
+			add_custom_target(${SUBDIRECTORY_NAME}_copy_dlls ALL
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    			$<TARGET_FILE:${PROJECT_NAME}::${PROJECT_NAME}>
+				$<TARGET_FILE_DIR:${SUBDIRECTORY_NAME}>
+			)
+			add_dependencies(${SUBDIRECTORY_NAME} ${SUBDIRECTORY_NAME}_copy_dlls)
 		endif()
 
 		target_link_libraries(${SUBDIRECTORY_NAME} PRIVATE ${PROJECT_NAME}::${PROJECT_NAME})

@@ -9,19 +9,19 @@ namespace fae
     auto application::step() -> void
     {
         scheduler.invoke(pre_update_step{
-            .resources = resources,
+            .global_entity = global_entity,
             .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });
         scheduler.invoke(update_step{
-            .resources = resources,
+            .global_entity = global_entity,
             .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });
         scheduler.invoke(post_update_step{
-            .resources = resources,
+            .global_entity = global_entity,
             .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
@@ -30,13 +30,13 @@ namespace fae
         if (!is_running)
         {
             scheduler.invoke(stop_step{
-                .resources = resources,
+                .global_entity = global_entity,
                 .assets = assets,
                 .scheduler = scheduler,
                 .ecs_world = ecs_world,
             });
             scheduler.invoke(deinit_step{
-                .resources = resources,
+                .global_entity = global_entity,
                 .assets = assets,
                 .scheduler = scheduler,
                 .ecs_world = ecs_world,
@@ -56,13 +56,13 @@ namespace fae
                 is_running = false;
             });
         scheduler.invoke(init_step{
-            .resources = resources,
+            .global_entity = global_entity,
             .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,
         });
         scheduler.invoke(start_step{
-            .resources = resources,
+            .global_entity = global_entity,
             .assets = assets,
             .scheduler = scheduler,
             .ecs_world = ecs_world,

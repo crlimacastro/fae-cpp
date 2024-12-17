@@ -1,3 +1,6 @@
+# Downloads CPM.cmake and includes it.
+# ARGS
+# VERSION - Version of CPM.cmake to download (a git tag or "master" by default)
 function (get_cpm)
     set(oneValueArgs
         VERSION
@@ -24,18 +27,10 @@ function (get_cpm)
   # Expand relative path. This is important if the provided path contains a tilde (~)
   get_filename_component(GET_CPM_DOWNLOAD_LOCATION ${GET_CPM_DOWNLOAD_LOCATION} ABSOLUTE)
 
-  # If release already downloaded, don't download again. Always download master as it may have changed since last download
+  # If the release is already downloaded, don't download again. Always download master as it may have changed since the last configuration
   if (NOT EXISTS ${GET_CPM_DOWNLOAD_LOCATION} OR GET_CPM_VERSION STREQUAL "master")
-    if (GET_CPM_VERSION STREQUAL "master")
-        set(GET_CPM_URL "https://raw.githubusercontent.com/cpm-cmake/CPM.cmake/master/cmake/CPM.cmake")
-    else()
-        set(GET_CPM_URL "https://github.com/cpm-cmake/CPM.cmake/releases/download/${GET_CPM_VERSION}/CPM.cmake")
-    endif()
-    file(DOWNLOAD ${GET_CPM_URL} ${GET_CPM_DOWNLOAD_LOCATION})
+    file(DOWNLOAD "https://raw.githubusercontent.com/cpm-cmake/CPM.cmake/${GET_CPM_VERSION}/cmake/CPM.cmake" ${GET_CPM_DOWNLOAD_LOCATION})
   endif()
 
   include(${GET_CPM_DOWNLOAD_LOCATION})
-  if (GET_CPM_VERSION STREQUAL "master")
-    message(WARNING "To use a specific version of CPM, set the VERSION parameter of this 'get_cpm' function.")
-  endif()
 endfunction()

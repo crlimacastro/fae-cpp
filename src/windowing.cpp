@@ -1,14 +1,17 @@
 #include "fae/windowing.hpp"
 
-#include "fae/resource_manager.hpp"
+#include <SDL3/SDL.h>
+
 #include "fae/application/application.hpp"
+#include "fae/logging.hpp"
+#include "fae/sdl.hpp"
 
 namespace fae
 {
     auto show_primary_window_after_first_render(const fae::first_render_end& e) noexcept -> void
     {
-        e.resources.use_resource<fae::primary_window>([](primary_window& primary)
-            { primary.window().show(); });
+        e.global_entity.use_component<fae::primary_window>([&](primary_window& primary)
+            { entity_commands{ .id=primary.window_entity, .registry=e.ecs_world.registry }.get_component<fae::window>()->show(); });
     }
 
     auto update_windows(const update_step& step) noexcept -> void
@@ -17,52 +20,6 @@ namespace fae
         {
             window.update();
         }
-    }
-
-    [[nodiscard]] auto make_sdl_window(fae::sdl_window& window) noexcept -> fae::window
-    {
-        return fae::window{
-            .get_title = [&]()
-            { return SDL_GetWindowTitle(window.raw.get()); },
-            .set_title = [&](std::string_view value)
-            { SDL_SetWindowTitle(window.raw.get(), value.data()); },
-            .get_size = [&]()
-            {
-				int width{}, height{};
-				SDL_GetWindowSize(window.raw.get(), &width, &height);
-				return fae::window::size
-				{
-					.width = static_cast<std::size_t>(width),
-					.height = static_cast<std::size_t>(height),
-				}; },
-            .set_size = [&](std::size_t width, std::size_t height)
-            { SDL_SetWindowSize(window.raw.get(), static_cast<int>(width), static_cast<int>(height)); },
-            .get_position = [&]()
-            {
-                int x, y;
-                SDL_GetWindowPosition(window.raw.get(), &x, &y);
-                return fae::window::position{ .x = x, .y = y }; },
-            .set_position = [&](int x, int y)
-            { SDL_SetWindowPosition(window.raw.get(), x, y); },
-            .show = [&]()
-            { SDL_ShowWindow(window.raw.get()); },
-            .hide = [&]()
-            { SDL_HideWindow(window.raw.get()); },
-            .update = [&]()
-            {
-                // do nothing
-            },
-            .should_close = [&]()
-            { return window.should_close; },
-            .close = [&]()
-            { window.should_close = true; },
-            .is_fullscreen = [&]()
-            { return SDL_GetWindowFlags(window.raw.get()) & SDL_WINDOW_FULLSCREEN; },
-            .set_fullscreen = [&](bool value)
-            { SDL_SetWindowFullscreen(window.raw.get(), value ? SDL_TRUE : SDL_FALSE); },
-            .is_focused = [&]()
-            { return window.is_focused; },
-        };
     }
 
     auto windowing_plugin::init(application& app) const noexcept -> void
@@ -83,28 +40,20 @@ namespace fae
             flags |= SDL_WINDOW_FULLSCREEN;
         }
 
-        auto maybe_sdl_window = sdl_window::create(sdl_window::options{
-            .title = window_title,
-            .width = window_width,
-            .height = window_height,
-            .is_resizable = is_window_resizable,
-            .is_hidden = should_hide_window_until_first_render,
-            .is_fullscreen = is_window_fullscreen,
-        });
-        if (!maybe_sdl_window)
+        auto window = SDL_CreateWindow(window_title.c_str(), static_cast<int>(window_width), static_cast<int>(window_height), flags);
+        if (!window)
         {
             fae::log_error(std::format("could not create window: {}", SDL_GetError()));
             return;
         }
-        auto& sdl_window = *maybe_sdl_window;
         auto window_entity = app.ecs_world.create_entity();
-        auto& sdl_window_component = window_entity.set_and_get_component<fae::sdl_window>(std::move(sdl_window));
-        auto window = make_sdl_window(sdl_window_component);
+        auto window_component = window_entity.get_or_set_component<SDL_Window*>(std::move(window));
         window_entity
-        .set_component<name>(name{ .value = "primary window" })
-        .set_component<fae::window>(std::move(window));
-        app.emplace_resource<primary_window>(primary_window{
-            .window_entity = window_entity });
+            .set_component<name>(name{ .value = "primary window" })
+            .set_component<fae::window>(std::move(window_from_sdl_window(window_component)));
+        app.set_global_component<primary_window>(primary_window{
+            .window_entity = window_entity.id,
+        });
         if (should_hide_window_until_first_render)
         {
             app.add_system<first_render_end>(show_primary_window_after_first_render);

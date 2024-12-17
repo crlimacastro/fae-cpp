@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29.3)
+cmake_minimum_required(VERSION 3.31.1)
 
 project(
     fae
@@ -7,17 +7,15 @@ project(
     DESCRIPTION "fae game framework (core library of the fae game engine)"
 )
 
-# options
-set(FAE_CPM_VERSION "v0.39.0" CACHE STRING "Which version of CPM to use (tag or \"master\")")
+set(FAE_CPM_VERSION "v0.40.2" CACHE STRING "Which version of CPM to use (a git tag or \"master\")")
 option(FAE_ENABLE_WARNINGS "Enable compilation warnings" OFF)
 option(FAE_ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
-option(FAE_USE_BUILD_ASSET_DIR "Use assets directory in the build folder. Switch ON for release builds" OFF)
+option(FAE_USE_BUILD_ASSET_DIR "Use assets directory in the build folder. Switch ON for release builds" ON)
 option(FAE_BUILD_EXAMPLES "Build examples" ON)
 # TODO option(FAE_BUILD_TESTS "Build tests" OFF)
 # TODO option(FAE_BUILD_BENCHMARKS "Build benchmarks" OFF))
 # TODO option(FAE_BUILD_DOCS "Build documentation" OFF)
 
-# dependencies
 include(cmake/get_cpm.cmake)
 get_cpm(VERSION ${FAE_CPM_VERSION})
 CPMUsePackageLock(package-lock.cmake)
@@ -27,35 +25,26 @@ CPMAddPackage("gh:skypjack/entt#v3.13.2")
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
-	GIT_TAG 490f7af92b958c52a920fbc313c5568d3c7550d7
+	GIT_TAG 2f59a1ce442bec93c8cef525341b2c0338bf024c
 	OPTIONS
-		"EXCLUDE_FROM_ALL ON"
 		"SYSTEM ON"
+		"EXCLUDE_FROM_ALL ON"
 		"SDL_SHARED OFF"
 		"SDL_STATIC ON"
 )
 if(NOT DEFINED EMSCRIPTEN)
 	CPMAddPackage(
 		NAME dawn
-		GITHUB_REPOSITORY google/dawn
-		GIT_TAG main
+		GIT_REPOSITORY https://dawn.googlesource.com/dawn.git
+  		GIT_TAG a6aa2a9eaf8f295f65f01c677bce1bc6b35b3ab7
 		OPTIONS
-			"EXCLUDE_FROM_ALL ON"
-			"SYSTEM ON"
 			"DAWN_FETCH_DEPENDENCIES ON"
 			"BUILD_SHARED_LIBS OFF"
 	)
 endif()
 CPMAddPackage("gh:assimp/assimp#v5.4.1")
 CPMAddPackage("gh:gracicot/stb-cmake#d42aa7a48ff0479fa9cab999d035a901cc4c4134")
-CPMAddPackage(
-	NAME imgui
-	GITHUB_REPOSITORY ocornut/imgui
-	GIT_TAG v1.91.0-docking
-	OPTIONS
-		"EXCLUDE_FROM_ALL ON"
-		"SYSTEM ON"
-)
+CPMAddPackage("gh:ocornut/imgui#v1.91.5-docking")
 include(cmake/imgui.cmake)
 
 configure_file(config.hpp.in "include/${PROJECT_NAME}/config.hpp")
@@ -69,11 +58,15 @@ set_target_properties(${PROJECT_NAME}
         CXX_STANDARD_REQUIRED ON
 		CXX_EXTENSIONS OFF
         COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
-        LINKER_LANGUAGE CXX
-		LINK_FLAGS
-			"--use-preload-plugins"			
+        LINKER_LANGUAGE CXX	
 )
 
+target_compile_features(${PROJECT_NAME}
+	PUBLIC
+		cxx_std_23
+)
+
+# define platform
 if(DEFINED EMSCRIPTEN)
 	target_compile_definitions(${PROJECT_NAME}
 		PUBLIC
@@ -96,6 +89,7 @@ elseif(UNIX)
 	)
 endif()
 
+# define dll export if building as a dynamic library
 if(BUILD_SHARED_LIBS)
 	target_compile_definitions(${PROJECT_NAME}
 		PRIVATE
@@ -103,6 +97,7 @@ if(BUILD_SHARED_LIBS)
 	)
 endif()
 
+# define where assets are located
 if(DEFINED EMSCRIPTEN)
 	target_compile_definitions(${PROJECT_NAME}
 		PUBLIC
@@ -125,11 +120,7 @@ else()
 	endif()
 endif()
 
-target_compile_features(${PROJECT_NAME}
-	PUBLIC
-		cxx_std_23
-)
-
+# handle warnings
 if(FAE_ENABLE_WARNINGS)
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 		target_compile_options(${PROJECT_NAME}
@@ -142,7 +133,6 @@ if(FAE_ENABLE_WARNINGS)
 				"-Wall"
 				"-Wextra"
 				"-Wpedantic"
-				"-Wno-reorder-init-list"
 		)
 	endif()
 endif()
@@ -164,8 +154,6 @@ if(DEFINED EMSCRIPTEN)
 	)
 endif()
 
-
-
 target_include_directories(${PROJECT_NAME}
 	PUBLIC
 		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -177,6 +165,7 @@ target_include_directories(${PROJECT_NAME}
 
 file(GLOB_RECURSE FAE_SOURCES CONFIGURE_DEPENDS
 	${CMAKE_CURRENT_SOURCE_DIR}/include/fae/*.hpp	
+	${CMAKE_CURRENT_BINARY_DIR}/include/fae/*.hpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp
 	${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
 )
@@ -185,7 +174,6 @@ target_sources(${PROJECT_NAME}
 	PRIVATE
 		${FAE_SOURCES}
 )
-
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
 		magic_enum::magic_enum
@@ -199,8 +187,8 @@ target_link_libraries(${PROJECT_NAME}
 if(NOT DEFINED EMSCRIPTEN)
 	target_link_libraries(${PROJECT_NAME}
 		PUBLIC
-			webgpu_cpp
 			webgpu_dawn
+			webgpu_cpp
 	)
 endif()
 

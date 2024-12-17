@@ -1,4 +1,5 @@
 #pragma once
+
 #include <imgui.h>
 #include <misc/cpp/imgui_stdlib.h>
 
@@ -9,8 +10,8 @@ namespace fae
         using namespace ImGui;
     }
 
+struct entity_commands;
     struct application;
-    struct resource_manager;
     struct asset_manager;
     struct scheduler;
     struct ecs_world;
@@ -24,7 +25,7 @@ namespace fae
 
     struct ui_begin_step
     {
-        resource_manager& resources;
+        entity_commands& global_entity;
         asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
@@ -32,7 +33,7 @@ namespace fae
 
     struct ui_render_step
     {
-        resource_manager& resources;
+        entity_commands& global_entity;
         asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
@@ -40,7 +41,7 @@ namespace fae
 
     struct ui_end_step
     {
-        resource_manager& resources;
+        entity_commands& global_entity;
         asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;

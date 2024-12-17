@@ -5,7 +5,6 @@
 namespace fae
 {
     struct application;
-    struct resource_manager;
     struct asset_manager;
     struct scheduler;
     struct ecs_world;
@@ -14,12 +13,12 @@ namespace fae
 
     struct editor
     {
-        entity_id_t selected_entity;
+        entity selected_entity;
     };
 
     struct editor_render_step
     {
-        resource_manager& resources;
+        entity_commands& global_entity;
         asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;

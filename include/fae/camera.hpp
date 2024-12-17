@@ -1,7 +1,6 @@
 #pragma once
 
 #include "fae/entity.hpp"
-#include "fae/math.hpp"
 
 namespace fae
 {
@@ -15,15 +14,5 @@ namespace fae
     struct active_camera
     {
         fae::entity camera_entity;
-
-        [[nodiscard]] auto camera() noexcept -> camera&
-        {
-            return *camera_entity.get_component<fae::camera>();
-        }
-
-        [[nodiscard]] auto transform() noexcept -> transform&
-        {
-            return *camera_entity.get_component<fae::transform>();
-        }
     };
 }

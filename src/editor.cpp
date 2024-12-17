@@ -13,7 +13,7 @@ namespace fae
     auto editor_plugin::init(application& app) const noexcept -> void
     {
         app
-            .insert_resource(editor{
+            .set_global_component(editor{
                 .selected_entity = entt::null,
             })
             .add_system<ui_render_step>(ui_render_editor)
@@ -26,7 +26,7 @@ namespace fae
     {
         fae::ui::DockSpaceOverViewport(0U, nullptr, ImGuiDockNodeFlags_PassthruCentralNode);
         step.scheduler.invoke(editor_render_step{
-            .resources = step.resources,
+            .global_entity = step.global_entity,
             .assets = step.assets,
             .scheduler = step.scheduler,
             .ecs_world = step.ecs_world,
@@ -39,9 +39,9 @@ namespace fae
 
         if (ImGui::IsKeyPressed(ImGuiKey_Delete))
         {
-            step.resources.use_resource<editor>([&](editor& editor)
+            step.global_entity.use_component<editor>([&](editor& editor)
                 { 
-                    auto entity = fae::entity
+                    auto entity = fae::entity_commands
                     {
                         .id = editor.selected_entity,
                         .registry = step.ecs_world.registry,
@@ -61,7 +61,7 @@ namespace fae
             {
                 if (fae::ui::IsItemClicked())
                 {
-                    step.resources.use_resource<editor>([&](editor& editor)
+                    step.global_entity.use_component<editor>([&](editor& editor)
                         { editor.selected_entity = entity.id; });
                 }
             }
@@ -71,13 +71,13 @@ namespace fae
 
     auto ui_render_entity_inspector(const editor_render_step& step) noexcept -> void
     {
-        step.resources.use_resource<editor>([&](editor& editor)
+        step.global_entity.use_component<editor>([&](editor& editor)
             {
                     fae::ui::Begin("Inspector");
                     static entt::entity prev_selected_entity = entt::null;
                 if (editor.selected_entity != entt::null)
                 {
-                    auto entity = fae::entity{
+                    auto entity = fae::entity_commands{
                         .id = editor.selected_entity,
                         .registry = step.ecs_world.registry,
                     };
@@ -135,7 +135,7 @@ namespace fae
     auto ui_render_resources(const editor_render_step& step) noexcept -> void
     {
         fae::ui::Begin("Resources");
-        step.resources.use_resource<fae::renderer>(
+        step.global_entity.use_component<fae::renderer>(
             [&](fae::renderer& renderer)
             {
                 if (fae::ui::CollapsingHeader("Renderer", ImGuiTreeNodeFlags_DefaultOpen))

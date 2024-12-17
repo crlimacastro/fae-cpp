@@ -1,13 +1,11 @@
 #pragma once
 
 #include <any>
-#include <functional>
 #include <optional>
 #include <typeindex>
 #include <unordered_map>
 #include <concepts>
 #include <filesystem>
-#include <fstream>
 
 #include "fae/core/optional_reference.hpp"
 

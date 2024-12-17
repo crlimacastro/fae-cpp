@@ -1,5 +1,7 @@
 #include "fae/color.hpp"
 
+#include <cmath>
+
 namespace fae
 {
     auto color_rgba::from_hsva(const color_hsva& color) noexcept -> color_rgba

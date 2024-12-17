@@ -8,17 +8,16 @@
 #include "fae/event.hpp"
 #include "fae/logging.hpp"
 #include "fae/math.hpp"
+#include "fae/cursor.hpp"
 
-#include "fae/resource_manager.hpp"
 #include "fae/asset_manager.hpp"
 #include "fae/scheduler.hpp"
 
-#include "fae/ecs_world.hpp"
 #include "fae/entity.hpp"
+#include "fae/ecs_world.hpp"
 
 #include "fae/application/application.hpp"
 
-#include "fae/default_plugins.hpp"
 #include "fae/sdl.hpp"
 #include "fae/webgpu/webgpu.hpp"
 #include "fae/time.hpp"
@@ -27,6 +26,6 @@
 #include "fae/camera.hpp"
 #include "fae/lighting.hpp"
 #include "fae/windowing.hpp"
-#include "fae/cursor.hpp"
 #include "fae/imgui.hpp"
 #include "fae/ui.hpp"
+#include "fae/default_plugins.hpp"

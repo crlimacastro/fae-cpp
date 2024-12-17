@@ -8,6 +8,8 @@ namespace fae
 
     struct render_pipeline
     {
+        void* data;
+
         std::function<std::size_t()> get_id;
         std::function<void(std::size_t)> prepare_render_pass;
 

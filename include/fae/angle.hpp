@@ -1,4 +1,5 @@
 #pragma once
+
 #include <numbers>
 
 namespace fae
@@ -115,7 +116,7 @@ namespace fae
         float m_radians;
     };
 
-    struct unit_angle : public angle
+    struct unit_angle : angle
     {
         constexpr unit_angle(angle angle) noexcept : fae::angle(angle.radians())
         {

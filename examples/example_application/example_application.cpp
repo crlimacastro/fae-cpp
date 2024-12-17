@@ -11,7 +11,7 @@ struct rotate
 
 auto start(const fae::start_step& step) noexcept -> void
 {
-    step.resources.use_resource<fae::ui_settings>([&](fae::ui_settings& ui_settings)
+    step.global_entity.use_component<fae::ui_settings>([&](fae::ui_settings& ui_settings)
         { ui_settings.hide_ui = true; });
     fae::hide_cursor();
 
@@ -28,8 +28,8 @@ auto start(const fae::start_step& step) noexcept -> void
             .rotation = fae::math::angleAxis(fae::math::radians(180.f), fae::vec3(0.0f, 1.0f, 0.0f)) * fae::math::quat{ 0.f, 0.f, 0.f, 1.f },
         })
         .set_component<fae::camera>(fae::camera{});
-    step.resources.insert<fae::active_camera>(fae::active_camera{
-        .camera_entity = camera_entity,
+    step.global_entity.set_component<fae::active_camera>(fae::active_camera{
+        .camera_entity = camera_entity.id,
     });
 
     step.ecs_world.create_entity()
@@ -84,26 +84,12 @@ auto start(const fae::start_step& step) noexcept -> void
         .set_component<fae::model>(fae::model{
             .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
         });
-
-        step.ecs_world.create_entity()
-        .set_component<fae::name>(fae::name{ "boat" })
-        .set_component<fae::transform>(fae::transform{
-            .position = { -17.f, 0.f, 23.f },
-            .rotation = fae::math::angleAxis(fae::math::radians(180.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
-            .scale = fae::vec3{ 1.f, 1.f, 1.f },
-        })
-        .set_component<fae::model>(fae::model{
-            .mesh = *step.assets.load<fae::mesh>("fourareen/fourareen.obj"),
-            .material = fae::material {
-                .diffuse = *step.assets.load<fae::texture>("fourareen/fourareen2K_albedo.jpg"),
-            },
-        });
 }
 
 auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void
 {
-    auto& time = step.resources.get_or_emplace<fae::time>(fae::time{});
-    step.resources.use_resource<fae::renderer>(
+    auto& time = step.global_entity.get_or_set_component<fae::time>(fae::time{});
+    step.global_entity.use_component<fae::renderer>(
         [&](fae::renderer& renderer)
         {
             const auto speed = 200.f;
@@ -125,18 +111,20 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
 
     static auto had_focus = true;
     auto has_focus = false;
-    step.resources.use_resource<fae::primary_window>(
+    step.global_entity.use_component<fae::primary_window>(
         [&](fae::primary_window& primary_window)
         {
-            if (!primary_window.window_entity.valid())
+            auto window_entity = step.ecs_world.get_entity(primary_window.window_entity);
+            if (!window_entity.valid())
                 return;
-            auto& window = primary_window.window();
+            auto maybe_window = window_entity.get_component<fae::window>();
+            auto& window = *maybe_window;
             has_focus = window.is_focused();
         });
 
     if (has_focus && !had_focus)
     {
-        auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
+        auto input = step.global_entity.get_or_set_component<fae::input>(fae::input{});
         input.get_mouse_delta();
         had_focus = has_focus;
         return;
@@ -149,7 +137,7 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
     }
 
     static bool enabled = true;
-    auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
+    auto input = step.global_entity.get_or_set_component<fae::input>(fae::input{});
     if (input.is_key_just_pressed(fae::key::lalt) || input.is_key_just_pressed(fae::key::grave))
     {
         enabled = !enabled;
@@ -157,26 +145,28 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
         {
             fae::hide_cursor();
             input.get_mouse_delta();
-            step.resources.use_resource<fae::ui_settings>([&](fae::ui_settings& ui_settings)
+            step.global_entity.use_component<fae::ui_settings>([&](fae::ui_settings& ui_settings)
                 { ui_settings.hide_ui = true; });
         }
         else
         {
             fae::show_cursor();
-            step.resources.use_resource<fae::ui_settings>([&](fae::ui_settings& ui_settings)
+            step.global_entity.use_component<fae::ui_settings>([&](fae::ui_settings& ui_settings)
                 { ui_settings.hide_ui = false; });
         }
     }
     if (!enabled)
         return;
 
-    auto& time = step.resources.get_or_emplace<fae::time>(fae::time{});
-    step.resources.use_resource<fae::active_camera>(
+    auto& time = step.global_entity.get_or_set_component<fae::time>(fae::time{});
+    step.global_entity.use_component<fae::active_camera>(
         [&](fae::active_camera& active_camera)
         {
-            if (!active_camera.camera_entity.valid())
+            auto camera_entity = step.ecs_world.get_entity(active_camera.camera_entity);
+            if (!camera_entity.valid())
                 return;
-            auto& camera_transform = active_camera.transform();
+                auto maybe_camera_transform = camera_entity.get_component<fae::transform>();
+            auto& camera_transform = *maybe_camera_transform;
 
             auto move_input = fae::vec3(0.0f, 0.0f, 0.0f);
 
@@ -236,7 +226,7 @@ auto fps_control_active_camera(const fae::update_step& step) noexcept -> void
 auto lock_mouse(const fae::update_step& step) noexcept -> void
 {
     bool is_ui_hidden = false;
-    step.resources.use_resource<fae::ui_settings>(
+    step.global_entity.use_component<fae::ui_settings>(
         [&](fae::ui_settings& ui_settings)
         {
             is_ui_hidden = ui_settings.hide_ui;
@@ -246,10 +236,12 @@ auto lock_mouse(const fae::update_step& step) noexcept -> void
         return;
     }
 
-    step.resources.use_resource<fae::primary_window>(
+    step.global_entity.use_component<fae::primary_window>(
         [&](fae::primary_window& primary_window)
         {
-            auto& window = primary_window.window();
+            auto window_entity = step.ecs_world.get_entity(primary_window.window_entity);
+            auto maybe_window = window_entity.get_component<fae::window>();
+            auto& window = *maybe_window;
 
             static auto was_focused = false;
             auto is_focused = window.is_focused();
@@ -269,31 +261,31 @@ auto lock_mouse(const fae::update_step& step) noexcept -> void
             auto window_position = window.get_position();
             auto window_size = window.get_size();
 
-            auto input = step.resources.get_or_emplace<fae::input>(fae::input{});
+            auto input = step.global_entity.get_or_set_component<fae::input>(fae::input{});
 
             auto global_mouse_position = input.get_global_mouse_position();
             if (global_mouse_position.x < window_position.x)
             {
-                input.set_local_mouse_position(primary_window.window_entity, window_size.width, global_mouse_position.y);
+                input.set_local_mouse_position(window_entity, window_size.width, global_mouse_position.y);
             }
             if (global_mouse_position.x > window_position.x + window_size.width)
             {
-                input.set_local_mouse_position(primary_window.window_entity, 0, global_mouse_position.y);
+                input.set_local_mouse_position(window_entity, 0, global_mouse_position.y);
             }
             if (global_mouse_position.y < window_position.y)
             {
-                input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, window_size.height);
+                input.set_local_mouse_position(window_entity, global_mouse_position.x, window_size.height);
             }
             if (global_mouse_position.y > window_position.y + window_size.height)
             {
-                input.set_local_mouse_position(primary_window.window_entity, global_mouse_position.x, 0);
+                input.set_local_mouse_position(window_entity, global_mouse_position.x, 0);
             }
         });
 }
 
 auto rotate_system(const fae::update_step& step) noexcept -> void
 {
-    auto& time = step.resources.get_or_emplace<fae::time>(fae::time{});
+    auto& time = step.global_entity.get_or_set_component<fae::time>(fae::time{});
     for (auto& [entity, transform, rotate] : step.ecs_world.query<fae::transform, const rotate>())
     {
         transform.rotation *= fae::math::angleAxis(fae::math::radians(rotate.speed) * time.delta(), rotate.axis);
@@ -343,7 +335,7 @@ auto ui(const fae::ui_render_step& step) noexcept -> void
     fae::ui::End();
 }
 
-auto fae_main(int argc, char* argv[]) -> int
+auto main(int argc, char* argv[]) -> int
 {
     fae::application{}
         .add_plugin(fae::default_plugins{})

@@ -2,13 +2,11 @@
 
 #include <functional>
 
-#include "fae/sdl.hpp"
-#include "fae/windowing.hpp"
-
 namespace fae
 {
     struct application;
     struct update_step;
+    struct entity_commands;
 
     enum struct key
     {
@@ -301,14 +299,12 @@ namespace fae
         std::function<mouse_position()> get_global_mouse_position;
 		std::function<mouse_position()> get_local_mouse_position;
 		std::function<void(float x, float y)> set_global_mouse_position;
-		std::function<void(entity window_entity, float x, float y)> set_local_mouse_position;
+		std::function<void(entity_commands& window_entity, float x, float y)> set_local_mouse_position;
     };
 
-    [[nodiscard]] auto to_sdl_keycode(const fae::key key) noexcept -> SDL_Keycode;
     auto quit_on_esc(const update_step& step) noexcept -> void;
     auto toggle_fullscreen_on_alt_enter(const update_step& step) noexcept -> void;
 
-    auto input_from(fae::sdl_input& sdl_input) noexcept -> fae::input;
 
     struct input_plugin
     {

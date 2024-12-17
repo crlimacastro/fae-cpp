@@ -15,7 +15,7 @@
 namespace fae
 {
     struct application;
-    struct resource_manager;
+    struct entity_commands;
     struct asset_manager;
     struct scheduler;
     struct ecs_world;
@@ -24,7 +24,7 @@ namespace fae
 
     struct render_step
     {
-        resource_manager& resources;
+        entity_commands& global_entity;
         asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;

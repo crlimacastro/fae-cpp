@@ -12,6 +12,7 @@ namespace fae
             .add_plugin(input_plugin)
             .add_plugin(rendering_plugin)
             .add_plugin(lighting_plugin)
-            .add_plugin(ui_plugin);
+            .add_plugin(ui_plugin)
+            ;
     }
 }

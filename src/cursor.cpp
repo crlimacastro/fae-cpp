@@ -1,7 +1,6 @@
 #include "fae/cursor.hpp"
 
 #include <SDL3/SDL.h>
-#include <imgui.h>
 
 namespace fae
 {

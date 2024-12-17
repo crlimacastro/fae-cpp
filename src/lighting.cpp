@@ -7,14 +7,14 @@ namespace fae
     auto lighting_plugin::init(application& app) const noexcept -> void
     {
         app
-            .insert_resource(ambient_light_info{})
-            .insert_resource(directional_light_info{})
+            .set_global_component(ambient_light_info{})
+            .set_global_component(directional_light_info{})
             .add_system<update_step>(update_lighting);
     }
 
     auto update_lighting(const update_step& step) noexcept -> void
     {
-        step.resources.use_resource<ambient_light_info>([&](ambient_light_info& info)
+        step.global_entity.use_component<ambient_light_info>([&](ambient_light_info& info)
             {
                 info.clear();
                 auto i = 0;
@@ -25,7 +25,7 @@ namespace fae
                 }
                 info.lights.count = i; });
 
-        step.resources.use_resource<directional_light_info>([&](directional_light_info& info)
+        step.global_entity.use_component<directional_light_info>([&](directional_light_info& info)
             {
                 info.clear();
                 auto i = 0;

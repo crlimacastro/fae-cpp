@@ -12,8 +12,6 @@ namespace fae
 {
     [[nodiscard]] auto request_adapter_sync(wgpu::Instance instance, wgpu::RequestAdapterOptions adapter_options = {}) noexcept -> wgpu::Adapter;
     [[nodiscard]] auto request_device_sync(wgpu::Adapter adapter, wgpu::DeviceDescriptor device_descriptor = {}) noexcept -> wgpu::Device;
-    [[nodiscard]] auto get_features(const wgpu::Adapter& adapter) noexcept -> std::vector<wgpu::FeatureName>;
-    [[nodiscard]] auto get_features(const wgpu::Device& device) noexcept -> std::vector<wgpu::FeatureName>;
     [[nodiscard]] wgpu::Buffer create_buffer(const wgpu::Device& device,
         std::string_view label,
         std::size_t size,

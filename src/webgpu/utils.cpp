@@ -26,12 +26,12 @@ namespace fae
         instance.RequestAdapter(&adapter_options,
             wgpu::RequestAdapterCallbackInfo{
                 .mode = wgpu::CallbackMode::AllowSpontaneous,
-                .callback = [](WGPURequestAdapterStatus cStatus, WGPUAdapter cAdapter, const char* message, void* userdata)
+                .callback = [](WGPURequestAdapterStatus cStatus, WGPUAdapter cAdapter, WGPUStringView message, void* userdata)
                 {
                     const auto status = static_cast<wgpu::RequestAdapterStatus>(cStatus);
                     if (status != wgpu::RequestAdapterStatus::Success)
                     {
-                        fae::log_fatal(std::format("failed to request adapter: {}", message));
+                        fae::log_fatal(std::format("failed to request adapter: {}", message.data));
                     }
                     auto data = reinterpret_cast<request_adapter_data*>(userdata);
                     data->adapter = wgpu::Adapter::Acquire(cAdapter);
@@ -73,12 +73,12 @@ namespace fae
         adapter.RequestDevice(&device_descriptor,
             wgpu::RequestDeviceCallbackInfo{
                 .mode = wgpu::CallbackMode::AllowSpontaneous,
-                .callback = [](WGPURequestDeviceStatus cStatus, WGPUDevice cDevice, char const* message, void* userdata)
+                .callback = [](WGPURequestDeviceStatus cStatus, WGPUDevice cDevice, WGPUStringView message, void* userdata)
                 {
                     const auto status = static_cast<wgpu::RequestDeviceStatus>(cStatus);
                     if (status != wgpu::RequestDeviceStatus::Success)
                     {
-                        fae::log_fatal(std::format("failed to request device: ", message));
+                        fae::log_fatal(std::format("failed to request device: ", message.data));
                     }
                     auto data = reinterpret_cast<request_device_data*>(userdata);
                     data->device = wgpu::Device::Acquire(cDevice);
@@ -104,22 +104,6 @@ namespace fae
         auto device = data->device;
         delete data;
         return device;
-    }
-
-    auto get_features(const wgpu::Adapter& adapter) noexcept -> std::vector<wgpu::FeatureName>
-    {
-        const auto feature_count = adapter.EnumerateFeatures(nullptr);
-        std::vector<wgpu::FeatureName> features(feature_count);
-        adapter.EnumerateFeatures(features.data());
-        return features;
-    }
-
-    auto get_features(const wgpu::Device& device) noexcept -> std::vector<wgpu::FeatureName>
-    {
-        const auto feature_count = device.EnumerateFeatures(nullptr);
-        std::vector<wgpu::FeatureName> features(feature_count);
-        device.EnumerateFeatures(features.data());
-        return features;
     }
 
     wgpu::Buffer create_buffer(const wgpu::Device& device,

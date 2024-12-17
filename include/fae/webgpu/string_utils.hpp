@@ -7,7 +7,6 @@
 
 namespace fae
 {
-    [[nodiscard]] auto to_string(const wgpu::AdapterProperties& adapter_properties) noexcept -> std::string;
     [[nodiscard]] auto to_string(const wgpu::Limits& limits, const std::string& indent) noexcept -> std::string;
     auto log_properties(const wgpu::Adapter& adapter) noexcept -> void;
     auto log_features(const wgpu::Adapter& adapter) noexcept -> void;

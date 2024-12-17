@@ -3,14 +3,13 @@
 #include <concepts>
 #include <unordered_set>
 
-#include "fae/core/optional_reference.hpp"
 #include "fae/ecs_world.hpp"
 #include "fae/event.hpp"
-#include "fae/resource_manager.hpp"
 #include "fae/asset_manager.hpp"
 #include "fae/scheduler.hpp"
-
-#include "application_step.hpp"
+#include "fae/ecs_world.hpp"
+#include "fae/entity.hpp"
+#include "fae/application/application_step.hpp"
 
 namespace fae
 {
@@ -36,37 +35,20 @@ namespace fae
     struct application
     {
         bool is_running{};
-        resource_manager resources{};
         asset_manager assets{};
         scheduler scheduler{};
         ecs_world ecs_world{};
         std::unordered_set<std::type_index> plugins{};
+        entity_commands global_entity = ecs_world.create_entity();
 
         auto step() -> void;
         ;
         auto run() -> void;
 
-        template <typename t_resource, typename... t_args>
-        [[maybe_unused]] inline auto
-        emplace_resource(t_args&&... args) noexcept -> application&
+        template <typename t_component>
+        [[maybe_unused]] inline auto set_global_component(t_component&& value) noexcept -> application&
         {
-            resources.emplace<t_resource>(std::forward<t_args>(args)...);
-            return *this;
-        }
-
-        template <typename t_resource>
-        [[maybe_unused]] inline auto
-        insert_resource(t_resource&& resource = {}) noexcept -> application&
-        {
-            resources.insert(std::forward<t_resource>(resource));
-            return *this;
-        }
-
-        template <typename t_resource>
-        [[nodiscard]] inline auto
-        insert_or_assign_resource(t_resource&& resource) noexcept -> application&
-        {
-            resources.insert_or_assign(std::forward<t_resource>(resource));
+            global_entity.set_component<t_component>(std::forward<t_component&&>(value));
             return *this;
         }
 

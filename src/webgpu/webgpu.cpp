@@ -22,7 +22,7 @@ namespace fae
             .add_plugin(windowing_plugin{})
             .add_system<window_resized>(reconfigure_on_window_resized);
 
-        auto& webgpu = app.resources.emplace_and_get<fae::webgpu>(fae::webgpu{
+        auto& webgpu = app.global_entity.get_or_set_component<fae::webgpu>(fae::webgpu{
             .instance = wgpu::CreateInstance(),
         });
         webgpu.adapter = request_adapter_sync(webgpu.instance, adapter_options);
@@ -30,24 +30,26 @@ namespace fae
 #ifndef FAE_PLATFORM_WEB
         webgpu.device.SetLoggingCallback(logging_callback, nullptr);
 #endif
-        webgpu.device.SetUncapturedErrorCallback(error_callback, nullptr);
-        auto maybe_primary_window = app.resources.get<primary_window>();
+        auto maybe_primary_window = app.global_entity.get_component<primary_window>();
         if (!maybe_primary_window)
         {
             fae::log_fatal("primary window resource not found");
         }
         auto primary_window = *maybe_primary_window;
-        auto maybe_sdl_window = primary_window.window_entity.get_component<sdl_window>();
+        auto maybe_sdl_window = app.ecs_world.get_entity(primary_window.window_entity).get_component<SDL_Window*>();
         if (!maybe_sdl_window)
         {
             fae::log_fatal("sdl window component not found in primary window entity");
         }
         auto& sdl_window = *maybe_sdl_window;
-        webgpu.surface = get_sdl_webgpu_surface(webgpu.instance, sdl_window.raw.get());
-        auto& window = primary_window.window();
+        webgpu.surface = get_sdl_webgpu_surface(webgpu.instance, sdl_window);
+        auto maybe_window = app.ecs_world.get_entity(primary_window.window_entity).get_component<fae::window>();
+        auto &window = *maybe_window;
         auto window_size = window.get_size();
 
-        auto surface_format = webgpu.surface.GetPreferredFormat(webgpu.adapter);
+        auto surface_capabilities = wgpu::SurfaceCapabilities{};
+        webgpu.surface.GetCapabilities(webgpu.adapter, &surface_capabilities);
+        auto surface_format = surface_capabilities.formats[0];
 
         auto surface_config = wgpu::SurfaceConfiguration{
             .device = webgpu.device,
@@ -62,7 +64,7 @@ namespace fae
 
     auto reconfigure_on_window_resized(const fae::window_resized& e) noexcept -> void
     {
-        e.resources.use_resource<fae::webgpu>([&](webgpu& webgpu)
+        e.global_entity.use_component<fae::webgpu>([&](webgpu& webgpu)
             {
             auto window_width = e.width;
             auto window_height = e.height;
@@ -74,9 +76,11 @@ namespace fae
 
             webgpu.surface.Unconfigure();
 
+        auto surface_capabilities = wgpu::SurfaceCapabilities{};
+        webgpu.surface.GetCapabilities(webgpu.adapter, &surface_capabilities);
             auto surface_config = wgpu::SurfaceConfiguration{
                 .device = webgpu.device,
-                .format = webgpu.surface.GetPreferredFormat(webgpu.adapter),
+                .format = surface_capabilities.formats[0],
                 .usage = wgpu::TextureUsage::RenderAttachment,
                 .width = static_cast<std::uint32_t>(window_width),
                 .height = static_cast<std::uint32_t>(window_height),

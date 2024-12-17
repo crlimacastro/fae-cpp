@@ -4,7 +4,6 @@
 
 #include "fae/core/vector.hpp"
 #include "fae/rendering/renderer.hpp"
-#include "fae/resource_manager.hpp"
 #include "fae/math.hpp"
 #include "fae/time.hpp"
 #include "fae/webgpu/webgpu.hpp"
@@ -16,20 +15,21 @@
 #include "fae/rendering/material.hpp"
 #include "fae/rendering/render_pass.hpp"
 #include "fae/rendering/model.hpp"
+#include "fae/ecs_world.hpp"
 
 #include "fae/webgpu/default_render_pipeline.hpp"
 
 namespace fae
 {
     [[nodiscard]] auto
-    make_webgpu_renderer(resource_manager& resources) noexcept -> renderer
+    make_webgpu_renderer(ecs_world& ecs_world, entity_commands& global_entity) noexcept -> renderer
     {
         return renderer{
             .get_clear_color =
                 [&]()
             {
                 auto clear_color = colors::black;
-                resources.use_resource<fae::webgpu>(
+                global_entity.use_component<fae::webgpu>(
                     [&](webgpu& webgpu)
                     {
                         clear_color = color{
@@ -48,7 +48,7 @@ namespace fae
             .set_clear_color =
                 [&](const color& value)
             {
-                resources.use_resource<fae::webgpu>(
+                global_entity.use_component<fae::webgpu>(
                     [&](webgpu& webgpu)
                     {
                         webgpu.clear_color = wgpu::Color{
@@ -63,41 +63,26 @@ namespace fae
                 [&](const fae::render_pipeline& render_pipeline)
             {
                 std::size_t id = 0;
-                resources.use_resource<fae::webgpu>(
+                global_entity.use_component<fae::webgpu>(
                     [&](webgpu& webgpu)
                     {
                         auto webgpu_render_pass = webgpu::render_pass{
                             .render_pipeline_id = render_pipeline.get_id(),
                             .render_commands = std::vector<webgpu::render_pass::render_command>(),
+                            .label = "fae_render_pass",
                         };
                         id = webgpu.render_passes.size();
                         webgpu.render_passes.push_back(webgpu_render_pass);
                         render_pipeline.prepare_render_pass(id);
 
-                        // auto ui_command_encoder = webgpu.device.CreateCommandEncoder();
-                        // auto ui_color_attachment = wgpu::RenderPassColorAttachment{
-                        //     .view = surface_texture_view,
-                        //     .depthSlice = WGPU_DEPTH_SLICE_UNDEFINED,
-                        //     .resolveTarget = nullptr,
-                        //     .loadOp = wgpu::LoadOp::Load,
-                        //     .storeOp = wgpu::StoreOp::Store,
-                        // };
-                        // auto ui_depth_attachment = wgpu::RenderPassDepthStencilAttachment{
-                        //     .view = webgpu.render_pipeline.depth_texture.CreateView(),
-                        //     .depthLoadOp = wgpu::LoadOp::Clear,
-                        //     .depthStoreOp = wgpu::StoreOp::Store,
-                        //     .depthClearValue = 1.0,
-                        //     .stencilReadOnly = true,
-                        // };
-                        // auto ui_render_pass_desc = wgpu::RenderPassDescriptor{
+                        // auto ui_render_pass = webgpu::render_pass{
+                        //     .render_pipeline_id = render_pipeline.get_id(),
+                        //     .render_commands = std::vector<webgpu::render_pass::render_command>(),
                         //     .label = "fae_ui_render_pass",
-                        //     .colorAttachmentCount = 1,
-                        //     .colorAttachments = &ui_color_attachment,
-                        //     .depthStencilAttachment = &ui_depth_attachment,
                         // };
-                        // auto ui_render_pass = ui_command_encoder.BeginRenderPass(&ui_render_pass_desc);
-                        // webgpu.render_pass.ui_command_encoder = ui_command_encoder;
-                        // webgpu.render_pass.ui_render_pass = ui_render_pass;
+                        // id = webgpu.render_passes.size();
+                        // webgpu.render_passes.push_back(ui_render_pass);
+                        // render_pipeline.prepare_render_pass(id);
                     });
 
                 return fae::render_pass{
@@ -110,7 +95,7 @@ namespace fae
                         // TODO
                     },
                     .end = [&, id]()
-                    { resources.use_resource<fae::webgpu>(
+                    { global_entity.use_component<fae::webgpu>(
                           [&](webgpu& webgpu)
                           {
                               auto& render_pass = webgpu.render_passes[id];
@@ -118,16 +103,19 @@ namespace fae
 
                               if (!render_pass.render_commands.empty())
                               {
-                                  resources.use_resource<fae::active_camera>([&](active_camera active_camera)
+                                  global_entity.use_component<fae::active_camera>([&](active_camera active_camera)
                                       {
-                                if (!active_camera.camera_entity.valid())
+                                        auto camera_entity = ecs_world.get_entity(active_camera.camera_entity);
+                                if (!camera_entity.valid())
                                     return;
-                            auto &camera = active_camera.camera();
-                            auto &camera_transform = active_camera.transform();
+                                    auto maybe_camera = camera_entity.get_component<fae::camera>();
+                            auto &camera = *maybe_camera;
+                            auto maybe_camera_transform = camera_entity.get_component<fae::transform>();
+                            auto &camera_transform = *maybe_camera_transform;
 
                             global_uniforms_t global_uniforms;
                             global_uniforms.camera_world_position = camera_transform.position;
-                            auto time = resources.get_or_emplace<fae::time>(fae::time{});
+                            auto time = global_entity.get_or_set_component<fae::time>(fae::time{});
                             auto t = time.elapsed().seconds_f32();
                             global_uniforms.time = t;
 
@@ -149,11 +137,11 @@ namespace fae
                             queue.WriteBuffer(local_uniforms_buffer, 0, local_uniform_data.data(), sizeof_data(local_uniform_data));
 
                             auto ambient_light_info_buffer = create_buffer(webgpu.device, "ambient_light_info_buffer", sizeof(fae::directional_light_info), wgpu::BufferUsage::Uniform);
-                            resources.use_resource<fae::ambient_light_info>([&](fae::ambient_light_info info)
+                            global_entity.use_component<fae::ambient_light_info>([&](fae::ambient_light_info info)
                                 { queue.WriteBuffer(ambient_light_info_buffer, 0, &info, sizeof(fae::ambient_light_info)); });
 
                             auto directional_light_info_buffer = create_buffer(webgpu.device, "fae_directional_light_info_buffer", sizeof(fae::directional_light_info), wgpu::BufferUsage::Uniform);
-                            resources.use_resource<fae::directional_light_info>([&](fae::directional_light_info info)
+                            global_entity.use_component<fae::directional_light_info>([&](fae::directional_light_info info)
                                 { queue.WriteBuffer(directional_light_info_buffer, 0, &info, sizeof(fae::directional_light_info)); });
 
                             std::uint32_t uniform_offset = 0;
@@ -221,8 +209,6 @@ namespace fae
 
                               render_pass.render_pass_encoder.End();
                               auto command_buffer = render_pass.command_encoder.Finish();
-                              //   render_pass.ui_render_pass.End();
-                              //   auto ui_command_buffer = render_pass.ui_command_encoder.Finish();
 
                               auto commands = std::vector<wgpu::CommandBuffer>{ command_buffer };
                               webgpu.device.GetQueue().Submit(commands.size(), commands.data());
@@ -233,24 +219,28 @@ namespace fae
                               webgpu.render_passes.erase(webgpu.render_passes.begin() + id);
                           }); },
                     .render_model = [&, id](const fae::render_pass::render_model_args& args)
-                    { resources.use_resource<fae::webgpu>([&, id](fae::webgpu& webgpu)
+                    { global_entity.use_component<fae::webgpu>([&, id](fae::webgpu& webgpu)
                           {
                             auto &render_pass = webgpu.render_passes[id];
 
                         local_uniforms_t local_uniforms;
-                        resources.use_resource<fae::active_camera>([&](active_camera active_camera)
+                        global_entity.use_component<fae::active_camera>([&](active_camera active_camera)
                         {
-                            if (!active_camera.camera_entity.valid())
+                            auto camera_entity = ecs_world.get_entity(active_camera.camera_entity);
+                            if (!camera_entity.valid())
                                 return;
-                            auto &camera = active_camera.camera();
-                            auto &camera_transform = active_camera.transform();
+                                auto maybe_camera = camera_entity.get_component<fae::camera>();
+                            auto &camera = *maybe_camera;
+                            auto maybe_transform = camera_entity.get_component<fae::transform>();
+                            auto &camera_transform = *maybe_transform;
 
                             local_uniforms.view = math::lookAt(camera_transform.position, camera_transform.position + camera_transform.forward(), fae::vec3(0.f, 1.f, 0.f));
-                            resources.use_resource<fae::primary_window>([&](fae::primary_window primary_window)
+                            global_entity.use_component<fae::primary_window>([&](fae::primary_window primary_window)
                         {
-                            if (!primary_window.window_entity.valid())
+                            if (!global_entity.registry.valid(primary_window.window_entity))
                                 return;
-                            auto &window = primary_window.window();
+                            auto maybe_window =  ecs_world.get_entity(primary_window.window_entity).get_component<fae::window>();
+                            auto& window = *maybe_window;
                             auto window_size = window.get_size();
                             auto aspect_ratio = static_cast<float>(window_size.width) / static_cast<float>(window_size.height);
 

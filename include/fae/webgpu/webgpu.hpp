@@ -20,7 +20,6 @@
 #include "string_utils.hpp"
 #include "utils.hpp"
 
-
 namespace fae
 {
     struct application;
@@ -60,6 +59,7 @@ namespace fae
                 wgpu::Sampler sampler;
             };
             std::vector<render_command> render_commands;
+            std::string label;
         };
         std::vector<render_pass> render_passes;
     };
@@ -67,40 +67,45 @@ namespace fae
     struct webgpu_plugin
     {
         wgpu::RequestAdapterOptions adapter_options{};
-        wgpu::DeviceDescriptor device_descriptor{
+        wgpu::DeviceDescriptor device_descriptor{};
+
 #ifndef FAE_PLATFORM_WEB
-            .deviceLostCallbackInfo = wgpu::DeviceLostCallbackInfo{
-                .mode = wgpu::CallbackMode::AllowSpontaneous,
-                .callback = [](WGPUDevice const* device, WGPUDeviceLostReason cReason, char const* message, void* userdata)
-                {
-                    auto reason = static_cast<wgpu::DeviceLostReason>(cReason);
-                    switch (reason)
-                    {
-                    case wgpu::DeviceLostReason::Destroyed:
-                        // don't log this reason to not scare the user, happens naturally at the end of the application lifecycle
-                        break;
-                    case wgpu::DeviceLostReason::Unknown:
-                    case wgpu::DeviceLostReason::InstanceDropped:
-                    case wgpu::DeviceLostReason::FailedCreation:
-                        fae::log_info(std::format("[wgpu] Device lost. [reason] {} [message] {}", to_string(reason), message));
-                        break;
-                    }
-                },
-            }
-#endif
-        };
-#ifndef FAE_PLATFORM_WEB
-        wgpu::LoggingCallback logging_callback = [](WGPULoggingType cType, char const* message, void* userdata)
+        wgpu::LoggingCallback logging_callback = [](WGPULoggingType cType, WGPUStringView message, void* userdata)
         {
             auto type = static_cast<wgpu::LoggingType>(cType);
-            fae::log_info(std::format("[wgpu] Info [type] {} [message] {}", to_string(type), message));
+            fae::log_info(std::format("[wgpu] Info [type] {} [message] {}", to_string(type), message.data));
         };
 #endif
-        wgpu::ErrorCallback error_callback = [](WGPUErrorType cType, const char* message, void* userdata)
+        WGPUUncapturedErrorCallback error_callback = [](WGPUDevice const * device, WGPUErrorType cType, struct WGPUStringView message, void* userdata1, void* userdata2)
         {
             auto type = static_cast<wgpu::ErrorType>(cType);
-            fae::log_error(std::format("[wgpu] Error [type] {} [message] {}", to_string(type), message));
+            fae::log_error(std::format("[wgpu] Error [type] {} [message] {}", to_string(type), message.data));
         };
+
+        webgpu_plugin()
+        {
+            #ifndef FAE_PLATFORM_WEB
+        device_descriptor.deviceLostCallbackInfo = wgpu::DeviceLostCallbackInfo{
+            .mode = wgpu::CallbackMode::AllowSpontaneous,
+            .callback = [](WGPUDevice const* device, WGPUDeviceLostReason cReason, WGPUStringView message, void* userdata)
+            {
+                auto reason = static_cast<wgpu::DeviceLostReason>(cReason);
+                switch (reason)
+                {
+                case wgpu::DeviceLostReason::Destroyed:
+                    // don't log this reason to not scare the user, happens naturally at the end of the application lifecycle
+                    break;
+                case wgpu::DeviceLostReason::Unknown:
+                case wgpu::DeviceLostReason::InstanceDropped:
+                case wgpu::DeviceLostReason::FailedCreation:
+                    fae::log_info(std::format("[wgpu] Device lost. [reason] {} [message] {}", to_string(reason), message.data));
+                    break;
+                }
+            },
+        };
+        // device_descriptor.SetUncapturedErrorCallback(error_callback, nullptr);
+#endif
+        }
 
         auto init(application& app) const noexcept -> void;
     };

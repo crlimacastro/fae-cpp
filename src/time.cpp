@@ -1,12 +1,14 @@
 #include "fae/time.hpp"
 
+#include <chrono>
+
 #include "fae/application/application.hpp"
 
 namespace fae
 {
     auto update_time(const update_step& step) noexcept -> void
     {
-        auto& time = step.resources.use_resource<fae::time>(
+        auto& time = step.global_entity.use_component<fae::time>(
             [](fae::time& time)
             {
                 static auto last_time = std::chrono::high_resolution_clock::now();
@@ -20,7 +22,7 @@ namespace fae
     auto time_plugin::init(application& app) const noexcept -> void
     {
         app
-            .emplace_resource<time>(time{})
+            .set_global_component<time>(time{})
             .add_system<update_step>(update_time);
     }
 

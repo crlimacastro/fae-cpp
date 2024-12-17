@@ -1,19 +1,15 @@
 #pragma once
 
 #include <cstddef>
-#include <format>
 #include <functional>
 #include <string>
 #include <string_view>
 
-#include "fae/logging.hpp"
 #include "fae/entity.hpp"
-#include "fae/sdl.hpp"
 
 namespace fae
 {
     struct application;
-    struct resource_manager;
     struct asset_manager;
     struct scheduler;
     struct ecs_world;
@@ -56,16 +52,11 @@ namespace fae
     struct primary_window
     {
         fae::entity window_entity;
-
-        [[nodiscard]] auto window() noexcept -> fae::window&
-        {
-            return *window_entity.get_component<fae::window>();
-        }
     };
 
     struct first_render_end
     {
-        resource_manager& resources;
+        entity_commands& global_entity;
         asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
@@ -76,7 +67,7 @@ namespace fae
         std::size_t width;
         std::size_t height;
 
-        resource_manager& resources;
+        entity_commands& global_entity;
         asset_manager& assets;
         scheduler& scheduler;
         ecs_world& ecs_world;
@@ -84,7 +75,6 @@ namespace fae
 
     auto show_primary_window_after_first_render(const fae::first_render_end& e) noexcept -> void;
     auto update_windows(const update_step& step) noexcept -> void;
-    [[nodiscard]] auto make_sdl_window(fae::sdl_window& window) noexcept -> fae::window;
 
     struct windowing_plugin
     {

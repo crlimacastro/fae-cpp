@@ -1,4 +1,4 @@
-add_library(imgui)
+add_library(imgui STATIC)
 add_library(imgui::imgui ALIAS imgui)
 
 target_sources(imgui
@@ -24,9 +24,14 @@ target_sources(imgui
         ${imgui_SOURCE_DIR}/backends/imgui_impl_wgpu.cpp
 )
 
+target_compile_definitions(imgui
+	PUBLIC
+		IMGUI_IMPL_WEBGPU_BACKEND_DAWN
+)
+
 target_include_directories(imgui PUBLIC ${imgui_SOURCE_DIR})
 target_link_libraries(imgui PUBLIC
     SDL3::SDL3
-    webgpu_cpp
     webgpu_dawn
+    webgpu_cpp
 )

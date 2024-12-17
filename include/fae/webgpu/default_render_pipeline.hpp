@@ -9,7 +9,7 @@
 namespace fae
 {
     struct window_resized;
-    struct resource_manager;
+    struct entity_commands;
     struct asset_manager;
 
     struct global_uniforms_t
@@ -28,7 +28,7 @@ namespace fae
     };
     static_assert(sizeof(local_uniforms_t) % 16 == 0, "uniform buffer must be aligned on 16 bytes");
 
-    [[nodiscard]] auto create_default_render_pipeline(resource_manager& resources, asset_manager& assets) noexcept -> render_pipeline;
+    [[nodiscard]] auto create_default_render_pipeline(ecs_world& ecs_world, entity_commands& global_entity, asset_manager& assets) noexcept -> render_pipeline;
 
     struct webgpu_default_render_pipeline
     {

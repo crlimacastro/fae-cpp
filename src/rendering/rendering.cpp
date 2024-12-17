@@ -24,11 +24,11 @@ namespace fae
 {
     auto rendering_plugin::init(application& app) const noexcept -> void
     {
-        if (!app.resources.get<renderer>())
+        if (!app.global_entity.get_component<renderer>())
         {
             app.add_plugin(webgpu_plugin{});
             const auto maybe_webgpu_renderer =
-                app.resources.get<webgpu>();
+                app.global_entity.get_component<webgpu>();
             if (!maybe_webgpu_renderer)
             {
                 fae::log_error("webgpu renderer not found");
@@ -36,11 +36,11 @@ namespace fae
             }
             auto webgpu_renderer = *maybe_webgpu_renderer;
             app
-                .emplace_resource<default_render_pipeline>(default_render_pipeline{
-                    .render_pipeline = create_default_render_pipeline(app.resources, app.assets),
+                .set_global_component<default_render_pipeline>(default_render_pipeline{
+                    .render_pipeline = create_default_render_pipeline(app.ecs_world, app.global_entity, app.assets),
                 })
-                .emplace_resource<renderer>(
-                    make_webgpu_renderer(app.resources));
+                .set_global_component<renderer>(
+                    make_webgpu_renderer(app.ecs_world, app.global_entity));
         }
 
         app.add_system<update_step>(update_rendering)
@@ -51,14 +51,14 @@ namespace fae
     auto update_rendering(const update_step& step) noexcept -> void
     {
         static bool first_render_happened = false;
-        step.resources.use_resource<fae::default_render_pipeline>([&](fae::default_render_pipeline& default_render_pipeline)
-            { step.resources.use_resource<fae::renderer>(
+        step.global_entity.use_component<fae::default_render_pipeline>([&](fae::default_render_pipeline& default_render_pipeline)
+            { step.global_entity.use_component<fae::renderer>(
                   [&](fae::renderer& renderer)
                   {
                       auto render_pass = renderer.begin(default_render_pipeline.render_pipeline);
                       render_pass.clear(renderer.get_clear_color());
                       step.scheduler.invoke<render_step>(render_step{
-                          .resources = step.resources,
+                          .global_entity = step.global_entity,
                           .assets = step.assets,
                           .scheduler = step.scheduler,
                           .ecs_world = step.ecs_world,
@@ -68,7 +68,7 @@ namespace fae
                       if (!first_render_happened)
                       {
                           step.scheduler.invoke(fae::first_render_end{
-                              .resources = step.resources,
+                              .global_entity = step.global_entity,
                               .assets = step.assets,
                               .scheduler = step.scheduler,
                               .ecs_world = step.ecs_world,
@@ -98,7 +98,7 @@ namespace fae
 
     auto resize_active_render_passes(const window_resized& e) noexcept -> void
     {
-        e.resources.use_resource<fae::renderer>([&](fae::renderer& renderer)
+        e.global_entity.use_component<fae::renderer>([&](fae::renderer& renderer)
             {
             for (auto& render_pass : renderer.get_active_render_passes())
             {

@@ -2,7 +2,6 @@
 
 #include "fae/application/application.hpp"
 #include "fae/asset_manager.hpp"
-#include "fae/resource_manager.hpp"
 #include "fae/core/offset_of.hpp"
 #include "fae/windowing.hpp"
 #include "fae/webgpu/webgpu.hpp"
@@ -10,9 +9,9 @@
 #include "fae/rendering/render_pipeline.hpp"
 #include "fae/rendering/render_pass.hpp"
 
-auto fae::create_default_render_pipeline(fae::resource_manager& resources, fae::asset_manager& assets) noexcept -> render_pipeline
+auto fae::create_default_render_pipeline(fae::ecs_world& ecs_world, fae::entity_commands& global_entity, fae::asset_manager& assets) noexcept -> render_pipeline
 {
-    auto maybe_webgpu = resources.get<fae::webgpu>();
+    auto maybe_webgpu = global_entity.get_component<fae::webgpu>();
     if (!maybe_webgpu)
     {
         fae::log_fatal("webgpu resource not found");
@@ -67,7 +66,9 @@ auto fae::create_default_render_pipeline(fae::resource_manager& resources, fae::
             .dstFactor = wgpu::BlendFactor::One,
         },
     };
-    auto surface_format = webgpu.surface.GetPreferredFormat(webgpu.adapter);
+    auto surface_capabilities = wgpu::SurfaceCapabilities{};
+    webgpu.surface.GetCapabilities(webgpu.adapter, &surface_capabilities);
+    auto surface_format = surface_capabilities.formats[0];
     wgpu::ColorTargetState color_target_state{
         .format = surface_format,
         .blend = &blend_state,
@@ -181,13 +182,14 @@ auto fae::create_default_render_pipeline(fae::resource_manager& resources, fae::
 
     auto webgpu_render_pipeline = webgpu.device.CreateRenderPipeline(&pipeline_descriptor);
 
-    auto maybe_primary_window = resources.get<primary_window>();
+    auto maybe_primary_window = global_entity.get_component<primary_window>();
     if (!maybe_primary_window)
     {
         fae::log_fatal("primary window resource not found");
     }
     auto primary_window = *maybe_primary_window;
-    auto& window = primary_window.window();
+    auto maybe_window = ecs_world.get_entity(primary_window.window_entity).get_component<fae::window>();
+    auto& window = *maybe_window;
     auto window_size = window.get_size();
 
     auto ceil_to_next_multiple = [](std::uint32_t value, std::uint32_t step) noexcept -> std::uint32_t
@@ -208,18 +210,19 @@ auto fae::create_default_render_pipeline(fae::resource_manager& resources, fae::
         .shader_module = shader_module,
         .render_pipeline = webgpu_render_pipeline,
         .depth_texture = create_texture(
-        webgpu.device, "Fae Depth texture",
-        {
-            .width = static_cast<std::uint32_t>(window_size.width),
-            .height = static_cast<std::uint32_t>(window_size.height),
-        },
-        depth_texture_format, wgpu::TextureUsage::RenderAttachment),
+            webgpu.device, "Fae Depth texture",
+            {
+                .width = static_cast<std::uint32_t>(window_size.width),
+                .height = static_cast<std::uint32_t>(window_size.height),
+            },
+            depth_texture_format, wgpu::TextureUsage::RenderAttachment),
         .uniform_stride = uniform_stride,
     });
 
     auto& render_pipeline = webgpu.render_pipelines[id];
 
     return fae::render_pipeline{
+        .data = &render_pipeline,
         .get_id = [&, id]()
         { return id; },
         .prepare_render_pass = [&](std::size_t id)
@@ -228,6 +231,8 @@ auto fae::create_default_render_pipeline(fae::resource_manager& resources, fae::
 
             wgpu::SurfaceTexture surface_texture;
             webgpu.surface.GetCurrentTexture(&surface_texture);
+            if (surface_texture.status != wgpu::SurfaceGetCurrentTextureStatus::Success)
+                return;
             auto surface_texture_view = surface_texture.texture.CreateView();
 
             auto color_attachment = wgpu::RenderPassColorAttachment{
@@ -257,7 +262,7 @@ auto fae::create_default_render_pipeline(fae::resource_manager& resources, fae::
             webgpu.render_passes[id].command_encoder = command_encoder;
             webgpu.render_passes[id].render_pass_encoder = render_pass_encoder; },
         .on_window_resized = [&](const window_resized& window_resized_event)
-        { window_resized_event.resources.use_resource<fae::webgpu>([&](fae::webgpu& webgpu)
+        { window_resized_event.global_entity.use_component<fae::webgpu>([&](fae::webgpu& webgpu)
               {
             render_pipeline.depth_texture.Destroy();
             render_pipeline.depth_texture = create_texture(
