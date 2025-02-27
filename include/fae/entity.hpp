@@ -64,18 +64,6 @@ namespace fae
         }
 
         template <typename t_component>
-        [[nodiscard]] inline constexpr auto get_or_set_component(t_component&& value) noexcept -> t_component&
-        {
-            if (!has_components<t_component>())
-            {
-                return set_and_get_component<t_component>(std::forward<t_component&&>(value));
-            }
-
-			auto component = get_component<t_component>();
-            return *component;
-        }
-
-        template <typename t_component>
         [[nodiscard]] inline constexpr auto set_and_get_component(t_component&& value) noexcept -> t_component&
         {
             registry.emplace_or_replace<t_component>(id, std::forward<t_component&&>(value));
@@ -87,6 +75,18 @@ namespace fae
         {
             [[maybe_unused]] auto maybe_component = set_and_get_component<t_component>(std::forward<t_component&&>(value));
             return *this;
+        }
+
+        template <typename t_component>
+        [[nodiscard]] inline constexpr auto get_or_set_component(t_component&& value) noexcept -> t_component&
+        {
+            if (!has_components<t_component>())
+            {
+                return set_and_get_component<t_component>(std::forward<t_component&&>(value));
+            }
+
+			auto component = get_component<t_component>();
+            return *component;
         }
 
         template <typename t_component>

@@ -15,12 +15,6 @@ auto start(const fae::start_step& step) noexcept -> void
         { ui_settings.hide_ui = true; });
     fae::hide_cursor();
 
-    auto maybe_rock_texture = step.assets.load<fae::texture>("rock.png");
-    auto rock_texture = *maybe_rock_texture;
-
-    auto maybe_wood_texture = step.assets.load<fae::texture>("wood.png");
-    auto wood_texture = *maybe_wood_texture;
-
     auto camera_entity = step.ecs_world.create_entity();
     camera_entity
         .set_component<fae::name>(fae::name{ "camera" })
@@ -55,7 +49,7 @@ auto start(const fae::start_step& step) noexcept -> void
         .set_component<fae::model>(fae::model{
             .mesh = fae::meshes::cube(),
             .material = fae::material{
-                .diffuse = rock_texture,
+                .diffuse = *step.assets.load<fae::texture>("rock.png"),
             },
         });
 
@@ -69,21 +63,21 @@ auto start(const fae::start_step& step) noexcept -> void
         .set_component<fae::model>(fae::model{
             .mesh = *step.assets.load<fae::mesh>("cube.obj"),
             .material = fae::material{
-                .diffuse = wood_texture,
+                .diffuse = *step.assets.load<fae::texture>("wood.png"),
             },
         })
         .set_component<rotate>(rotate{ .speed = 60.f });
 
-    step.ecs_world.create_entity()
-        .set_component<fae::name>(fae::name{ "model" })
-        .set_component<fae::transform>(fae::transform{
-            .position = { 17.f, 0.f, -23.f },
-            .rotation = fae::math::angleAxis(fae::math::radians(-90.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
-            .scale = fae::vec3{ 1.f, 1.f, 1.f } * 0.03f,
-        })
-        .set_component<fae::model>(fae::model{
-            .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
-        });
+    // step.ecs_world.create_entity()
+    //     .set_component<fae::name>(fae::name{ "model" })
+    //     .set_component<fae::transform>(fae::transform{
+    //         .position = { 17.f, 0.f, -23.f },
+    //         .rotation = fae::math::angleAxis(fae::math::radians(-90.f), fae::vec3(1.0f, 0.0f, 0.0f)) * fae::quat{ 0.f, 0.f, 0.f, 1.f },
+    //         .scale = fae::vec3{ 1.f, 1.f, 1.f } * 0.03f,
+    //     })
+    //     .set_component<fae::model>(fae::model{
+    //         .mesh = *step.assets.load<fae::mesh>("Stanford_Bunny.stl"),
+    //     });
 }
 
 auto hue_shift_clear_color(const fae::update_step& step) noexcept -> void

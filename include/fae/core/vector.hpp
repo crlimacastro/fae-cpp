@@ -5,9 +5,9 @@
 
 namespace fae
 {
-    template <typename t, typename t_alloc>
-    [[nodiscard]] constexpr auto sizeof_data(const std::vector<t, t_alloc>& v) noexcept -> std::size_t
+    template <typename t_container>
+    [[nodiscard]] constexpr auto sizeof_data(const t_container& v) noexcept -> std::size_t
     {
-        return v.size() * sizeof(typename std::vector<t, t_alloc>::value_type);
+        return v.size() * sizeof(typename t_container::value_type);
     }
 }

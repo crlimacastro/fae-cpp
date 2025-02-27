@@ -2,16 +2,14 @@ cmake_minimum_required(VERSION 3.31.1)
 
 project(
     fae
-    VERSION 0.0.2
+    VERSION 0.0.1
     LANGUAGES CXX
     DESCRIPTION "fae game framework (core library of the fae game engine)"
 )
 
-set(FAE_CPM_VERSION "v0.40.2" CACHE STRING "Which version of CPM to use (a git tag or \"master\")")
-option(FAE_ENABLE_WARNINGS "Enable compilation warnings" OFF)
-option(FAE_ENABLE_WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
-option(FAE_USE_BUILD_ASSET_DIR "Use assets directory in the build folder. Switch ON for release builds" ON)
-option(FAE_BUILD_EXAMPLES "Build examples" ON)
+set(FAE_CPM_VERSION "v0.40.5" CACHE STRING "Which version of CPM to use (a git tag or \"master\")")
+option(FAE_USE_BUILD_ASSET_DIR "Use assets directory in the build folder. Switch ON for release builds" OFF)
+option(FAE_BUILD_EXAMPLES "Build examples" OFF)
 # TODO option(FAE_BUILD_TESTS "Build tests" OFF)
 # TODO option(FAE_BUILD_BENCHMARKS "Build benchmarks" OFF))
 # TODO option(FAE_BUILD_DOCS "Build documentation" OFF)
@@ -19,32 +17,44 @@ option(FAE_BUILD_EXAMPLES "Build examples" ON)
 include(cmake/get_cpm.cmake)
 get_cpm(VERSION ${FAE_CPM_VERSION})
 CPMUsePackageLock(package-lock.cmake)
+set(FAE_PUBLIC_LIBS)
+set(FAE_PRIVATE_LIBS)
 CPMAddPackage("gh:Neargye/magic_enum#v0.9.5")
+list(APPEND FAE_PUBLIC_LIBS magic_enum::magic_enum)
 CPMAddPackage("gh:g-truc/glm#1.0.1")
+list(APPEND FAE_PUBLIC_LIBS glm::glm)
 CPMAddPackage("gh:skypjack/entt#v3.13.2")
+list(APPEND FAE_PUBLIC_LIBS EnTT::EnTT)
 CPMAddPackage(
 	NAME SDL
 	GITHUB_REPOSITORY libsdl-org/SDL
-	GIT_TAG 2f59a1ce442bec93c8cef525341b2c0338bf024c
+	GIT_TAG 67ea67f191450cedf99b5b0ae70c1a5c72335e20
 	OPTIONS
 		"SYSTEM ON"
 		"EXCLUDE_FROM_ALL ON"
 		"SDL_SHARED OFF"
 		"SDL_STATIC ON"
 )
+list(APPEND FAE_PUBLIC_LIBS SDL3::SDL3)
 if(NOT DEFINED EMSCRIPTEN)
 	CPMAddPackage(
 		NAME dawn
 		GIT_REPOSITORY https://dawn.googlesource.com/dawn.git
-  		GIT_TAG a6aa2a9eaf8f295f65f01c677bce1bc6b35b3ab7
+  		GIT_TAG 7f24ec953f266a5a1ed320d571a74ed69ae0c3ea
 		OPTIONS
+			"SYSTEM ON"
+			"EXCLUDE_FROM_ALL ON"
 			"DAWN_FETCH_DEPENDENCIES ON"
 			"BUILD_SHARED_LIBS OFF"
 	)
+list(APPEND FAE_PUBLIC_LIBS webgpu_dawn webgpu_cpp)
 endif()
-CPMAddPackage("gh:assimp/assimp#v5.4.1")
+CPMAddPackage("gh:assimp/assimp#v5.4.3")
+list(APPEND FAE_PUBLIC_LIBS assimp::assimp)
 CPMAddPackage("gh:gracicot/stb-cmake#d42aa7a48ff0479fa9cab999d035a901cc4c4134")
+list(APPEND FAE_PUBLIC_LIBS stb::image)
 CPMAddPackage("gh:ocornut/imgui#v1.91.5-docking")
+list(APPEND FAE_PUBLIC_LIBS imgui::imgui)
 include(cmake/imgui.cmake)
 
 configure_file(config.hpp.in "include/${PROJECT_NAME}/config.hpp")
@@ -54,10 +64,6 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 set_target_properties(${PROJECT_NAME}
     PROPERTIES
-        CXX_STANDARD 23
-        CXX_STANDARD_REQUIRED ON
-		CXX_EXTENSIONS OFF
-        COMPILE_WARNING_AS_ERROR ${FAE_ENABLE_WARNINGS_AS_ERRORS}
         LINKER_LANGUAGE CXX	
 )
 
@@ -77,16 +83,32 @@ elseif(WIN32)
 		PUBLIC
 			FAE_PLATFORM_WINDOWS
 	)
+elseif(UNIX AND NOT APPLE)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+            FAE_PLATFORM_LINUX
+    )
+elseif(ANDROID)
+    target_compile_definitions(${PROJECT_NAME}
+        PUBLIC
+            FAE_PLATFORM_ANDROID
+    )
 elseif(APPLE)
-	target_compile_definitions(${PROJECT_NAME}
+    target_compile_definitions(${PROJECT_NAME}
 		PUBLIC
-			FAE_PLATFORM_MACOS
+			FAE_PLATFORM_APPLE
 	)
-elseif(UNIX)
-	target_compile_definitions(${PROJECT_NAME}
-		PUBLIC
-			FAE_PLATFORM_LINUX
-	)
+    if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	    target_compile_definitions(${PROJECT_NAME}
+	    	PUBLIC
+	    		FAE_PLATFORM_MACOS
+	    )
+    elseif(IOS)
+	    target_compile_definitions(${PROJECT_NAME}
+	    	PUBLIC
+	    		FAE_PLATFORM_IOS
+	    )
+    endif()
 endif()
 
 # define dll export if building as a dynamic library
@@ -116,23 +138,6 @@ else()
 		target_compile_definitions(${PROJECT_NAME}
 			PUBLIC
 				FAE_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
-		)
-	endif()
-endif()
-
-# handle warnings
-if(FAE_ENABLE_WARNINGS)
-	if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-		target_compile_options(${PROJECT_NAME}
-			PRIVATE
-				"/W4"
-		)
-	elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-		target_compile_options(${PROJECT_NAME}
-			PRIVATE
-				"-Wall"
-				"-Wextra"
-				"-Wpedantic"
 		)
 	endif()
 endif()
@@ -176,21 +181,10 @@ target_sources(${PROJECT_NAME}
 )
 target_link_libraries(${PROJECT_NAME}
 	PUBLIC
-		magic_enum::magic_enum
-		glm::glm
-		EnTT::EnTT
-		SDL3::SDL3
-		assimp::assimp
-		stb::image
-		imgui::imgui
+        ${FAE_PUBLIC_LIBS}
+    PRIVATE
+        ${FAE_PRIVATE_LIBS}
 )
-if(NOT DEFINED EMSCRIPTEN)
-	target_link_libraries(${PROJECT_NAME}
-		PUBLIC
-			webgpu_dawn
-			webgpu_cpp
-	)
-endif()
 
 if(FAE_BUILD_EXAMPLES)
     add_subdirectory(examples)
